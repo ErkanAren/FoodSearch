@@ -26,6 +26,7 @@ import math
 import re
 import sqlite3
 import sys
+import threading
 import time
 import unicodedata
 from contextlib import closing
@@ -40,6 +41,12 @@ ON_TSV = ROOT / "opennutrition-dataset-2025.1" / "opennutrition_foods.tsv"
 DB_PATH = ROOT / "work" / "browser.sqlite"
 INDEX_HTML = HERE / "index.html"
 NO_IMAGE_SVG = HERE / "no-image.svg"
+PILOT_HTML = HERE / "photo_pilot.html"
+PILOT_RUNS = {  # photo pilot runs: name -> output folder
+    "cutout": ROOT / "work" / "photo_pilot",  # E11 background removal, tools/photos/cleanup_pilot.py
+    "crop": ROOT / "work" / "photo_pilot_crop",  # E14 OFF crop model, tools/photos/crop_pilot.py
+}
+PILOT_SCRIPTS = {"cutout": "cleanup_pilot.py", "crop": "crop_pilot.py"}
 PAGE_SIZE = 50
 NO_NAME_SORT = "￿"  # rows without a name sort last
 
@@ -395,6 +402,51 @@ def counts():
     return out
 
 
+# --- Photo pilots (E11 cut-out, E14 crop): manifest, images and good/bad reviews --------------
+_PILOT_IMG = re.compile(r"^/pilot/(cutout|crop)/(before|after)/([0-9A-Za-z_-]{1,40})\.jpg$")
+_review_lock = threading.Lock()
+
+
+def _read_reviews(folder):
+    path = folder / "review.json"
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def pilot_data(run):
+    if run not in PILOT_RUNS:
+        raise ValueError("unknown run")
+    folder = PILOT_RUNS[run]
+    manifest = folder / "manifest.json"
+    if not manifest.exists():
+        return {"error": f"Pilot not run yet. Run: .venv/bin/python -I tools/photos/{PILOT_SCRIPTS[run]}"}
+    data = json.loads(manifest.read_text())
+    data["run"] = run
+    data["reviews"] = _read_reviews(folder)
+    compare = data["summary"].get("compare_run")
+    if compare in PILOT_RUNS and compare != run:  # e.g. the crop page also shows the cut-out verdicts
+        data["compare_reviews"] = _read_reviews(PILOT_RUNS[compare])
+    return data
+
+
+def save_review(run, code, verdict):
+    if verdict not in ("good", "bad", None):
+        raise ValueError("verdict must be good, bad or null")
+    with _review_lock:
+        data = pilot_data(run)
+        if "error" in data or code not in {it["code"] for it in data["items"]}:
+            raise ValueError("unknown product")
+        reviews = data["reviews"]
+        if verdict is None:
+            reviews.pop(code, None)
+        else:
+            reviews[code] = verdict
+        folder = PILOT_RUNS[run]
+        tmp = folder / "review.json.tmp"
+        tmp.write_text(json.dumps(reviews, indent=1, sort_keys=True))
+        tmp.replace(folder / "review.json")
+    return reviews
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, status, body, ctype):
         self.send_response(status)
@@ -415,6 +467,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, INDEX_HTML.read_bytes(), "text/html; charset=utf-8")
             elif url.path == "/no-image.svg":
                 self._send(200, NO_IMAGE_SVG.read_bytes(), "image/svg+xml")
+            elif url.path == "/photo-pilot":
+                self._send(200, PILOT_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/photo-pilot":
+                self._json(pilot_data(qs.get("run", "cutout")))
+            elif _PILOT_IMG.match(url.path):
+                run, sub, name = _PILOT_IMG.match(url.path).groups()
+                f = PILOT_RUNS[run] / sub / f"{name}.jpg"
+                self._send(200, f.read_bytes(), "image/jpeg") if f.exists() else self._json({"error": "not found"}, 404)
             elif url.path == "/api/meta":
                 self._json(counts())
             elif url.path == "/api/search":
@@ -432,6 +492,22 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._json({"error": "not found"}, 404)
         except ValueError as e:
+            self._json({"error": str(e)}, 400)
+
+    def do_POST(self):
+        if urlparse(self.path).path != "/api/photo-pilot/review":
+            return self._json({"error": "not found"}, 404)
+        # JSON-only: browsers must preflight this from other sites, and we never answer preflights.
+        if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
+            return self._json({"error": "expected application/json"}, 415)
+        length = int(self.headers.get("Content-Length") or 0)
+        if length > 10_000:
+            return self._json({"error": "too large"}, 413)
+        try:
+            body = json.loads(self.rfile.read(length) or b"{}")
+            reviews = save_review(str(body.get("run", "cutout")), str(body.get("code", "")), body.get("verdict"))
+            self._json({"ok": True, "reviewed": len(reviews)})
+        except (ValueError, AttributeError) as e:
             self._json({"error": str(e)}, 400)
 
     def log_message(self, fmt, *args):

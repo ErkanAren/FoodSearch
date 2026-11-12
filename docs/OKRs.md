@@ -87,6 +87,33 @@
 
 ---
 
+## O5: Every food has a clear, trustworthy picture *(aspirational)*
+
+Strategy and specs: `IMAGES.md`.
+
+| KR | Baseline | Target | Current | Score |
+|---|---|---|---|---|
+| **KR5.1** Greek packaged products with a **cleaned front photo** that passed review | 0 (20,525 have a raw front photo) | **≥ 18,000** | 0 | |
+| **KR5.2** Clean-up pilot: share of cleaned photos rated "good" in human review | n/a | **≥ 85 %** | **31 %** (62 / 200) | |
+| **KR5.3** Generic foods & Greek dishes with an **approved** image (AI or other) showing the default portion | 0 | **100 %** of the curated list | 0 | |
+| **KR5.4** Images shown with a portion that doesn't match the stored grams (found in review) | n/a | **0** | — | |
+| **KR5.5** Foods without any picture that show a **category icon** instead of the generic plate | 0 % | **100 %** | 0 % | |
+
+**Tasks**
+- [x] Write the image strategy (`IMAGES.md`)
+- [x] Create the project venv (`.venv`) with `rembg` for background removal
+- [x] E11: photo clean-up pilot run on 200 Greek products (birefnet-general-lite, 6.1 s per photo, 13 flagged)
+- [x] E11: human review of the 200 at `/photo-pilot`: 31 % good → **no-go** for an unattended full run
+- [ ] E11b: better cut-outs and/or an automatic judge, scored against the 200 verdicts (**parked**; try OFF's ready-made crop + front-photo models first, see E11)
+- [x] E14: product crop with OFF's ready-made models, run on the same 200 (0.08 s per photo, 20 flagged)
+- [ ] E14: human review at `/photo-pilot?run=crop`, then decide crop vs cut-out
+- [ ] E12: AI image pilot (30 Greek dishes / generic foods). Needs a provider choice + API key
+- [ ] E13: category icon set + mapping from OFF food groups
+- [ ] Attribution line for cleaned OFF photos on the detail screen (CC BY-SA)
+- [ ] In-app "add a photo" flow that uploads to Open Food Facts
+
+---
+
 ## Scoring guide
 
 | Score | Meaning |
@@ -105,3 +132,4 @@ Objective score = average of its KRs.
 | Date | Notes | O1 | O2 | O3 | O4 |
 |---|---|---|---|---|---|
 | 2026-11-12 | Both datasets downloaded and profiled. Docs written. Key findings: carb-definition mismatch (Q-01), OFF serving double-scaling (Q-02), OpenNutrition grocery ≈ OFF subset, Greek names scarce (Q-09). | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-12 (pm) | Data browser built (Greece only, with photos). Image strategy written (O5, `IMAGES.md`). E11 photo clean-up pilot run on 200 products and reviewed: only 31 % good, so no-go for an unattended full run; next is E11b. | 0.75 | 0.0 | 0.0 | 0.0 |

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photo Pilot Review</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
+    --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb;
+    --good: #1a7f37; --good-soft: #dafbe1; --bad: #cf222e; --bad-soft: #ffebe9;
+    --flag: #9a6700; --flag-soft: #fff8c5; --photo-bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+      --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff;
+      --good: #3fb950; --good-soft: #12261a; --bad: #f85149; --bad-soft: #2d1416;
+      --flag: #e3b341; --flag-soft: #2b2410; --photo-bg: #ecece8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1500px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; font-weight: 650; flex: 1; min-width: 200px; }
+  a { color: var(--accent); }
+  nav.runs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 9px; }
+  nav.runs a { padding: 5px 10px; border-radius: 7px; text-decoration: none; color: var(--muted); font-weight: 600; font-size: 13px; }
+  nav.runs a[aria-current="page"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
+  .stats { max-width: 1500px; margin: 0 auto; padding: 0 16px 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; min-width: 120px; }
+  .stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  main { max-width: 1500px; margin: 0 auto; padding: 4px 16px 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min, 420px)), 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card.good { border-color: var(--good); }
+  .card.bad { border-color: var(--bad); }
+  .title { font-weight: 600; line-height: 1.3; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .pair { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: 8px; }
+  .pair figure { margin: 0; }
+  .pair img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; border-radius: 8px; background: var(--photo-bg); border: 1px solid var(--border); }
+  .pair figure.rate img { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .pair figcaption { font-size: 11px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .04em; }
+  .pair figcaption .v-good { color: var(--good); font-weight: 700; }
+  .pair figcaption .v-bad { color: var(--bad); font-weight: 700; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 20px; }
+  .chip { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: var(--flag-soft); color: var(--flag); }
+  .chip.ok { background: var(--surface-2); color: var(--muted); }
+  .actions { display: flex; gap: 8px; }
+  .actions button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+  .actions button.good[aria-pressed="true"] { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+  .actions button.bad[aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .actions button:focus-visible, select:focus, nav.runs a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1 id="heading">Photo pilot</h1>
+    <nav class="runs" aria-label="Pilot run">
+      <a href="?run=cutout" data-run="cutout">Cut-out · E11</a>
+      <a href="?run=crop" data-run="crop">Crop · E14</a>
+    </nav>
+    <select id="filter" aria-label="Show"></select>
+    <a href="/">← Food browser</a>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden></div>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs, ...children) {   // data is untrusted: text only, never innerHTML
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const c of children) if (c != null) n.append(c instanceof Node ? c : String(c));
+  return n;
+}
+
+const RUNS = {
+  cutout: { title: "Photo clean-up pilot · E11 (background removal)", after: "After (cut-out)" },
+  crop: { title: "Product crop pilot · E14 (OFF crop model)", after: "Crop (rate this)" },
+};
+const RUN = RUNS[new URLSearchParams(location.search).get("run")] ? new URLSearchParams(location.search).get("run") : "cutout";
+$("heading").textContent = RUNS[RUN].title;
+document.title = RUN === "crop" ? "Crop Pilot Review" : "Photo Pilot Review";
+for (const a of document.querySelectorAll("nav.runs a")) if (a.dataset.run === RUN) a.setAttribute("aria-current", "page");
+
+let data = null;
+const cmp = () => data.summary.compare_run && data.compare_reviews ? data.compare_reviews : null;
+
+function stat(value, label) { return el("div", { class: "stat" }, el("b", { text: value }), el("span", { text: label })); }
+const pct = (a, b) => b ? `${Math.round((100 * a) / b)} %` : "–";
+
+function setupFilter() {
+  const opts = [["all", "All"], ["unreviewed", "Not reviewed yet"], ["flagged", "Auto-flagged"], ["good", "Rated good"], ["bad", "Rated bad"]];
+  if (cmp()) opts.push(["cmp_bad", "Cut-out was bad"], ["cmp_good", "Cut-out was good"]);
+  $("filter").replaceChildren(...opts.map(([v, t]) => el("option", { value: v, text: t })));
+}
+
+function renderStats() {
+  const s = data.summary, items = data.items.filter((i) => i.secs != null), rv = data.reviews, cr = cmp();
+  const reviewed = items.filter((i) => rv[i.code]);
+  const good = reviewed.filter((i) => rv[i.code] === "good").length;
+  const bad = reviewed.length - good;
+  const flaggedReviewed = reviewed.filter((i) => i.flags.length);
+  const flaggedBad = flaggedReviewed.filter((i) => rv[i.code] === "bad").length;
+  const missed = reviewed.filter((i) => !i.flags.length && rv[i.code] === "bad").length;
+  const out = [
+    stat(s.model, "model"),
+    stat(`${s.n_processed}/${s.n_selected}`, "processed"),
+    stat(`${s.avg_secs}s · ${s.avg_after_kb} KB`, "per image"),
+    stat(`${s.n_flagged}`, "auto-flagged"),
+    stat(`${reviewed.length}/${items.length}`, "reviewed"),
+    stat(pct(good, reviewed.length), `good (${good} good · ${bad} bad)`),
+    stat(pct(flaggedBad, flaggedReviewed.length), "flags that were right"),
+    stat(`${missed}`, "bad but not flagged"),
+  ];
+  if (cr) {
+    const cutGood = reviewed.filter((i) => cr[i.code] === "good").length;
+    const either = reviewed.filter((i) => rv[i.code] === "good" || cr[i.code] === "good").length;
+    out.push(stat(pct(cutGood, reviewed.length), "cut-out good (same products)"),
+             stat(pct(either, reviewed.length), "good with either method"));
+  }
+  $("stats").replaceChildren(...out);
+}
+
+function verdictText(v) {
+  return v ? el("span", { class: "v-" + v, text: v === "good" ? " · you: good" : " · you: bad" }) : null;
+}
+
+function card(item) {
+  const verdict = data.reviews[item.code] || "";
+  const cr = cmp();
+  const c = el("article", { class: "card " + verdict });
+  const link = el("a", { href: "/#" + new URLSearchParams({ tab: "off", q: item.code, filter: "all", page: "0", item: item.code }), target: "_blank", rel: "noopener", text: item.code });
+  c.append(
+    el("div", null, el("div", { class: "title", text: item.name || "(no name)" }),
+      el("div", { class: "meta" }, (item.brand ? item.brand + " · " : ""), link,
+        item.orig_w ? ` · original ${item.orig_w}×${item.orig_h}` : "",
+        item.secs != null ? ` · ${item.secs}s` : "",
+        item.front_prob != null ? ` · front ${Math.round(item.front_prob * 100)} %` : "",
+        item.box_conf != null ? ` · box ${Math.round(item.box_conf * 100)} %` : "")),
+  );
+  const chips = el("div", { class: "chips" });
+  if (!item.flags.length) chips.append(el("span", { class: "chip ok", text: "no flags" }));
+  for (const f of item.flags) chips.append(el("span", { class: "chip", text: f, title: (data.summary.flag_rules || {})[f] || f }));
+  c.append(chips);
+  if (item.secs != null) {
+    const img = (run, sub, alt) => el("img", { src: `/pilot/${run}/${sub}/${encodeURIComponent(item.code)}.jpg`, alt, loading: "lazy", decoding: "async" });
+    const figs = [el("figure", null, img(RUN, "before", "Original photo"), el("figcaption", { text: "Original (OFF)" }))];
+    if (cr) figs.push(el("figure", null, img(data.summary.compare_run, "after", "Cut-out from E11"),
+      el("figcaption", null, "Cut-out", verdictText(cr[item.code]))));
+    figs.push(el("figure", { class: cr ? "rate" : "" }, img(RUN, "after", RUNS[RUN].after), el("figcaption", { text: RUNS[RUN].after })));
+    const pair = el("div", { class: "pair" }, ...figs);
+    pair.style.setProperty("--cols", String(figs.length));
+    c.append(pair);
+    const actions = el("div", { class: "actions" });
+    for (const [v, label] of [["good", "✓ Good"], ["bad", "✗ Bad"]]) {
+      const b = el("button", { class: v, "aria-pressed": String(verdict === v), text: label });
+      b.addEventListener("click", () => review(item.code, verdict === v ? null : v));
+      actions.append(b);
+    }
+    c.append(actions);
+  }
+  return c;
+}
+
+function render() {
+  const f = $("filter").value, rv = data.reviews, cr = cmp() || {};
+  const items = data.items.filter((i) =>
+    f === "all" ? true
+    : f === "unreviewed" ? !rv[i.code] && i.secs != null
+    : f === "flagged" ? i.flags.length > 0
+    : f === "cmp_bad" ? cr[i.code] === "bad"
+    : f === "cmp_good" ? cr[i.code] === "good"
+    : rv[i.code] === f);
+  $("grid").replaceChildren(...items.map(card));
+  $("empty").hidden = items.length > 0;
+  $("empty").textContent = "Nothing to show for this filter.";
+  renderStats();
+}
+
+async function review(code, verdict) {
+  const res = await fetch("/api/photo-pilot/review", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ run: RUN, code, verdict }),
+  });
+  const out = await res.json();
+  if (out.error) { alert(out.error); return; }
+  if (verdict) data.reviews[code] = verdict; else delete data.reviews[code];
+  const y = window.scrollY;
+  render();
+  window.scrollTo(0, y);
+}
+
+$("filter").addEventListener("change", render);
+(async function init() {
+  data = await (await fetch(`/api/photo-pilot?run=${encodeURIComponent(RUN)}`)).json();
+  if (data.error) { $("empty").hidden = false; $("empty").textContent = data.error; return; }
+  if (cmp()) $("grid").style.setProperty("--card-min", "560px");
+  setupFilter();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,7 @@ Goal: turn two open datasets into a **clean, trustworthy, carb-accurate food lib
 | [`docs/DATASETS.md`](docs/DATASETS.md) | What each dataset contains: columns, coverage numbers, Greek-market stats, **known issues Q-01…Q-15** |
 | [`docs/PIPELINE.md`](docs/PIPELINE.md) | Stages raw → clean, **target schema**, **carb normalization**, validation rules, merge priority |
 | [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) | Experiment cards E0–E10 (hypothesis → result → decision) |
+| [`docs/IMAGES.md`](docs/IMAGES.md) | Food image strategy: options, decision, clean-up and AI-image specs, category icons |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | ODbL / OpenNutrition attribution obligations + open decision D-1 |
 
 ## Data browser (local web page)
@@ -46,6 +47,21 @@ python3 -I tools/browser/foods_browser.py serve   # open http://127.0.0.1:8765
 
 Re-run `build` after downloading new raw data.
 
+## Photo pilots (experiments E11 and E14)
+
+Two ways to turn Greek OFF front photos into square catalogue images, tried on the same 200 products:
+
+- **E11 cut-out:** removes the background (rembg). Reviewed: 31 % good, no-go. Review page: http://127.0.0.1:8765/photo-pilot
+- **E14 crop:** Open Food Facts' own ready-made models find the product and check that the photo really is a front. The original is cropped to the product and placed on white. Review page: http://127.0.0.1:8765/photo-pilot?run=crop (shows the original, the cut-out with your verdict, and the crop)
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r tools/photos/requirements.txt   # once
+.venv/bin/python -I tools/photos/cleanup_pilot.py    # E11: 200 products → work/photo_pilot/
+.venv/bin/python -I tools/photos/crop_pilot.py       # E14: same 200 → work/photo_pilot_crop/ (model download commands are in the script)
+```
+
+Verdicts are saved to `review.json` in each run's folder. See `docs/IMAGES.md` §4 and `docs/EXPERIMENTS.md` (E11, E14).
+
 ## Five things to know first
 
 1. **OFF is the main source for packaged foods.** 99.99 % of OpenNutrition's 313 k grocery items are OFF barcodes.
@@ -62,7 +78,8 @@ Foods/
 ├── docs/                           # documentation (this)
 ├── openfoodfacts/food.parquet      # RAW, read-only
 ├── opennutrition-dataset-2025.1/   # RAW, read-only
-├── tools/browser/                  # local data browser (build + serve)
+├── tools/browser/                  # local data browser (build + serve) + photo pilot page
+├── tools/photos/                   # photo clean-up pilot (E11)
 ├── scripts/                        # (to create) pipeline steps 01_…, 02_…
 ├── work/                           # intermediate files (browser.sqlite lives here)
 └── out/                            # (to create) knowd1_foods.sqlite, qa_report.md

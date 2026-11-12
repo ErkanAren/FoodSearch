@@ -17,6 +17,10 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E8 | On-device packaging (SQLite + FTS5) | KR4.1, KR4.2 | ⬜ |
 | E9 | Greek / Greeklish search normalization | KR3.5 | ⬜ |
 | E10 | Manual audit of 200 items | KR2.5 | ⬜ |
+| E11 | OFF photo clean-up pilot (background removal) | KR5.1, KR5.2 | ✅ (31 % good, no-go) |
+| E12 | AI image pilot for generic foods & Greek dishes | KR5.3, KR5.4 | ⬜ |
+| E13 | Category icons for foods without a picture | KR5.5 | ⬜ |
+| E14 | Product crop with OFF's ready-made models | KR5.1, KR5.2 | 🔄 |
 
 ---
 
@@ -95,6 +99,58 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 - **Method:** Random 200 items from the final Greek subset. Compare carbs, kcal and portion against the package photo (OFF images) or the producer's website.
 - **Metrics:** % within ±1 g or ±10 % for carbs; error categories.
 - **Result:** _TBD_
+
+## E11: OFF photo clean-up pilot ✅
+- **Hypothesis:** Open-source background removal turns ≥ 85 % of Greek OFF front photos into clean, catalogue-style 512 px images (white background, centred), good enough for the app list. Automatic flags catch most failures.
+- **Method:** `tools/photos/cleanup_pilot.py`. Deterministic sample of **200** Greek products with a front photo (sorted by SHA-1 of the barcode, so it's random-like but repeatable). Download the full photo → rembg → crop / square / white → auto-QA flags. Review before/after in the browser at `/photo-pilot` (good / bad buttons).
+- **Metrics:** % rated good, % flagged, flag precision (flagged ∩ bad / flagged), seconds per image, output KB per image.
+- **Model choice (8-photo test):** `isnet-general-use` takes 0.9 s per photo but fades or cuts parts of packs. `birefnet-general-lite` takes 6.6 s per photo and gives crisp, complete packs. **Picked birefnet-general-lite.**
+- **Result (2026-11-12, automatic part):** 200/200 downloaded and processed. **6.1 s per photo** on this Mac's CPU (p95 7.5 s). Output **30 KB** per 512 px JPEG. **13 auto-flagged** (fragmented 7, soft_edges 5, low_res 4, fg_small 1). Raw downloads 125 MB (≈ 0.6 MB per photo).
+- **Result (human review of all 200, 2026-11-12):** **62 good, 138 bad → 31 % good.** Far below the 85 % target. (An earlier rough look at small thumbnails guessed ≈ 87 %. That was wrong: at full size most rejects have real defects.)
+  - **Auto-flags are precise but miss almost everything:** 12 of the 13 flagged were bad, but they caught only **12 of 138** bad images (9 %).
+  - **Mask metrics can't tell good from bad either:** the best simple rule on fill and soft edges keeps a set that is only 48 % good.
+  - Failure types seen at full size:
+    1. **Parts of the pack cut away:** a corner, a bite out of the middle, the top of a box.
+    2. **The food printed on the pack is cut out instead of the pack** (Doritos chip, granola, pizza, cereal bowl).
+    3. **Leftovers kept:** hands, lids, coasters, a second product behind.
+    4. **The source photo itself is bad:** product cut off by the photo frame, crumpled or angled packs, dark photos, or the back label / nutrition table uploaded as "front" (contributor error).
+- **Scale estimate:** 20,525 front photos × 6.1 s ≈ **35 h** CPU on this Mac (2–3 overnight runs, or faster with GPU / CoreML). ≈ 12 GB of raw downloads, ≈ 600 MB of cleaned output.
+- **Ideas to test next (E11b):**
+  - Safe fallback: for flagged or rejected images, **don't remove the background**. Just crop and pad the original to the square canvas.
+  - Second-opinion flag: also run isnet and flag images where the two masks disagree (low overlap). This should catch most unflagged failures.
+  - Prompted segmentation ("product package") with a text-guided detector + SAM, to stop the model from cutting out the food printed on the pack.
+  - **Automatic judge** checked against the 200 human verdicts: an image-embedding classifier, or a vision model given the review rules. Auto-accept only the images it is very sure about. The rest get the safe fallback or a human look.
+- **Decision (2026-11-12): no-go** for an unattended full run. Keep the **62 approved** images. The 200 verdicts in `work/photo_pilot/review.json` become the **gold set** for scoring the next attempt (E11b) without starting the review from zero.
+- **E11b parked (2026-11-12):** too costly to scale for now (≈ 6 s per photo on CPU, plus human review). Ready-made options found on Hugging Face, to try first:
+  - [`openfoodfacts/crop-detection`](https://huggingface.co/openfoodfacts/crop-detection) (YOLOv8n, AGPL-3.0): finds the product's edges in an OFF photo. Cropping to that box and padding on white keeps the pack intact, with no background removal. A tiny model, fast on CPU.
+  - [`openfoodfacts/front_image_classification`](https://huggingface.co/openfoodfacts/front_image_classification) (YOLO11n, 95 % accuracy, AGPL-3.0): tells a front photo from any other. It catches back labels uploaded as "front".
+  - Other background-removal models: BiRefNet full size and BEN2 (both MIT). RMBG-2.0 needs a commercial license from BRIA.
+  - There is no ready-made set of clean product photos.
+  - AGPL models are fine for offline processing in our pipeline: we ship the resulting photos, not the model.
+
+## E12: AI image pilot ⬜
+- **Hypothesis:** One prompt template produces approvable images (right dish, realistic portion, consistent style) for ≥ 80 % of 30 test items (15 Greek dishes + 15 generic foods), at < $0.10 per approved image.
+- **Method:** 3 variants per item with one provider, then review with the checklist in `IMAGES.md` §5. Optionally compare 2 providers on the same 30 items.
+- **Metrics:** approval rate, portion-mismatch count, cost and time per approved image.
+- **Needs:** provider choice + API key.
+
+## E13: Category icons ⬜
+- **Hypothesis:** ~20 icons cover ≥ 95 % of Greek OFF products via their first `food_groups_tags` value, plus OpenNutrition types and labels.
+- **Method:** Map food groups to icons (Fluent Emoji, MIT) and count unmapped products.
+- **Metrics:** coverage %, number of icons needed.
+
+## E14: Product crop with OFF's ready-made models 🔄
+- **Hypothesis:** Cropping the original photo to the product (no background removal) never breaks the pack. It gives far more usable images than the E11 cut-out (31 %), and is fast enough to run on all Greek products on this Mac.
+- **Method:** `tools/photos/crop_pilot.py`, on the **same 200 products as E11** so the two methods compare photo by photo.
+  1. [`openfoodfacts/front_image_classification`](https://huggingface.co/openfoodfacts/front_image_classification) (YOLO11n-cls, ONNX, 6 MB) scores whether the photo is really a front.
+  2. [`openfoodfacts/crop-detection`](https://huggingface.co/openfoodfacts/crop-detection) (YOLOv8n, ONNX, 12 MB) finds the product box.
+  3. Crop to the box (+ 2 %) and centre it on a 512 × 512 white square (5 % margin).
+  - Flags: `no_box`, `not_front` (front score < 50 %), `small_box` (< 15 % of the photo), `low_res`.
+  - Review at `/photo-pilot?run=crop`. Each card shows the original, the E11 cut-out with its verdict, and the crop.
+- **Metrics:** % rated good; % good with either method (best of E11 and E14); flag precision; seconds per image.
+- **Result (2026-11-12, automatic part):** 200/200 processed. **0.08 s per photo** (≈ 75× faster than E11). All 20,525 Greek front photos would take ≈ 30–40 min of processing, plus downloading ≈ 12 GB of photos. 38 KB per image. 20 flagged (`not_front` 16, `low_res` 4, `no_box` 1). **15 of the 16 `not_front` photos were also rated bad in E11**, so the front check looks useful on its own.
+- **Result (human review):** _pending_
+- **Decision:** _after the review_. If the crop is clearly better than the cut-out, it becomes the default for packaged products, with the `not_front` photos replaced by a category icon or another photo.
 
 ---
 

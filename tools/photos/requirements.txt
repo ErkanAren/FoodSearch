@@ -1,0 +1,8 @@
+rembg[cpu]==2.0.87
+onnxruntime==1.31.1
+pillow==13.0.0
+numpy==2.4.6
+scikit-image==0.26.0
+scipy==1.17.1
+PyMatting==1.1.16
+pooch==1.9.0
