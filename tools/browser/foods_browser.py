@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""KnowD1 food data browser: two tabs (Open Food Facts GR+CY | OpenNutrition), deterministic search.
+"""KnowD1 food data browser: two tabs (Open Food Facts Greece | OpenNutrition), deterministic search.
+
+OFF tab = products sold in Greece OR with a Greek GS1 barcode (520-521).
 
 Run from anywhere (paths are resolved relative to this file):
 
@@ -37,6 +39,7 @@ OFF_PARQUET = ROOT / "openfoodfacts" / "food.parquet"
 ON_TSV = ROOT / "opennutrition-dataset-2025.1" / "opennutrition_foods.tsv"
 DB_PATH = ROOT / "work" / "browser.sqlite"
 INDEX_HTML = HERE / "index.html"
+NO_IMAGE_SVG = HERE / "no-image.svg"
 PAGE_SIZE = 50
 NO_NAME_SORT = "￿"  # rows without a name sort last
 
@@ -113,32 +116,94 @@ def pick_off_name(names):
     return "", ""
 
 
-def build_off(con):
+# OFF product photos are hosted online; the parquet only lists them (key, rev, sizes).
+IMG_BASE = "https://images.openfoodfacts.org/images/products"
+PHOTO_KINDS = ("front", "nutrition", "ingredients", "packaging")
+
+
+def image_folder(code):
+    """OFF rule (verified): numeric codes are zero-padded to 13 digits, then split 3/3/3/rest."""
+    c = code.zfill(13) if code.isdigit() else code
+    return f"{c[:3]}/{c[3:6]}/{c[6:9]}/{c[9:]}" if c.isdigit() and len(c) > 9 else c
+
+
+def _first_size(sizes, prefs, default):
+    return next((p for p in prefs if (sizes or {}).get(p)), default)
+
+
+def off_photos(code, images, lang):
+    """Return (thumb_url, {kind: {key, thumb, medium, full}}) for one OFF product.
+
+    Selected photos (front/nutrition/ingredients/packaging) prefer Greek, then the product's
+    language, then English. Products with only unassigned uploads get their first upload.
+    """
+    images = images or []
+    folder = f"{IMG_BASE}/{image_folder(code)}"
+    selected = {x["key"]: x for x in images if x.get("key") and not x["key"].isdigit() and x.get("rev") is not None}
+    photos = {}
+    for kind in PHOTO_KINDS:
+        keys = sorted(k for k in selected if k == kind or k.startswith(kind + "_"))
+        if not keys:
+            continue
+        key = next((k for k in (f"{kind}_el", f"{kind}_{lang}", f"{kind}_en", kind) if k in selected), keys[0])
+        x = selected[key]
+        stem = f"{folder}/{key}.{x['rev']}"
+        photos[kind] = {
+            "key": key,
+            "thumb": f"{stem}.{_first_size(x.get('sizes'), ('200', '400', '100'), '400')}.jpg",
+            "medium": f"{stem}.{_first_size(x.get('sizes'), ('400', 'full'), '400')}.jpg",
+            "full": f"{stem}.full.jpg",
+        }
+    thumb = photos.get("front", {}).get("thumb")
+    if not photos:
+        uploads = sorted((x for x in images if (x.get("key") or "").isdigit()), key=lambda x: int(x["key"]))
+        if uploads:
+            x = uploads[0]
+            medium = f"{folder}/{x['key']}.{_first_size(x.get('sizes'), ('400', '100'), '400')}.jpg"
+            photos["photo"] = {"key": x["key"], "thumb": medium, "medium": medium, "full": f"{folder}/{x['key']}.jpg"}
+    if not thumb and photos:
+        thumb = next(iter(photos.values()))["thumb"]
+    return thumb, photos
+
+
+def build_off(con, on_codes):
+    """Greek-market OFF table. Also returns photo info for OFF products whose barcode is in `on_codes`
+    (OpenNutrition grocery items), as a list of (thumb, photos_json, code_norm)."""
     import pyarrow as pa
     import pyarrow.parquet as pq
 
     con.execute("""CREATE TABLE off(
         id TEXT PRIMARY KEY, code_norm TEXT, name TEXT, name_lang TEXT, brand TEXT,
-        sort_key TEXT, search TEXT, sold_gr INT, sold_cy INT, gs1_gr INT,
+        sort_key TEXT, search TEXT, sold_gr INT, gs1_gr INT,
         kcal REAL, carbs REAL, sugars REAL, fiber REAL, protein REAL, fat REAL, salt REAL,
-        per TEXT, scans INT, raw TEXT)""")
+        per TEXT, scans INT, thumb TEXT, photos TEXT, raw TEXT)""")
     pf = pq.ParquetFile(OFF_PARQUET)
     total_groups = pf.metadata.num_row_groups
     inserted = skipped_dupes = 0
+    on_photos = []
     t0 = time.time()
     for i in range(total_groups):
         head = pf.read_row_group(i, columns=["code", "countries_tags"])
+        codes = head["code"].to_pylist()
         idx = [
-            j for j, (code, countries) in enumerate(zip(head["code"].to_pylist(), head["countries_tags"].to_pylist()))
-            if "en:greece" in (countries or []) or "en:cyprus" in (countries or []) or is_greek_gs1(code)
+            j for j, (code, countries) in enumerate(zip(codes, head["countries_tags"].to_pylist()))
+            if "en:greece" in (countries or []) or is_greek_gs1(code)
         ]
+        idx_on = [j for j, code in enumerate(codes) if code and code_norm(code) in on_codes]
+        if idx_on:
+            for r in pf.read_row_group(i, columns=["code", "lang", "images"]).take(pa.array(idx_on)).to_pylist():
+                code = r["code"].strip()
+                thumb, photos = off_photos(code, r["images"], r["lang"])
+                if photos:
+                    on_photos.append((thumb, json.dumps(photos), code_norm(code)))
         if idx:
-            rows = pf.read_row_group(i, columns=OFF_COLS).take(pa.array(idx)).to_pylist()
+            rows = pf.read_row_group(i, columns=OFF_COLS + ["images"]).take(pa.array(idx)).to_pylist()
             batch = []
             for r in rows:
                 code = (r["code"] or "").strip()
                 if not code:
                     continue
+                thumb, photos = off_photos(code, r.pop("images"), r["lang"])
                 name, lang = pick_off_name(r["product_name"])
                 if not name:
                     name, lang = pick_off_name(r["generic_name"])
@@ -148,20 +213,22 @@ def build_off(con):
                 batch.append((
                     code, code_norm(code), name, lang, (r["brands"] or "").strip(),
                     norm(name) or NO_NAME_SORT, norm(" ".join(texts + [r["brands"] or ""])),
-                    int("en:greece" in countries), int("en:cyprus" in countries), int(is_greek_gs1(code)),
+                    int("en:greece" in countries), int(is_greek_gs1(code)),
                     nut.get("energy-kcal"), nut.get("carbohydrates"), nut.get("sugars"), nut.get("fiber"),
                     nut.get("proteins"), nut.get("fat"), nut.get("salt"),
                     r["nutrition_data_per"], r["unique_scans_n"],
+                    thumb, json.dumps(photos) if photos else None,
                     json.dumps(json_safe(r), ensure_ascii=False, default=str),
                 ))
             before = con.total_changes
-            con.executemany("INSERT OR IGNORE INTO off VALUES (" + ",".join("?" * 20) + ")", batch)
+            con.executemany("INSERT OR IGNORE INTO off VALUES (" + ",".join("?" * 21) + ")", batch)
             added = con.total_changes - before
             inserted += added
             skipped_dupes += len(batch) - added
         if i % 400 == 0 or i == total_groups - 1:
             print(f"  OFF row group {i + 1}/{total_groups} - {inserted:,} products - {time.time() - t0:.0f}s", flush=True)
     print(f"  OFF done: {inserted:,} products ({skipped_dupes} duplicate barcodes skipped)")
+    return on_photos
 
 
 ON_JSON_COLS = ("alternate_names", "source", "serving", "nutrition_100g", "labels", "package_size", "ingredient_analysis")
@@ -175,7 +242,8 @@ def build_on(con):
     con.execute("""CREATE TABLE on_foods(
         id TEXT PRIMARY KEY, code_norm TEXT, name TEXT, type TEXT, brand TEXT,
         sort_key TEXT, search TEXT, serving TEXT,
-        kcal REAL, carbs REAL, sugars REAL, fiber REAL, protein REAL, fat REAL, sodium_mg REAL, raw TEXT)""")
+        kcal REAL, carbs REAL, sugars REAL, fiber REAL, protein REAL, fat REAL, sodium_mg REAL,
+        thumb TEXT, photos TEXT, raw TEXT)""")
     csv.field_size_limit(10**9)
     t0 = time.time()
     batch, count = [], 0
@@ -205,15 +273,16 @@ def build_on(con):
                 norm(name) or NO_NAME_SORT, norm(" ".join([name] + [a for a in alt if isinstance(a, str)])), serving,
                 nut.get("calories"), nut.get("carbohydrates"), nut.get("total_sugars"), nut.get("dietary_fiber"),
                 nut.get("protein"), nut.get("total_fat"), nut.get("sodium"),
+                None, None,  # thumb, photos: filled from OFF by barcode after the OFF scan
                 json.dumps(json_safe(rec), ensure_ascii=False),
             ))
             if len(batch) >= 5000:
-                con.executemany("INSERT INTO on_foods VALUES (" + ",".join("?" * 16) + ")", batch)
+                con.executemany("INSERT INTO on_foods VALUES (" + ",".join("?" * 18) + ")", batch)
                 count += len(batch)
                 batch = []
                 if count % 50000 == 0:
                     print(f"  OpenNutrition {count:,} rows - {time.time() - t0:.0f}s", flush=True)
-    con.executemany("INSERT INTO on_foods VALUES (" + ",".join("?" * 16) + ")", batch)
+    con.executemany("INSERT INTO on_foods VALUES (" + ",".join("?" * 18) + ")", batch)
     count += len(batch)
     print(f"  OpenNutrition done: {count:,} foods")
 
@@ -231,9 +300,13 @@ def build():
     t0 = time.time()
     print("Building OpenNutrition table…")
     build_on(con)
+    con.execute("CREATE INDEX on_code ON on_foods(code_norm)")
     con.commit()
-    print("Building Open Food Facts table (Greece + Cyprus + Greek barcodes)…")
-    build_off(con)
+    on_codes = {c for (c,) in con.execute("SELECT code_norm FROM on_foods WHERE code_norm IS NOT NULL")}
+    print("Building Open Food Facts table (sold in Greece + Greek barcodes) + photos for OpenNutrition barcodes…")
+    on_photos = build_off(con, on_codes)
+    con.executemany("UPDATE on_foods SET thumb = ?, photos = ? WHERE code_norm = ?", on_photos)
+    print(f"  OpenNutrition grocery items with OFF photos: {len(on_photos):,}")
     con.commit()
     print("Indexing…")
     con.executescript("""
@@ -241,7 +314,6 @@ def build():
         CREATE INDEX off_code ON off(code_norm);
         CREATE INDEX on_sort ON on_foods(sort_key, id);
         CREATE INDEX on_type_sort ON on_foods(type, sort_key, id);
-        CREATE INDEX on_code ON on_foods(code_norm);
         CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
     """)
     con.execute("INSERT INTO meta VALUES ('built_at', ?)", (time.strftime("%Y-%m-%d %H:%M"),))
@@ -258,13 +330,13 @@ def build():
 TABS = {
     "off": {
         "table": "off",
-        "cols": ["id", "name", "name_lang", "brand", "sold_gr", "sold_cy", "gs1_gr",
+        "cols": ["id", "thumb", "name", "name_lang", "brand", "sold_gr", "gs1_gr",
                  "kcal", "carbs", "sugars", "fiber", "protein", "fat", "salt", "per", "scans"],
-        "filters": {"all": None, "sold_gr": "sold_gr = 1", "sold_cy": "sold_cy = 1", "gs1_gr": "gs1_gr = 1"},
+        "filters": {"all": None, "sold_gr": "sold_gr = 1", "gs1_gr": "gs1_gr = 1"},
     },
     "on": {
         "table": "on_foods",
-        "cols": ["id", "name", "type", "brand", "code_norm", "serving",
+        "cols": ["id", "thumb", "name", "type", "brand", "code_norm", "serving",
                  "kcal", "carbs", "sugars", "fiber", "protein", "fat", "sodium_mg"],
         "filters": {"all": None, "everyday": "type = 'everyday'", "prepared": "type = 'prepared'",
                     "restaurant": "type = 'restaurant'", "grocery": "type = 'grocery'"},
@@ -310,8 +382,10 @@ def search(tab, q, filt, page):
 
 def item(tab, item_id):
     with closing(connect_ro()) as con:
-        row = con.execute(f"SELECT raw FROM {TABS[tab]['table']} WHERE id = ?", (item_id,)).fetchone()
-    return {"id": item_id, "raw": json.loads(row[0])} if row else None
+        row = con.execute(f"SELECT raw, photos FROM {TABS[tab]['table']} WHERE id = ?", (item_id,)).fetchone()
+    if not row:
+        return None
+    return {"id": item_id, "raw": json.loads(row[0]), "photos": json.loads(row[1]) if row[1] else {}}
 
 
 def counts():
@@ -339,6 +413,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ("/", "/index.html"):
                 self._send(200, INDEX_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/no-image.svg":
+                self._send(200, NO_IMAGE_SVG.read_bytes(), "image/svg+xml")
             elif url.path == "/api/meta":
                 self._json(counts())
             elif url.path == "/api/search":

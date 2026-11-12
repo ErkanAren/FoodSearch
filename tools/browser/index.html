@@ -8,13 +8,13 @@
   :root {
     --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
     --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb; --accent-soft: #e6efff;
-    --warn: #9a6700; --row-hover: #f3f6fb; --shadow: 0 8px 30px rgba(0,0,0,.12);
+    --warn: #9a6700; --row-hover: #f3f6fb; --shadow: 0 8px 30px rgba(0,0,0,.12); --photo-bg: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
       --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --accent-soft: #1d2b44;
-      --warn: #e3b341; --row-hover: #23272e; --shadow: 0 8px 30px rgba(0,0,0,.5);
+      --warn: #e3b341; --row-hover: #23272e; --shadow: 0 8px 30px rgba(0,0,0,.5); --photo-bg: #ecece8;
     }
   }
   * { box-sizing: border-box; }
@@ -42,6 +42,11 @@
   .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
   table { border-collapse: collapse; width: 100%; }
   th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody td { padding: 10px 12px; vertical-align: middle; }
+  td.thumb-cell { width: 88px; padding-right: 4px; }
+  .thumb { width: 72px; height: 72px; object-fit: contain; display: block; border-radius: 10px;
+           background: var(--photo-bg); border: 1px solid var(--border); }
+  td.name { font-size: 15px; font-weight: 520; }
   th { position: sticky; top: 0; background: var(--surface-2); font-weight: 600; font-size: 12px; color: var(--muted); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   td.name { white-space: normal; min-width: 240px; max-width: 420px; }
@@ -73,6 +78,13 @@
   .sub-table td { white-space: normal; word-break: break-word; }
   .key-row td { font-weight: 650; }
   .pre { white-space: pre-wrap; }
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .photos figure { margin: 0; }
+  .photos a { display: block; }
+  .photo { width: 100%; height: 210px; object-fit: contain; display: block; border-radius: 10px;
+           background: var(--photo-bg); border: 1px solid var(--border); }
+  .photos figcaption { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .photo-note { font-size: 12px; color: var(--muted); margin: -2px 0 8px; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -81,7 +93,7 @@
   <div class="bar">
     <h1>KnowD1 Foods</h1>
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="off">Open Food Facts · GR + CY<span class="count" id="count-off"></span></button>
+      <button class="tab" role="tab" data-tab="off">Open Food Facts · Greece<span class="count" id="count-off"></span></button>
       <button class="tab" role="tab" data-tab="on">OpenNutrition<span class="count" id="count-on"></span></button>
     </div>
   </div>
@@ -134,14 +146,24 @@ const fmtNum = (v) => (v == null || v === "" || Number.isNaN(+v)) ? "–" : Stri
 const fmtInt = (v) => v == null ? "–" : Number(v).toLocaleString("en-US");
 const safeUrl = (s) => typeof s === "string" && /^https?:\/\//i.test(s) ? s : null;
 const link = (href, text) => el("a", { href, target: "_blank", rel: "noopener noreferrer", text });
+const NO_IMAGE = "/no-image.svg";
+// Photo from images.openfoodfacts.org, or the default image when there is none / it fails to load (e.g. offline).
+function img(url, alt, cls) {
+  const i = el("img", { class: cls, alt: alt || "", loading: "lazy", decoding: "async", referrerpolicy: "no-referrer" });
+  i.addEventListener("error", () => { if (!i.dataset.fallback) { i.dataset.fallback = "1"; i.src = NO_IMAGE; } });
+  i.src = safeUrl(url) || NO_IMAGE;
+  return i;
+}
+const THUMB = { key: "thumb", label: "", cls: "thumb-cell", render: (r) => img(r.thumb, r.name, "thumb") };
 
 // ---------- tab definitions ----------
 const NUM = (key, label) => ({ key, label, num: true, render: (r) => fmtNum(r[key]) });
 const TABS = {
   off: {
-    filters: [["all", "All (GR + CY + Greek barcodes)"], ["sold_gr", "Sold in Greece"], ["sold_cy", "Sold in Cyprus"], ["gs1_gr", "Greek barcode 520–521"]],
+    filters: [["all", "All (sold in Greece + Greek barcodes)"], ["sold_gr", "Sold in Greece"], ["gs1_gr", "Greek barcode 520–521"]],
     note: "Per 100 g / 100 ml as stored by OFF. EU labels: carbs exclude fiber.",
     cols: [
+      THUMB,
       { key: "name", label: "Name", cls: "name", render: (r) => {
           const f = document.createDocumentFragment();
           f.append(r.name || "(no name)");
@@ -149,7 +171,7 @@ const TABS = {
           return f; } },
       { key: "brand", label: "Brand", cls: "wrap", render: (r) => r.brand || "–" },
       { key: "id", label: "Barcode", render: (r) => r.id },
-      { key: "market", label: "Market", render: (r) => [r.sold_gr && "GR", r.sold_cy && "CY", r.gs1_gr && "520"].filter(Boolean).join(" · ") },
+      { key: "market", label: "Market", render: (r) => [r.sold_gr && "GR", r.gs1_gr && "520"].filter(Boolean).join(" · ") },
       NUM("kcal", "kcal"), NUM("carbs", "Carbs g"), NUM("sugars", "Sugars g"), NUM("fiber", "Fiber g"),
       NUM("protein", "Protein g"), NUM("fat", "Fat g"), NUM("salt", "Salt g"),
       { key: "per", label: "Entered per", render: (r) => r.per || "–" },
@@ -160,6 +182,7 @@ const TABS = {
     filters: [["all", "All types"], ["everyday", "Everyday (generic)"], ["prepared", "Prepared"], ["restaurant", "Restaurant"], ["grocery", "Grocery (US packaged)"]],
     note: "Per 100 g. Carbs are TOTAL carbs (fiber included, US style).",
     cols: [
+      THUMB,
       { key: "name", label: "Name", cls: "name", render: (r) => r.name || "(no name)" },
       { key: "type", label: "Type", render: (r) => r.type },
       { key: "code_norm", label: "Barcode", render: (r) => r.code_norm || "–" },
@@ -254,6 +277,23 @@ const SECTIONS = {
   ],
 };
 
+const PHOTO_LABELS = { front: "Front", nutrition: "Nutrition table", ingredients: "Ingredients", packaging: "Packaging", photo: "Photo" };
+function renderPhotos(photos, emptyText) {
+  const kinds = Object.keys(PHOTO_LABELS).filter((k) => photos && photos[k]);
+  const wrap = el("div", { class: "photos" });
+  if (!kinds.length) {
+    wrap.append(el("figure", null, img(null, "No image", "photo"), el("figcaption", { text: emptyText })));
+    return wrap;
+  }
+  for (const k of kinds) {
+    const p = photos[k], full = safeUrl(p.full), lang = String(p.key || "").split("_")[1];
+    const pic = img(p.medium, PHOTO_LABELS[k], "photo");
+    const media = full ? el("a", { href: full, target: "_blank", rel: "noopener noreferrer", title: "Open full size" }, pic) : pic;
+    wrap.append(el("figure", null, media, el("figcaption", { text: PHOTO_LABELS[k] + (lang ? ` (${lang})` : "") })));
+  }
+  return wrap;
+}
+
 function renderScalar(key, v) {
   if (v == null || v === "") return el("span", { class: "muted", text: "–" });
   if (typeof v === "number") {
@@ -316,7 +356,10 @@ async function openItem(id) {
   $("d-title").replaceChildren(title || "(no name)", sub);
 
   const body = $("d-body"), used = new Set();
-  body.replaceChildren();
+  body.replaceChildren(el("h3", { text: "Photos" }));
+  const hasPhotos = res.photos && Object.keys(res.photos).length > 0;
+  if (tab === "on" && hasPhotos) body.append(el("p", { class: "photo-note", text: "From Open Food Facts (same barcode). OpenNutrition itself has no images." }));
+  body.append(renderPhotos(res.photos, tab === "on" ? "No photo. OpenNutrition has no images" + (raw.type === "grocery" ? " and Open Food Facts has none for this barcode." : ".") : "No photo uploaded to Open Food Facts yet."));
   for (const [heading, keys] of SECTIONS[tab]) {
     const present = keys.filter((k) => k in raw);
     present.forEach((k) => used.add(k));

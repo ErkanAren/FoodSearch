@@ -22,10 +22,10 @@ Goal: turn two open datasets into a **clean, trustworthy, carb-accurate food lib
 
 ## Data browser (local web page)
 
-Two tabs: **Open Food Facts (Greece + Cyprus + Greek 520–521 barcodes, ~29 k products)** and **OpenNutrition (all 326 k foods)**. Raw values, searchable.
+Two tabs: **Open Food Facts (sold in Greece or Greek 520–521 barcode, 26,654 products)** and **OpenNutrition (all 326 k foods)**. Raw values, searchable.
 
 ```bash
-python3 -I tools/browser/foods_browser.py build   # one-time, ~1 min → work/browser.sqlite (~720 MB, git-ignored)
+python3 -I tools/browser/foods_browser.py build   # one-time, ~1 min → work/browser.sqlite (~850 MB, git-ignored)
 python3 -I tools/browser/foods_browser.py serve   # open http://127.0.0.1:8765
 ```
 
@@ -34,8 +34,15 @@ python3 -I tools/browser/foods_browser.py serve   # open http://127.0.0.1:8765
 - **Normalization:** case and Greek accents are ignored, so `φέτα` = `φετα` = `ΦΕΤΑ`. Punctuation counts as a space, so `coca cola` = `coca-cola`.
 - **Barcodes:** typing only 8–14 digits does an exact barcode lookup (leading zeros ignored, filters ignored).
 - **Order:** results are sorted A→Z by name, then by ID. There's no fuzzy matching and no ranking.
-- **Filters:** OFF by market (Greece / Cyprus / Greek barcode); OpenNutrition by type (everyday / prepared / restaurant / grocery).
+- **Filters:** OFF by market (sold in Greece / Greek barcode); OpenNutrition by type (everyday / prepared / restaurant / grocery).
 - **Shareable views:** the URL keeps the tab, query, filter, page and open item, so a view can be reloaded or shared.
+
+**Photos:**
+- Every row shows a thumbnail. The detail view shows the front, nutrition-table, ingredients and packaging photos.
+- Photos load live from images.openfoodfacts.org, so they need internet. They are CC BY-SA (see `docs/LICENSING.md`).
+- OpenNutrition has no images of its own. Its grocery items reuse the Open Food Facts photo for the same barcode.
+- Coverage: 21,294 of 26,654 OFF products and 101,484 OpenNutrition grocery items have a photo.
+- Items without a photo, or whose photo fails to load, show the default image `tools/browser/no-image.svg`.
 
 Re-run `build` after downloading new raw data.
 
