@@ -20,6 +20,25 @@ Goal: turn two open datasets into a **clean, trustworthy, carb-accurate food lib
 | [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) | Experiment cards E0–E10 (hypothesis → result → decision) |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | ODbL / OpenNutrition attribution obligations + open decision D-1 |
 
+## Data browser (local web page)
+
+Two tabs: **Open Food Facts (Greece + Cyprus + Greek 520–521 barcodes, ~29 k products)** and **OpenNutrition (all 326 k foods)**. Raw values, searchable.
+
+```bash
+python3 -I tools/browser/foods_browser.py build   # one-time, ~1 min → work/browser.sqlite (~720 MB, git-ignored)
+python3 -I tools/browser/foods_browser.py serve   # open http://127.0.0.1:8765
+```
+
+**Search is deterministic.** The same query always returns the same rows in the same order:
+- **Matching:** every word you type must appear somewhere in the name or brand. OpenNutrition matches name + alternate names.
+- **Normalization:** case and Greek accents are ignored, so `φέτα` = `φετα` = `ΦΕΤΑ`. Punctuation counts as a space, so `coca cola` = `coca-cola`.
+- **Barcodes:** typing only 8–14 digits does an exact barcode lookup (leading zeros ignored, filters ignored).
+- **Order:** results are sorted A→Z by name, then by ID. There's no fuzzy matching and no ranking.
+- **Filters:** OFF by market (Greece / Cyprus / Greek barcode); OpenNutrition by type (everyday / prepared / restaurant / grocery).
+- **Shareable views:** the URL keeps the tab, query, filter, page and open item, so a view can be reloaded or shared.
+
+Re-run `build` after downloading new raw data.
+
 ## Five things to know first
 
 1. **OFF is the main source for packaged foods.** 99.99 % of OpenNutrition's 313 k grocery items are OFF barcodes.
@@ -36,8 +55,9 @@ Foods/
 ├── docs/                           # documentation (this)
 ├── openfoodfacts/food.parquet      # RAW, read-only
 ├── opennutrition-dataset-2025.1/   # RAW, read-only
+├── tools/browser/                  # local data browser (build + serve)
 ├── scripts/                        # (to create) pipeline steps 01_…, 02_…
-├── work/                           # (to create) intermediate files
+├── work/                           # intermediate files (browser.sqlite lives here)
 └── out/                            # (to create) knowd1_foods.sqlite, qa_report.md
 ```
 

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KnowD1 Foods Browser</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
+    --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb; --accent-soft: #e6efff;
+    --warn: #9a6700; --row-hover: #f3f6fb; --shadow: 0 8px 30px rgba(0,0,0,.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+      --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --accent-soft: #1d2b44;
+      --warn: #e3b341; --row-hover: #23272e; --shadow: 0 8px 30px rgba(0,0,0,.5);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1400px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0 8px 0 0; font-weight: 650; }
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 9px; }
+  .tab { border: 0; background: transparent; color: var(--muted); padding: 7px 14px; border-radius: 7px;
+         font: inherit; font-weight: 550; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .tab .count { font-weight: 400; color: var(--muted); margin-left: 6px; font-size: 12px; }
+  .controls { max-width: 1400px; margin: 0 auto; padding: 0 16px 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=search] { flex: 1 1 320px; min-width: 0; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+         background: var(--surface); color: var(--text); font: inherit; font-size: 15px; }
+  input[type=search]:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  select, .btn { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+         color: var(--text); font: inherit; cursor: pointer; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .status { max-width: 1400px; margin: 0 auto; padding: 0 16px 10px; color: var(--muted); font-size: 13px;
+         display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+  .note { color: var(--warn); }
+  main { max-width: 1400px; margin: 0 auto; padding: 0 16px 24px; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--surface-2); font-weight: 600; font-size: 12px; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.name { white-space: normal; min-width: 240px; max-width: 420px; }
+  td.wrap { white-space: normal; min-width: 120px; max-width: 220px; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr:last-child td { border-bottom: 0; }
+  .muted { color: var(--muted); }
+  .badge { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 10px; background: var(--surface-2);
+           color: var(--muted); margin-left: 6px; vertical-align: 1px; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+  footer { max-width: 1400px; margin: 0 auto; padding: 8px 16px 32px; color: var(--muted); font-size: 12px; }
+  a { color: var(--accent); }
+  /* detail drawer */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 20; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100%); background: var(--surface);
+            z-index: 21; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+  .drawer-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
+  .drawer-head h2 { font-size: 17px; margin: 0; flex: 1; }
+  .drawer-head .sub { color: var(--muted); font-size: 12px; margin-top: 3px; font-weight: 400; }
+  .drawer-body { overflow: auto; padding: 4px 18px 24px; }
+  .drawer h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 0 6px; }
+  .kv { width: 100%; border: 1px solid var(--border); border-radius: 8px; border-collapse: separate; border-spacing: 0; }
+  .kv td { white-space: normal; vertical-align: top; word-break: break-word; }
+  .kv td:first-child { width: 34%; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .kv tr:last-child td, .sub-table tr:last-child td { border-bottom: 0; }
+  .sub-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  .sub-table th { position: static; }
+  .sub-table td { white-space: normal; word-break: break-word; }
+  .key-row td { font-weight: 650; }
+  .pre { white-space: pre-wrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>KnowD1 Foods</h1>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="off">Open Food Facts · GR + CY<span class="count" id="count-off"></span></button>
+      <button class="tab" role="tab" data-tab="on">OpenNutrition<span class="count" id="count-on"></span></button>
+    </div>
+  </div>
+  <div class="controls">
+    <input id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search name or brand (all words must appear) — or type a barcode">
+    <select id="filter" aria-label="Filter"></select>
+    <button class="btn" id="prev" aria-label="Previous page">‹ Prev</button>
+    <button class="btn" id="next" aria-label="Next page">Next ›</button>
+  </div>
+  <div class="status">
+    <span id="info">Loading…</span>
+    <span class="note" id="note"></span>
+  </div>
+</header>
+
+<main>
+  <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <div class="empty" id="empty" hidden></div>
+</main>
+
+<footer>
+  Raw source values, not cleaned. Data: © <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer">Open Food Facts contributors</a> (ODbL) ·
+  <a href="https://www.opennutrition.app" target="_blank" rel="noopener noreferrer">OpenNutrition</a> (ODbL).
+  <span id="built"></span>
+</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog">
+  <div class="drawer-head">
+    <h2 id="d-title"></h2>
+    <button class="btn" id="d-close" aria-label="Close">Close ✕</button>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</aside>
+
+<script>
+"use strict";
+// ---------- helpers (all data is untrusted: only ever set textContent, never innerHTML) ----------
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const c of children) if (c != null) n.append(c instanceof Node ? c : String(c));
+  return n;
+}
+const fmtNum = (v) => (v == null || v === "" || Number.isNaN(+v)) ? "–" : String(+(+v).toFixed(2));
+const fmtInt = (v) => v == null ? "–" : Number(v).toLocaleString("en-US");
+const safeUrl = (s) => typeof s === "string" && /^https?:\/\//i.test(s) ? s : null;
+const link = (href, text) => el("a", { href, target: "_blank", rel: "noopener noreferrer", text });
+
+// ---------- tab definitions ----------
+const NUM = (key, label) => ({ key, label, num: true, render: (r) => fmtNum(r[key]) });
+const TABS = {
+  off: {
+    filters: [["all", "All (GR + CY + Greek barcodes)"], ["sold_gr", "Sold in Greece"], ["sold_cy", "Sold in Cyprus"], ["gs1_gr", "Greek barcode 520–521"]],
+    note: "Per 100 g / 100 ml as stored by OFF. EU labels: carbs exclude fiber.",
+    cols: [
+      { key: "name", label: "Name", cls: "name", render: (r) => {
+          const f = document.createDocumentFragment();
+          f.append(r.name || "(no name)");
+          if (r.name_lang) f.append(el("span", { class: "badge", text: r.name_lang }));
+          return f; } },
+      { key: "brand", label: "Brand", cls: "wrap", render: (r) => r.brand || "–" },
+      { key: "id", label: "Barcode", render: (r) => r.id },
+      { key: "market", label: "Market", render: (r) => [r.sold_gr && "GR", r.sold_cy && "CY", r.gs1_gr && "520"].filter(Boolean).join(" · ") },
+      NUM("kcal", "kcal"), NUM("carbs", "Carbs g"), NUM("sugars", "Sugars g"), NUM("fiber", "Fiber g"),
+      NUM("protein", "Protein g"), NUM("fat", "Fat g"), NUM("salt", "Salt g"),
+      { key: "per", label: "Entered per", render: (r) => r.per || "–" },
+      { key: "scans", label: "Scans", num: true, render: (r) => fmtInt(r.scans) },
+    ],
+  },
+  on: {
+    filters: [["all", "All types"], ["everyday", "Everyday (generic)"], ["prepared", "Prepared"], ["restaurant", "Restaurant"], ["grocery", "Grocery (US packaged)"]],
+    note: "Per 100 g. Carbs are TOTAL carbs (fiber included, US style).",
+    cols: [
+      { key: "name", label: "Name", cls: "name", render: (r) => r.name || "(no name)" },
+      { key: "type", label: "Type", render: (r) => r.type },
+      { key: "code_norm", label: "Barcode", render: (r) => r.code_norm || "–" },
+      { key: "serving", label: "Serving", cls: "wrap", render: (r) => r.serving || "–" },
+      NUM("kcal", "kcal"), NUM("carbs", "Carbs g"), NUM("sugars", "Sugars g"), NUM("fiber", "Fiber g"),
+      NUM("protein", "Protein g"), NUM("fat", "Fat g"), NUM("sodium_mg", "Sodium mg"),
+    ],
+  },
+};
+
+// ---------- state (mirrored in the URL hash so a view can be reloaded or shared) ----------
+const state = { tab: "off", item: null, off: { q: "", filter: "all", page: 0 }, on: { q: "", filter: "all", page: 0 } };
+let lastResult = null, reqSeq = 0, debounce = null;
+
+function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const tab = h.get("tab");
+  if (tab in TABS) state.tab = tab;
+  const s = state[state.tab];
+  if (h.has("q")) s.q = h.get("q");
+  if (h.has("filter") && TABS[state.tab].filters.some(([v]) => v === h.get("filter"))) s.filter = h.get("filter");
+  if (h.has("page")) s.page = Math.max(0, parseInt(h.get("page"), 10) || 0);
+  state.item = h.get("item") || null;
+}
+function writeHash() {
+  const s = state[state.tab];
+  const h = new URLSearchParams({ tab: state.tab, q: s.q, filter: s.filter, page: String(s.page) });
+  if (state.item) h.set("item", state.item);
+  history.replaceState(null, "", "#" + h.toString());
+}
+
+// ---------- rendering ----------
+function renderTabChrome() {
+  for (const b of document.querySelectorAll(".tab")) b.setAttribute("aria-selected", String(b.dataset.tab === state.tab));
+  const cfg = TABS[state.tab], s = state[state.tab];
+  const sel = $("filter");
+  sel.replaceChildren(...cfg.filters.map(([v, label]) => el("option", { value: v, text: label })));
+  sel.value = s.filter;
+  $("q").value = s.q;
+  $("note").textContent = cfg.note;
+  $("thead").replaceChildren(el("tr", null, ...cfg.cols.map((c) => el("th", { class: c.num ? "num" : "", text: c.label }))));
+}
+
+function renderResults(res) {
+  const cfg = TABS[state.tab];
+  $("tbody").replaceChildren(...res.rows.map((r) => {
+    const tr = el("tr", { tabindex: "0" }, ...cfg.cols.map((c) => el("td", { class: (c.num ? "num " : "") + (c.cls || "") }, c.render(r))));
+    tr.addEventListener("click", () => openItem(r.id));
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter") openItem(r.id); });
+    return tr;
+  }));
+  const from = res.total ? res.page * res.page_size + 1 : 0, to = res.page * res.page_size + res.rows.length;
+  const how = res.mode === "barcode" ? `Barcode lookup “${res.query_words[0]}” (filters ignored)`
+    : res.query_words.length ? `Contains all of: ${res.query_words.map((w) => `“${w}”`).join(" ")}` : "All rows";
+  $("info").textContent = `${how} · ${from.toLocaleString("en-US")}–${to.toLocaleString("en-US")} of ${res.total.toLocaleString("en-US")} · sorted A→Z, then ID`;
+  $("empty").hidden = res.total > 0;
+  $("empty").textContent = res.total ? "" : "No results.";
+  $("prev").disabled = res.page === 0;
+  $("next").disabled = to >= res.total;
+}
+
+async function runSearch() {
+  const s = state[state.tab], seq = ++reqSeq;
+  writeHash();
+  const params = new URLSearchParams({ tab: state.tab, q: s.q, filter: s.filter, page: String(s.page) });
+  try {
+    const res = await (await fetch("/api/search?" + params)).json();
+    if (seq !== reqSeq) return; // a newer search started; drop this answer
+    if (res.error) throw new Error(res.error);
+    lastResult = res;
+    renderResults(res);
+  } catch (e) {
+    if (seq === reqSeq) $("info").textContent = "Error: " + e.message;
+  }
+}
+
+// ---------- detail drawer ----------
+const OFF_KEY_NUTRIENTS = ["energy-kcal", "energy-kj", "energy", "carbohydrates", "sugars", "fiber", "proteins", "fat", "saturated-fat", "salt", "sodium"];
+const ON_KEY_NUTRIENTS = ["calories", "carbohydrates", "net_carbs", "total_sugars", "added_sugars", "dietary_fiber", "sugar_alcohols", "protein", "total_fat", "saturated_fats", "sodium"];
+const SECTIONS = {
+  off: [
+    ["Names", ["product_name", "generic_name", "brands", "quantity", "serving_size", "serving_quantity", "lang"]],
+    ["Nutrition (nutriments)", ["nutrition_data_per", "nutriments"]],
+    ["Market & categories", ["countries_tags", "stores", "food_groups_tags", "categories_tags", "labels_tags"]],
+    ["Quality & popularity", ["completeness", "unique_scans_n", "scans_n", "data_quality_errors_tags", "data_quality_warnings_tags", "created_t", "last_modified_t"]],
+  ],
+  on: [
+    ["Food", ["name", "type", "ean_13", "serving", "labels", "package_size", "alternate_names"]],
+    ["Nutrition per 100 g", ["nutrition_100g"]],
+    ["Sources", ["source"]],
+    ["Description & ingredients", ["description", "ingredients", "ingredient_analysis"]],
+  ],
+};
+
+function renderScalar(key, v) {
+  if (v == null || v === "") return el("span", { class: "muted", text: "–" });
+  if (typeof v === "number") {
+    if (/_t$/.test(key) && v > 1e8) return new Date(v * 1000).toISOString().slice(0, 10);
+    return fmtNum(v);
+  }
+  if (typeof v === "boolean") return String(v);
+  const url = safeUrl(v);
+  return url ? link(url, v) : el("span", { class: "pre", text: String(v) });
+}
+
+function renderValue(key, v) {
+  if (Array.isArray(v)) {
+    if (!v.length) return el("span", { class: "muted", text: "–" });
+    if (v.every((x) => x === null || typeof x !== "object")) return v.join(", ");
+    return renderObjectTable(key, v);
+  }
+  if (v && typeof v === "object") return renderKV(v, key);
+  return renderScalar(key, v);
+}
+
+function renderObjectTable(key, rows) {
+  let cols = [...new Set(rows.flatMap((r) => Object.keys(r || {})))];
+  cols = cols.filter((c) => rows.some((r) => r && r[c] != null && r[c] !== "")); // drop all-empty columns
+  if (key === "nutriments") {
+    rows = [...rows].sort((a, b) => {
+      const ia = OFF_KEY_NUTRIENTS.indexOf(a.name), ib = OFF_KEY_NUTRIENTS.indexOf(b.name);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || String(a.name).localeCompare(String(b.name));
+    });
+  }
+  return el("table", { class: "sub-table" },
+    el("thead", null, el("tr", null, ...cols.map((c) => el("th", { text: c })))),
+    el("tbody", null, ...rows.map((r) => el("tr", { class: key === "nutriments" && OFF_KEY_NUTRIENTS.includes(r.name) ? "key-row" : "" },
+      ...cols.map((c) => el("td", { class: typeof r[c] === "number" ? "num" : "" },
+        r[c] && typeof r[c] === "object" ? JSON.stringify(r[c]) : renderScalar(c, r[c])))))));
+}
+
+function renderKV(obj, parentKey) {
+  let keys = Object.keys(obj);
+  if (parentKey === "nutrition_100g") {
+    keys.sort((a, b) => {
+      const ia = ON_KEY_NUTRIENTS.indexOf(a), ib = ON_KEY_NUTRIENTS.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+    });
+  }
+  return el("table", { class: "kv" }, el("tbody", null, ...keys.map((k) => el("tr",
+    { class: parentKey === "nutrition_100g" && ON_KEY_NUTRIENTS.includes(k) ? "key-row" : "" },
+    el("td", { text: k }), el("td", null, renderValue(k, obj[k]))))));
+}
+
+async function openItem(id) {
+  const tab = state.tab;
+  const res = await (await fetch("/api/item?" + new URLSearchParams({ tab, id }))).json();
+  if (res.error) return;
+  const raw = res.raw;
+  state.item = id; writeHash();
+  const title = tab === "off" ? pickOffName(raw.product_name) || pickOffName(raw.generic_name) : raw.name;
+  const sub = el("div", { class: "sub" }, `${tab === "off" ? "Barcode" : "ID"} ${id}`);
+  if (tab === "off") sub.append(" · ", link("https://world.openfoodfacts.org/product/" + encodeURIComponent(id), "Open on openfoodfacts.org ↗"));
+  $("d-title").replaceChildren(title || "(no name)", sub);
+
+  const body = $("d-body"), used = new Set();
+  body.replaceChildren();
+  for (const [heading, keys] of SECTIONS[tab]) {
+    const present = keys.filter((k) => k in raw);
+    present.forEach((k) => used.add(k));
+    if (!present.length) continue;
+    body.append(el("h3", { text: heading }));
+    if (present.length === 1 && raw[present[0]] && typeof raw[present[0]] === "object") body.append(renderValue(present[0], raw[present[0]]));
+    else body.append(renderKV(Object.fromEntries(present.map((k) => [k, raw[k]]))));
+  }
+  const rest = Object.keys(raw).filter((k) => !used.has(k));
+  if (rest.length) {
+    body.append(el("h3", { text: "All other fields" }));
+    body.append(renderKV(Object.fromEntries(rest.map((k) => [k, raw[k]]))));
+  }
+  $("scrim").hidden = false; $("drawer").hidden = false;
+  body.scrollTop = 0;
+  $("d-close").focus();
+}
+function closeDrawer() {
+  $("scrim").hidden = true; $("drawer").hidden = true;
+  if (state.item) { state.item = null; writeHash(); }
+}
+// Same priority as the build script: Greek, any Greek-script name, main language, English, anything.
+function pickOffName(names) {
+  names = (names || []).filter((n) => n && n.text && n.text.trim());
+  const checks = [(n) => n.lang === "el", (n) => /[\u0370-\u03ff\u1f00-\u1fff]/.test(n.text), (n) => n.lang === "main", (n) => n.lang === "en", () => true];
+  for (const c of checks) { const n = names.find(c); if (n) return n.text.trim(); }
+  return "";
+}
+
+// ---------- events ----------
+for (const b of document.querySelectorAll(".tab")) b.addEventListener("click", () => {
+  closeDrawer(); state.tab = b.dataset.tab; renderTabChrome(); runSearch(); $("q").focus();
+});
+$("q").addEventListener("input", () => {
+  const s = state[state.tab]; s.q = $("q").value; s.page = 0;
+  clearTimeout(debounce); debounce = setTimeout(runSearch, 250);
+});
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") { clearTimeout(debounce); runSearch(); } });
+$("filter").addEventListener("change", () => { const s = state[state.tab]; s.filter = $("filter").value; s.page = 0; runSearch(); });
+$("prev").addEventListener("click", () => { const s = state[state.tab]; if (s.page > 0) { s.page--; runSearch(); window.scrollTo(0, 0); } });
+$("next").addEventListener("click", () => { state[state.tab].page++; runSearch(); window.scrollTo(0, 0); });
+$("scrim").addEventListener("click", closeDrawer);
+$("d-close").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+
+(async function init() {
+  readHash();
+  const startItem = state.item;
+  renderTabChrome();
+  await runSearch();
+  if (startItem) openItem(startItem);
+  try {
+    const m = await (await fetch("/api/meta")).json();
+    $("count-off").textContent = fmtInt(m.off); $("count-on").textContent = fmtInt(m.on);
+    $("built").textContent = `Database built ${m.built_at}.`;
+  } catch (e) { /* counts are optional */ }
+})();
+</script>
+</body>
+</html>

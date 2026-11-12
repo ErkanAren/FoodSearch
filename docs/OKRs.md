@@ -26,6 +26,7 @@
 - [x] Downloaded OpenNutrition dataset 2025.1 (326,759 foods)
 - [x] Profile both datasets (E0)
 - [x] Write docs: `README.md`, `DATASETS.md`, `PIPELINE.md`, `EXPERIMENTS.md`, `LICENSING.md`, `OKRs.md`
+- [x] Local data browser with two tabs (OFF GR + CY | OpenNutrition) and deterministic search: `tools/browser/`
 - [ ] Decide D-1 (use OpenNutrition in the shipped app or not), see `LICENSING.md`
 
 ---
