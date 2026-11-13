@@ -14,13 +14,14 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E5 | Greek-market subset deep-dive | KR3.1, KR3.2 | ⬜ |
 | E6 | Generic-food base selection | KR3.3 | ⬜ |
 | E7 | Portions / household measures | KR3.3 | ⬜ |
-| E8 | On-device packaging (SQLite + FTS5) | KR4.1, KR4.2 | ⬜ |
+| E8 | Server search index (SQLite FTS5): size + speed | KR4.1, KR4.2 | 🔄 (laptop numbers done) |
 | E9 | Greek / Greeklish search normalization | KR3.5 | ⬜ |
 | E10 | Manual audit of 200 items | KR2.5 | ⬜ |
 | E11 | OFF photo clean-up pilot (background removal) | KR5.1, KR5.2 | ✅ (31 % good, no-go) |
 | E12 | AI image pilot for generic foods & Greek dishes | KR5.3, KR5.4 | ⬜ |
 | E13 | Category icons for foods without a picture | KR5.5 | ⬜ |
 | E14 | Product crop with OFF's ready-made models | KR5.1, KR5.2 | 🔄 |
+| E15 | Hybrid search: BM25 + semantic (embeddings) | KR3.5, KR4.1 | 🔄 (BM25 baseline done) |
 
 ---
 
@@ -83,16 +84,23 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 - **Metrics:** parse rate (world, GR); % of foods with ≥ 1 portion.
 - **Result:** _TBD_
 
-## E8: On-device packaging ⬜
-- **Hypothesis:** The Greek union (~20 k rows) + FTS5 fits in < 10 MB raw / < 5 MB zipped. The EU subset fits in < 150 MB, so it's not shippable in the APK and needs a download or API.
-- **Method:** Build SQLite files for GR / GR+CY / EU. Measure size, then run FTS prefix queries on a test device.
-- **Metrics:** MB, p50/p95 query ms.
-- **Result:** _TBD_
+## E8: Server search index (SQLite FTS5) 🔄
+- **Changed 2026-11-13:** all code now runs on our backend and the app is online-only, so this is no longer about fitting a Greek subset into the APK. The new question: is SQLite FTS5 on the server fast and small enough that we don't need a separate search engine?
+- **Hypothesis:** An FTS5 index over all products answers a query in < 10 ms and rebuilds in < 1 min.
+- **Method:** FTS5 (`unicode61`, diacritics removed, prefix indexes for 2 and 3 letters) over the text already normalized by `norm()`. Time the build, single inserts and queries. Compare with the browser's old LIKE scan.
+- **Metrics:** build seconds, MB, ms per query (mean / p95), ms per insert.
+- **Result (2026-11-13, this Mac, not yet the server):**
+  - All 353,413 products (OFF Greece + all OpenNutrition): **build 2.1 s, 68 MB.** Inserting one new product takes 0.7 ms, and it's searchable immediately.
+  - Queries: **0.3–1.0 ms**, vs 270–790 ms for the old LIKE scan on the 326 k OpenNutrition table (≈ 1,000× faster).
+  - Library-sized corpus (39,971 items, search lab): mean 0.5 ms, p95 1.5 ms.
+  - Browser rebuild with one FTS5 index per tab: 68 s in total. The DB grew from ~850 to 957 MB.
+- **Decision:** FTS5 + BM25 is the keyword half of search. The browser was switched on 2026-11-13. Still to measure: the real server, under concurrent load.
 
 ## E9: Greek / Greeklish search normalization ⬜
 - **Hypothesis:** Accent stripping + final-sigma folding + a Greeklish → Greek transliteration index raises top-5 hit rate on a 100-query set by ≥ 20 points vs a plain FTS.
 - **Method:** Build the query set (real user-style queries: "fakes", "giaourti", "spanakopita", "σπανακοπιτα"). Compare plain vs normalized index.
 - **Metrics:** top-1 / top-5 hit rate.
+- **Note (2026-11-13):** the query set now exists (`tools/search/queries.json`, see E15), and accent stripping + final-sigma folding are already in `norm()`. With BM25 alone, **Greeklish queries already reach 87 % hit@5 (13 of 15)**, because many Greek OFF products are named in Greeklish ("Giaourti", "Mousakas", "Fakes psiles", "Psomi Sitou"). The +20-point hypothesis can't hold on this set. Only `rizi` and `patates` still miss. Real user queries may be harder.
 - **Result:** _TBD_
 
 ## E10: Manual audit ⬜
@@ -151,6 +159,37 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 - **Result (2026-11-12, automatic part):** 200/200 processed. **0.08 s per photo** (≈ 75× faster than E11). All 20,525 Greek front photos would take ≈ 30–40 min of processing, plus downloading ≈ 12 GB of photos. 38 KB per image. 20 flagged (`not_front` 16, `low_res` 4, `no_box` 1). **15 of the 16 `not_front` photos were also rated bad in E11**, so the front check looks useful on its own.
 - **Result (human review):** _pending_
 - **Decision:** _after the review_. If the crop is clearly better than the cut-out, it becomes the default for packaged products, with the `not_front` photos replaced by a category icon or another photo.
+
+## E15: Hybrid search (BM25 + semantic) 🔄
+- **Question:** Does adding semantic search (embedding vectors) to BM25 find the right food more often? And is it worth running a model on the server?
+- **Hypothesis:** BM25 handles brands, exact names and prefixes. Semantic search adds what BM25 can't reach: Greek queries for foods that only have English names (all of OpenNutrition), synonyms and descriptive queries. A mix of the two raises hit@5 by **≥ 5 points** over BM25 alone, within the latency budget (p95 < 100 ms). The mix is either a weighted sum (starting at 0.25 BM25 / 0.75 semantic, after per-query rescaling) or reciprocal rank fusion (RRF).
+- **Setup:** `tools/search/search_lab.py` + `tools/search/queries.json` (commands in the README).
+  - **Corpus (39,971 items)**, roughly the future library: OFF Greek market (26,654) + OpenNutrition everyday / prepared / restaurant (13,317). OpenNutrition grocery is left out because those items are OFF barcodes.
+  - **Test set: 100 queries in 7 kinds:** Greek generic 20, English generic 20, brand 20, Greek dish 12, Greeklish 15, typo / prefix 8, descriptive 5. Each query describes a correct result with regexes on the product name, so new products count automatically. **A draft written by Claude from the data. It needs a human review plus real user queries, and is likely easier than real traffic.**
+  - **Metrics:** hit@1, hit@5 (= KR3.5), MRR@10, ms per query.
+- **Plan:**
+  1. ✅ Baseline: old LIKE search vs FTS5 BM25.
+  2. ⬜ Embed the corpus with `multilingual-e5-small` (cheap baseline) and `Qwen3-Embedding-0.6B`. Score semantic-only.
+  3. ⬜ Fusion: RRF vs weighted sum, sweeping the BM25 weight from 0 to 1 (including 0.25).
+  4. ⬜ Decide.
+- **Result 1: BM25 baseline (2026-11-13)**
+
+  | Method | hit@1 | hit@5 | MRR@10 | p95 ms |
+  |---|---|---|---|---|
+  | `like` (old browser search, A→Z) | 61 % | 83 % | 0.71 | 6.6 |
+  | `bm25` (FTS5, every word as a prefix) | **83 %** | **91 %** | **0.87** | 1.5 |
+  | `bm25_or` (+ any-word fill-up) | 83 % | 91 % | 0.87 | 0.7 |
+
+  - hit@5 by kind for `bm25`: English generic 100 %, brand 100 %, Greek generic 90 %, Greeklish 87 %, Greek dish 83 %, descriptive 80 %, typo / prefix 75 %.
+  - The 9 BM25 misses, grouped by what would fix them:
+    - **Cross-language** (`ντοματα` → "Tomatoes", `χωριατικη σαλατα` → "Greek Salad"): semantic search.
+    - **Typos** (`nutela`, `kinder beuno`): fuzzy matching or semantic search.
+    - **Greeklish generic** (`rizi`, `patates`): Greeklish → Greek conversion (E9).
+    - **Ranking** (`πορτοκαλι`: juice ranks before the fruit; `γεμιστα`: filled biscuits rank before the dish): ranking boosts, e.g. exact full-name match or generic foods first.
+    - **Descriptive** (`χωρις ζαχαρη σοκολατα`): no product has all three words. Semantic search.
+  - The any-word fill-up (`bm25_or`) changed nothing on this set.
+  - **Test-set lesson:** the first run scored BM25 at only 82 %, because the regexes didn't know Greeklish product names. Those were correct results judged as wrong. Fixing the regexes gave 91 %. When a query looks like a miss, check the top 5 in `details.json` before blaming search.
+- **Decision:** _after steps 2–3_. Ship hybrid only if it clearly beats BM25 (≥ +5 points hit@5, or it fixes most cross-language misses) within the latency budget. Otherwise ship BM25 + the E9 fixes and skip the model.
 
 ---
 

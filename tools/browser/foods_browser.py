@@ -10,12 +10,15 @@ Run from anywhere (paths are resolved relative to this file):
 
 Search rules (deterministic: same query -> same rows in the same order):
   * Text: the query is normalized (lower-case, Greek accents/diacritics removed, final sigma = sigma,
-    apostrophes removed, other punctuation -> space) and split into words. A row matches when its
-    normalized search text CONTAINS EVERY word (substring match, any position).
+    apostrophes removed, other punctuation -> space) and split into words. A row matches when EVERY
+    query word is the START of a word in the row (SQLite FTS5 prefix match: "γιαο" finds "γιαούρτι",
+    but "cola" no longer finds "chocolate").
       - OFF searches all product names (every language), generic names and brands.
       - OpenNutrition searches the name and alternate names.
   * Barcode: a query of 8-14 digits only is an exact barcode lookup (leading zeros ignored); filters are ignored.
-  * Order: normalized name A->Z, then ID. No fuzzy matching, no ranking.
+  * Order: BM25 relevance (a hit in the name counts 4x, in the brand 2x, in other names 1x), then
+    popularity (OFF scans), then name A->Z, then ID. An empty query lists all rows A->Z.
+    No fuzzy matching (typos are not corrected).
 
 Only Python's standard library + pyarrow (for reading the parquet file during `build`).
 """
@@ -294,6 +297,18 @@ def build_on(con):
     print(f"  OpenNutrition done: {count:,} foods")
 
 
+def build_fts(con):
+    """One FTS5 index per tab. Columns: name, brand, other (= the full normalized search text).
+    The text is already normalized by norm(), so build and query always agree. Rows are joined back
+    by `id` (not rowid: VACUUM may renumber the rowids of the main tables)."""
+    con.create_function("norm", 1, norm, deterministic=True)
+    for tab in TABS.values():
+        t = tab["table"]
+        con.execute(f"""CREATE VIRTUAL TABLE {t}_fts USING fts5(id UNINDEXED, name, brand, other,
+                        tokenize='unicode61 remove_diacritics 2', prefix='2 3')""")
+        con.execute(f"INSERT INTO {t}_fts SELECT id, norm(name), norm(brand), search FROM {t}")
+
+
 def build():
     for p in (OFF_PARQUET, ON_TSV):
         if not p.exists():
@@ -325,6 +340,9 @@ def build():
     """)
     con.execute("INSERT INTO meta VALUES ('built_at', ?)", (time.strftime("%Y-%m-%d %H:%M"),))
     con.commit()
+    print("Building full-text indexes (FTS5)…")
+    build_fts(con)
+    con.commit()
     con.execute("VACUUM")
     con.close()
     tmp.replace(DB_PATH)
@@ -340,6 +358,7 @@ TABS = {
         "cols": ["id", "thumb", "name", "name_lang", "brand", "sold_gr", "gs1_gr",
                  "kcal", "carbs", "sugars", "fiber", "protein", "fat", "salt", "per", "scans"],
         "filters": {"all": None, "sold_gr": "sold_gr = 1", "gs1_gr": "gs1_gr = 1"},
+        "tiebreak": "t.scans DESC, ",  # popularity; NULL sorts last
     },
     "on": {
         "table": "on_foods",
@@ -347,43 +366,53 @@ TABS = {
                  "kcal", "carbs", "sugars", "fiber", "protein", "fat", "sodium_mg"],
         "filters": {"all": None, "everyday": "type = 'everyday'", "prepared": "type = 'prepared'",
                     "restaurant": "type = 'restaurant'", "grocery": "type = 'grocery'"},
+        "tiebreak": "",
     },
 }
+FTS_WEIGHTS = "0, 4.0, 2.0, 1.0"  # bm25() weight per FTS column: id (unindexed), name, brand, other
+
+
+def fts_match(words, op="AND"):
+    """FTS5 query: every word as a quoted prefix term. norm() has removed all punctuation, so a word
+    can't contain a quote or FTS syntax."""
+    return f" {op} ".join(f'"{w}"*' for w in words)
 
 
 def connect_ro():
     return sqlite3.connect(DB_PATH.as_uri() + "?mode=ro", uri=True)
 
 
-def like_escape(word):
-    return "%" + word.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-
-
 def search(tab, q, filt, page):
     cfg = TABS[tab]
+    table, fts = cfg["table"], cfg["table"] + "_fts"
     q = (q or "").strip()
-    where, params = [], []
+    words = norm(q).split()
+    sql_from, where, params, order = f"{table} t", [], [], "t.sort_key, t.id"
     if _BARCODE.match(q):
         mode = "barcode"
-        where.append("code_norm = ?")
+        where.append("t.code_norm = ?")
         params.append(code_norm(q))
     else:
         mode = "text"
-        for word in norm(q).split():
-            where.append("search LIKE ? ESCAPE '\\'")
-            params.append(like_escape(word))
+        if words:
+            sql_from = f"{fts} JOIN {table} t ON t.id = {fts}.id"
+            where.append(f"{fts} MATCH ?")
+            params.append(fts_match(words))
+            order = f"bm25({fts}, {FTS_WEIGHTS}), {cfg['tiebreak']}t.sort_key, t.id"
         clause = cfg["filters"].get(filt)
         if clause:
             where.append(clause)
     sql_where = (" WHERE " + " AND ".join(where)) if where else ""
+    cols = ", ".join("t." + c for c in cfg["cols"])
     with closing(connect_ro()) as con:
-        total = con.execute(f"SELECT COUNT(*) FROM {cfg['table']}{sql_where}", params).fetchone()[0]
+        total = con.execute(f"SELECT COUNT(*) FROM {sql_from}{sql_where}", params).fetchone()[0]
         cur = con.execute(
-            f"SELECT {', '.join(cfg['cols'])} FROM {cfg['table']}{sql_where} ORDER BY sort_key, id LIMIT ? OFFSET ?",
+            f"SELECT {cols} FROM {sql_from}{sql_where} ORDER BY {order} LIMIT ? OFFSET ?",
             params + [PAGE_SIZE, page * PAGE_SIZE],
         )
         rows = [dict(zip(cfg["cols"], r)) for r in cur.fetchall()]
-    return {"mode": mode, "query_words": norm(q).split() if mode == "text" else [q],
+    return {"mode": mode, "query_words": words if mode == "text" else [q],
+            "ranked": mode == "text" and bool(words),
             "total": total, "page": page, "page_size": PAGE_SIZE, "rows": rows}
 
 

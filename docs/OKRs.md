@@ -1,6 +1,6 @@
 # OKRs: KnowD1 Clean Food Library
 
-**Cycle:** 2026-Q4 (2026-11-12 → 2026-12-31) · **Owner:** ___ · **Last check-in:** 2026-11-12
+**Cycle:** 2026-Q4 (2026-11-12 → 2026-12-31) · **Owner:** ___ · **Last check-in:** 2026-11-13
 
 > **How to use (Google-style OKRs)**
 > - **Objective** = qualitative "what & why". **Key Result** = measurable "how we know". Tasks/initiatives are *not* KRs.
@@ -27,6 +27,7 @@
 - [x] Profile both datasets (E0)
 - [x] Write docs: `README.md`, `DATASETS.md`, `PIPELINE.md`, `EXPERIMENTS.md`, `LICENSING.md`, `OKRs.md`
 - [x] Local data browser with two tabs (OFF GR + CY | OpenNutrition) and deterministic search: `tools/browser/`
+- [x] Browser search switched from a LIKE scan to SQLite FTS5 with BM25 ranking (2026-11-13)
 - [ ] Decide D-1 (use OpenNutrition in the shipped app or not), see `LICENSING.md`
 
 ---
@@ -60,29 +61,35 @@
 | **KR3.2** Greek-market products with a **Greek name** | 4,925 | **≥ 10,000** | 4,925 | |
 | **KR3.3** Generic everyday foods with a Greek name **and** ≥ 1 household portion in grams | 0 | **≥ 1,000** | 0 | |
 | **KR3.4** Traditional Greek dishes with carbs per portion (μουσακάς, παστίτσιο, σπανακόπιτα, γεμιστά, φασολάδα, γύρος πίτα…) | 0 | **≥ 150** | 0 | |
-| **KR3.5** Search test set (100 queries in Greek, Greeklish and English): right item in top 5 | n/a | **≥ 90 %** | — | |
+| **KR3.5** Search test set (100 queries in Greek, Greeklish and English): right item in top 5 | 83 % (old LIKE search, draft set) | **≥ 90 %** | 91 % (BM25, **draft** set, not yet reviewed) | |
 
 **Tasks**
 - [ ] E5: Greek subset deep-dive (name languages, brands, categories, gaps)
 - [ ] E6: pick a generic-food base (OpenNutrition everyday vs USDA vs CIQUAL) after D-1
 - [ ] E7: portions: parse OFF `serving_size`, map OpenNutrition `serving`, build a curated Greek portion list (κουταλιά, φλιτζάνι, φέτα, μερίδα…)
+- [x] Draft search test set (100 queries) + scoring tool: `tools/search/` (2026-11-13)
+- [ ] Review the test set and add real user queries (needed before KR3.5 can be scored)
 - [ ] E9: search normalization (accents/τόνοι, final ς, Greeklish transliteration)
+- [ ] E15: hybrid search (BM25 + semantic embeddings): does it beat BM25 alone?
 - [ ] Find a source for Greek dishes (recipe-based calculation or a licensed composition table)
 
 ---
 
-## O4: Ship it inside KnowD1 *(aspirational)*
+## O4: Serve it to KnowD1 from our backend *(aspirational)*
+
+Everything in this repo runs on our server. The app is online-only and calls our search API (decision 2026-11-13; KR4.1 and KR4.2 were rewritten from on-device targets, see the check-in log).
 
 | KR | Baseline | Target | Current | Score |
 |---|---|---|---|---|
-| **KR4.1** On-device Greek subset (SQLite + FTS5) size, compressed | n/a | **≤ 20 MB** | — | |
-| **KR4.2** Prefix search p95 latency on a mid-range Android phone | n/a | **< 100 ms** | — | |
+| **KR4.1** Search API p95 response time, measured on the server (without network) | n/a | **< 100 ms** | no API yet. BM25 alone: 1.5 ms p95 on this Mac (E8) | |
+| **KR4.2** Full search-index rebuild from `out/` (keyword index + vectors if E15 ships them), all products | n/a | **< 30 min** | keyword index: 2.1 s for 353 k products (E8) | |
 | **KR4.3** Attribution + ODbL obligations implemented per `LICENSING.md` | 0 % | 100 % | — | |
 | **KR4.4** Documented refresh process (re-download → rebuild → diff report) | none | runs monthly | — | |
 
 **Tasks**
-- [ ] E8: SQLite/FTS5 packaging experiment (GR / EU / world sizes + latency)
-- [ ] Barcode-scan fallback to the OFF API for products not in the local DB
+- [ ] E8: measure the FTS5 search index on the real server, including concurrent load (laptop numbers done)
+- [ ] Search API service: keyword search now, hybrid if E15 says so
+- [ ] Barcode-scan fallback to the OFF API for products not in our database
 - [ ] Add attribution strings to the About screen (+ per-screen if D-1 = B)
 
 ---
@@ -133,3 +140,4 @@ Objective score = average of its KRs.
 |---|---|---|---|---|---|
 | 2026-11-12 | Both datasets downloaded and profiled. Docs written. Key findings: carb-definition mismatch (Q-01), OFF serving double-scaling (Q-02), OpenNutrition grocery ≈ OFF subset, Greek names scarce (Q-09). | 0.75 | 0.0 | 0.0 | 0.0 |
 | 2026-11-12 (pm) | Data browser built (Greece only, with photos). Image strategy written (O5, `IMAGES.md`). E11 photo clean-up pilot run on 200 products and reviewed: only 31 % good, so no-go for an unattended full run; next is E11b. | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-13 | **Architecture decision: all code runs on our backend, and the app is online-only.** So O4's on-device KRs no longer applied. KR4.1 (APK size ≤ 20 MB) became search API p95 < 100 ms on the server. KR4.2 (phone latency) became full index rebuild < 30 min. Search: the browser moved from a LIKE scan to FTS5 + BM25, which is ~1,000× faster on 326 k rows. A draft 100-query test set and the search lab (E15) are built: BM25 reaches 91 % hit@5 vs 83 % for the old search. KR3.5 is not scored until the test set is reviewed. | 0.75 | 0.0 | 0.0 | 0.0 |

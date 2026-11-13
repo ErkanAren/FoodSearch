@@ -33,7 +33,7 @@ Rules: never edit raw files. Every step reads from the previous stage and writes
 | 3 | **Validate** | → `work/*_valid.parquet` + `work/quarantine.parquet` | Apply **hard rules** (fail → quarantine with reason) and **soft rules** (pass, but add flags). Compute `quality_score`. |
 | 4 | **Dedupe & merge** | → `work/merged.parquet` | Join on normalized barcode. Pick a winner per field (§6). Generic foods are deduped by name + nutrient similarity. |
 | 5 | **Enrich** | → `work/enriched.parquet` | Category mapping, portions/household measures, Greek names & aliases, search keys. |
-| 6 | **Export** | → `out/knowd1_foods.sqlite` | SQLite + FTS5 search index. Region subsets (GR / EU / world). Check against the size budget. |
+| 6 | **Export** | → `out/knowd1_foods.sqlite` | SQLite + FTS5 search index (+ embedding vectors if E15 ships hybrid search). Served by our backend search API (§7); nothing ships in the app. |
 | 7 | **QA report** | → `out/qa_report.md` | Counts per stage, drop reasons, flag rates, random sample for manual review. |
 
 ---
@@ -80,6 +80,10 @@ Rules: never edit raw files. Every step reads from the previous stage and writes
 
 ### `food_search` (FTS5)
 `food_id`, `text`, `lang`. Contains the name, brand, aliases and accent-stripped / Greeklish variants.
+Prototype in `tools/search/search_lab.py`: columns name / brand / other, BM25 weights 4 / 2 / 1, prefix indexes for 2 and 3 letters.
+
+### `food_vec` (only if E15 ships hybrid search)
+`food_id`, `model`, `text_hash`, `vector`. On refresh, only rows whose text hash changed are re-embedded. A new model means re-embedding every row (vectors from different models can't be mixed).
 
 ---
 
@@ -148,8 +152,12 @@ Start at 100: −15 per soft flag (S02 −30), +10 if `popularity` ≥ 10, cap a
 
 ---
 
-## 7. Size & performance budget (to confirm in E8)
+## 7. Serving & performance budget
 
-- Greek-market subset with FTS shipped **inside the APK** ≤ 20 MB compressed.
-- Rest of the world → online lookup by barcode (OFF API) or a downloadable pack.
-- Search: < 100 ms for a 3-letter prefix on a mid-range Android phone.
+**Decision 2026-11-13:** everything in this repo runs on **our backend**. The app is **online-only** and calls our search API. No food data ships inside the APK, so there's no APK size budget.
+
+- **Speed:** search API p95 < 100 ms on the server, without network time (KR4.1). FTS5 BM25 alone takes 1.5 ms p95 on this Mac (E8). If hybrid search ships (E15), embedding the query is the slow part (~10–50 ms on CPU), so cache frequent queries.
+- **Type-ahead:** the app waits ~200 ms after the last keystroke before calling the API. 1–2 letter prefixes use keyword search only. Semantic search (if shipped) starts at 3+ letters or a whole word.
+- **Barcodes:** always an exact lookup, never through a model. Products not in our database → OFF API fallback.
+- **Refresh:** new or changed foods go into the FTS index (searchable immediately) and, if hybrid, get embedded one by one. A full rebuild must stay < 30 min (KR4.2).
+- **Privacy:** in a diabetes app, food searches count as health data under GDPR. Don't log queries with user IDs, and host in the EU.

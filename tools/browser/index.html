@@ -237,8 +237,9 @@ function renderResults(res) {
   }));
   const from = res.total ? res.page * res.page_size + 1 : 0, to = res.page * res.page_size + res.rows.length;
   const how = res.mode === "barcode" ? `Barcode lookup “${res.query_words[0]}” (filters ignored)`
-    : res.query_words.length ? `Contains all of: ${res.query_words.map((w) => `“${w}”`).join(" ")}` : "All rows";
-  $("info").textContent = `${how} · ${from.toLocaleString("en-US")}–${to.toLocaleString("en-US")} of ${res.total.toLocaleString("en-US")} · sorted A→Z, then ID`;
+    : res.query_words.length ? `Words starting with: ${res.query_words.map((w) => `“${w}…”`).join(" ")}` : "All rows";
+  const order = res.ranked ? "best match first (BM25), then popularity, then A→Z" : "sorted A→Z, then ID";
+  $("info").textContent = `${how} · ${from.toLocaleString("en-US")}–${to.toLocaleString("en-US")} of ${res.total.toLocaleString("en-US")} · ${order}`;
   $("empty").hidden = res.total > 0;
   $("empty").textContent = res.total ? "" : "No results.";
   $("prev").disabled = res.page === 0;
