@@ -1,0 +1,3086 @@
+{
+ "version": "2026-11-16",
+ "source": "USDA WWEIA food categories 2021-2023 (unmerged) + KnowD1 additions X01-X11",
+ "rules": [
+  {
+   "title": "One category",
+   "text": "Every product gets exactly one category: the one that best describes what the product **is**, as sold (packaged foods) or as eaten (dishes)."
+  },
+  {
+   "title": "Processing is a tag",
+   "text": "Fresh, frozen, canned, dried, raw or cooked do **not** change the category (frozen broccoli → 6407, canned peaches → 6008). Record the state as a tag. Exception: dried fruit has its own category (6016)."
+  },
+  {
+   "title": "Uncooked staples",
+   "text": "Dry or uncooked staples go to the category of the food they become: dry pasta → 4004, dry rice → 4002, dried lentils → 2802, rolled oats → 4802."
+  },
+  {
+   "title": "Ready meals and kits",
+   "text": "Ready meals, frozen meals and meal kits go to the dish they make: frozen pizza → 3602, lasagna → 3204, taco kit → 3502, risotto kit → 3202."
+  },
+  {
+   "title": "Single food vs dish",
+   "text": "A single food with only seasoning, marinade or sauce stays in its own category (marinated chicken breast → 2202, tuna in oil → 2402). Combined with other foods (pasta, rice, vegetables, bread) it becomes a dish (31xx–38xx)."
+  },
+  {
+   "title": "Sandwiches and wraps",
+   "text": "Sandwiches, wraps and subs go to the 37xx category of their **main filling**."
+  },
+  {
+   "title": "Use the nutrition values",
+   "text": "Some categories split on nutrients; use the product's values per 100 g / 100 ml. **Milk fat**: whole ≥ 3.0 g, reduced fat 1.8–2.9 g, lowfat 0.6–1.7 g (incl. European semi-skimmed 1.5 %), nonfat < 0.6 g; unknown → reduced fat. **Ready-to-eat cereal**: sugars > 21.2 g → 4602, otherwise 4604. **Diet drinks** (71xx): ≤ 1 g sugars per 100 ml and sweetened with non-nutritive sweeteners (\"zero\", \"diet\", \"light\", \"sugar-free\")."
+  },
+  {
+   "title": "Biscuit",
+   "text": "\"Biscuit\" means a cookie in UK/European usage (→ 5504) but a bread-like quick bread in US usage (→ 4402). Decide from the product, not the word."
+  },
+  {
+   "title": "Plant-based alternatives",
+   "text": "Milk alternatives → 1902, yogurt alternatives → 1904, meat / cheese / other alternatives → 2806, ice cream alternatives → 5802 (differs from USDA)."
+  },
+  {
+   "title": "Survey-only categories",
+   "text": "6489 *Vegetables on a sandwich*, 7702 *Tap water* and 9602 *Human milk* exist only for diet surveys. **Never** assign them to a product."
+  },
+  {
+   "title": "Last resort",
+   "text": "9999 *Not included in a food category* only for non-food items (pet food, cosmetics, cutlery) or a food that truly fits no definition. Target: < 1 % of products."
+  }
+ ],
+ "categories": [
+  {
+   "code": "1002",
+   "name": "Milk, whole",
+   "group": "Milk & dairy",
+   "subgroup": "Milk",
+   "definition": "Plain whole milk (≥ 3.0 g fat per 100 ml).",
+   "includes": "whole cow's or goat's milk, lactose-free whole milk, evaporated milk, whole milk powder, buttermilk",
+   "excludes": "flavoured milk → 1202; plant-based drinks → 1902",
+   "usda_examples": [
+    "Milk, whole",
+    "Milk, lactose free",
+    "Milk, evaporated",
+    "Milk, dry",
+    "Buttermilk",
+    "Goat milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1004",
+   "name": "Milk, reduced fat",
+   "group": "Milk & dairy",
+   "subgroup": "Milk",
+   "definition": "Plain reduced-fat milk (1.8–2.9 g fat, US \"2 %\"). Default when the fat level is unknown.",
+   "includes": "2 % milk, lactose-free reduced-fat milk",
+   "excludes": "flavoured → 1204",
+   "usda_examples": [
+    "Milk, reduced fat (2%)",
+    "Milk, lactose free",
+    "Milk, NFS",
+    "Milk, evaporated"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1006",
+   "name": "Milk, lowfat",
+   "group": "Milk & dairy",
+   "subgroup": "Milk",
+   "definition": "Plain lowfat milk (0.6–1.7 g fat), incl. European semi-skimmed (1.5 %).",
+   "includes": "1 % milk, semi-skimmed milk, kefir (USDA places kefir here)",
+   "excludes": "flavoured → 1206; drinking yogurt → 1820",
+   "usda_examples": [
+    "Milk, low fat (1%)",
+    "Kefir",
+    "Milk, lactose free"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1008",
+   "name": "Milk, nonfat",
+   "group": "Milk & dairy",
+   "subgroup": "Milk",
+   "definition": "Plain nonfat / skimmed milk (< 0.6 g fat).",
+   "includes": "skim milk, fat-free milk, nonfat dry milk",
+   "excludes": "flavoured → 1208",
+   "usda_examples": [
+    "Milk, fat free (skim)",
+    "Milk, lactose free",
+    "Milk, dry",
+    "Milk, evaporated"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1202",
+   "name": "Flavored milk, whole",
+   "group": "Milk & dairy",
+   "subgroup": "Flavored milk",
+   "definition": "Sweetened or flavoured milk made with whole milk.",
+   "includes": "chocolate milk, strawberry milk, sweetened condensed milk, prepared hot chocolate with whole milk",
+   "excludes": "milkshakes → 1402; cocoa powder → X09",
+   "usda_examples": [
+    "Chocolate milk",
+    "Milk, condensed",
+    "Strawberry milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1204",
+   "name": "Flavored milk, reduced fat",
+   "group": "Milk & dairy",
+   "subgroup": "Flavored milk",
+   "definition": "Flavoured milk made with reduced-fat milk (or fat level unknown).",
+   "includes": "chocolate or strawberry milk drinks, malted milk, prepared hot chocolate",
+   "excludes": "milkshakes → 1402",
+   "usda_examples": [
+    "Chocolate milk",
+    "Hot chocolate / cocoa",
+    "Strawberry milk",
+    "Milk, malted"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1206",
+   "name": "Flavored milk, lowfat",
+   "group": "Milk & dairy",
+   "subgroup": "Flavored milk",
+   "definition": "Flavoured milk made with lowfat / semi-skimmed milk.",
+   "includes": "lowfat chocolate milk, flavoured semi-skimmed milk drinks",
+   "excludes": "milkshakes → 1402",
+   "usda_examples": [
+    "Chocolate milk",
+    "Hot chocolate / cocoa",
+    "Strawberry milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1208",
+   "name": "Flavored milk, nonfat",
+   "group": "Milk & dairy",
+   "subgroup": "Flavored milk",
+   "definition": "Flavoured milk made with nonfat milk.",
+   "includes": "fat-free chocolate milk, nonfat hot cocoa",
+   "excludes": "milkshakes → 1402",
+   "usda_examples": [
+    "Hot chocolate / cocoa",
+    "Chocolate milk",
+    "Strawberry milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1402",
+   "name": "Milk shakes and other dairy drinks",
+   "group": "Milk & dairy",
+   "subgroup": "Dairy drinks",
+   "definition": "Milkshakes and other ready dairy drinks that are not plain or flavoured milk.",
+   "includes": "milkshakes (fast food, bottled), eggnog, ice cream sodas, dairy dessert drinks",
+   "excludes": "drinking yogurt → 1820; protein / meal-replacement shakes → 7208; coffee drinks → 7302",
+   "usda_examples": [
+    "Milk shake, fast food",
+    "Milk shake, home recipe",
+    "Eggnog",
+    "Chocolate milk drink",
+    "Ice cream soda",
+    "Milk shake with malt"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1602",
+   "name": "Cheese",
+   "group": "Milk & dairy",
+   "subgroup": "Cheese",
+   "definition": "Cheese of any kind except fresh curd cheeses and cream cheese.",
+   "includes": "cheddar, mozzarella, feta, parmesan, gouda, halloumi, brie, blue cheese, cheese slices and strings, grated cheese, processed cheese and cheese spreads",
+   "excludes": "cottage cheese, ricotta → 1604; cream cheese → 8006; plant-based cheese → 2806; cheese dips and sauces → 8412",
+   "usda_examples": [
+    "Cheese, NFS",
+    "Cheese, Cheddar",
+    "Cheese, Mozzarella",
+    "Cheese, Parmesan",
+    "Cheese, American",
+    "Cheese, Feta"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1604",
+   "name": "Cottage/ricotta cheese",
+   "group": "Milk & dairy",
+   "subgroup": "Cheese",
+   "definition": "Fresh curd cheeses.",
+   "includes": "cottage cheese, ricotta, quark, fresh white cheese (queso fresco, queso blanco)",
+   "excludes": "cream cheese → 8006",
+   "usda_examples": [
+    "Cheese, cottage",
+    "Puerto Rican white cheese",
+    "Cheese, Ricotta",
+    "Cottage cheese",
+    "Cheese, cottage cheese"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1820",
+   "name": "Yogurt, regular",
+   "group": "Milk & dairy",
+   "subgroup": "Yogurt",
+   "definition": "Yogurt that is not strained (regular).",
+   "includes": "plain, flavoured or fruit yogurt, drinkable yogurt, yogurt tubes, yogurt with toppings or granola",
+   "excludes": "Greek / strained / skyr → 1822; frozen yogurt → 5802; plant-based → 1904; baby yogurt → 9010",
+   "usda_examples": [
+    "Yogurt, low fat milk",
+    "Yogurt tube",
+    "Yogurt, whole milk",
+    "Yogurt, liquid",
+    "Yogurt, nonfat milk",
+    "Yogurt, NS as to type of milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1822",
+   "name": "Yogurt, Greek",
+   "group": "Milk & dairy",
+   "subgroup": "Yogurt",
+   "definition": "Strained, high-protein yogurt.",
+   "includes": "Greek and Greek-style yogurt, skyr, labneh, strained yogurt (plain or flavoured)",
+   "excludes": "regular yogurt → 1820",
+   "usda_examples": [
+    "Yogurt, Greek"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1902",
+   "name": "Plant-based milk",
+   "group": "Milk & dairy",
+   "subgroup": "Plant-based alternatives",
+   "definition": "Plant-based milk alternatives for drinking or cereal.",
+   "includes": "almond, oat, soy, rice, coconut and pea drinks (sweetened, unsweetened, flavoured, barista), coconut milk",
+   "excludes": "plant-based cooking cream → 8008; plant-based yogurt → 1904",
+   "usda_examples": [
+    "Almond milk, unsweetened",
+    "Oat milk",
+    "Almond milk, sweetened",
+    "Soy milk, unsweetened",
+    "Soy milk, sweetened",
+    "Coconut milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "1904",
+   "name": "Plant-based yogurt",
+   "group": "Milk & dairy",
+   "subgroup": "Plant-based alternatives",
+   "definition": "Plant-based yogurt alternatives.",
+   "includes": "soy, coconut, almond and oat yogurt alternatives",
+   "excludes": "plant-based milk → 1902",
+   "usda_examples": [
+    "Yogurt, almond milk",
+    "Yogurt, coconut milk",
+    "Yogurt, soy"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2002",
+   "name": "Beef, excludes ground",
+   "group": "Protein foods",
+   "subgroup": "Meats",
+   "definition": "Beef cuts (not ground), raw or cooked, plain or seasoned.",
+   "includes": "steak, roast beef, brisket, short ribs, stew meat, veal cuts",
+   "excludes": "ground beef → 2004; corned beef, jerky → 2602; beef dishes → 3002",
+   "usda_examples": [
+    "Beef, steak",
+    "Beef, roast",
+    "Beef, shortribs",
+    "Beef, brisket",
+    "Beef, NFS",
+    "Meat, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2004",
+   "name": "Ground beef",
+   "group": "Protein foods",
+   "subgroup": "Meats",
+   "definition": "Ground (minced) beef or veal.",
+   "includes": "minced beef, ground veal, raw burger patties without a bun",
+   "excludes": "burgers in a bun → 3702; meatballs or meat loaf → 3002",
+   "usda_examples": [
+    "Beef, ground",
+    "Veal, ground",
+    "Meat, ground"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2006",
+   "name": "Pork",
+   "group": "Protein foods",
+   "subgroup": "Meats",
+   "definition": "Pork cuts, raw or cooked, plain or seasoned.",
+   "includes": "pork chops, ribs, tenderloin, roast pork, pulled pork (plain), pork rinds",
+   "excludes": "ham, salami → 2602; bacon → 2604; sausages → 2606 / 2608",
+   "usda_examples": [
+    "Pork, ribs",
+    "Pork, chop",
+    "Pork, tenderloin",
+    "Pork, NFS",
+    "Pork, roast",
+    "Pork skin rinds"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2008",
+   "name": "Lamb, goat, game",
+   "group": "Protein foods",
+   "subgroup": "Meats",
+   "definition": "Lamb, goat and game meat.",
+   "includes": "lamb, mutton, goat, venison, bison, rabbit, wild boar",
+   "excludes": "lamb dishes → 3002",
+   "usda_examples": [
+    "Lamb, NS as to cut",
+    "Lamb, chop",
+    "Venison, steak",
+    "Venison, NFS",
+    "Goat",
+    "Bison"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2010",
+   "name": "Liver and organ meats",
+   "group": "Protein foods",
+   "subgroup": "Meats",
+   "definition": "Liver and other organ meats.",
+   "includes": "liver, liver pâté, tongue, tripe, heart, kidneys, sweetbreads",
+   "excludes": "",
+   "usda_examples": [
+    "Liver, beef",
+    "Liver, paste or pate",
+    "Tongue",
+    "Tripe",
+    "Liver, chicken",
+    "Chitterlings"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2202",
+   "name": "Chicken, whole pieces",
+   "group": "Protein foods",
+   "subgroup": "Poultry",
+   "definition": "Chicken pieces, raw or cooked, not breaded or formed.",
+   "includes": "whole chicken, breasts, thighs, drumsticks, wings (incl. sauced wings), rotisserie or grilled chicken",
+   "excludes": "breaded / formed → 2204; deli chicken slices → 2602; chicken dishes → 3004",
+   "usda_examples": [
+    "Chicken, NS as to part and cooking method",
+    "Chicken breast",
+    "Chicken drumstick",
+    "Chicken thigh",
+    "Chicken \"wings\" with other sauces or seasoning",
+    "Chicken, NS as to part"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2204",
+   "name": "Chicken patties, nuggets and tenders",
+   "group": "Protein foods",
+   "subgroup": "Poultry",
+   "definition": "Breaded, battered or formed chicken products.",
+   "includes": "chicken nuggets, tenders, strips, patties, schnitzel, popcorn chicken, chicken fillet (breaded)",
+   "excludes": "chicken sandwiches or burgers → 3704",
+   "usda_examples": [
+    "Chicken nuggets",
+    "Chicken tenders or strips",
+    "Chicken patty",
+    "Chicken fillet"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2206",
+   "name": "Turkey, duck, other poultry",
+   "group": "Protein foods",
+   "subgroup": "Poultry",
+   "definition": "Turkey, duck and other poultry (not chicken).",
+   "includes": "turkey (incl. ground turkey), duck, goose, quail",
+   "excludes": "deli turkey → 2602; turkey bacon → 2604; turkey sausages → 2608",
+   "usda_examples": [
+    "Turkey, light meat",
+    "Turkey, NFS",
+    "Turkey, ground",
+    "Turkey, dark meat",
+    "Turkey, light or dark meat",
+    "Turkey, wing"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2402",
+   "name": "Fish",
+   "group": "Protein foods",
+   "subgroup": "Seafood",
+   "definition": "Fish (fin fish) in any form.",
+   "includes": "fresh or frozen fish, canned tuna, sardines, mackerel, salmon, smoked salmon, salted or dried fish, fish sticks / fingers",
+   "excludes": "shellfish → 2404; fish cakes and fish dishes → 3006; sushi → 3406",
+   "usda_examples": [
+    "Fish, salmon",
+    "Fish, tuna",
+    "Fish, stick",
+    "Fish, tilapia",
+    "Fish, catfish",
+    "Fish, cod"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2404",
+   "name": "Shellfish",
+   "group": "Protein foods",
+   "subgroup": "Seafood",
+   "definition": "Shellfish and other seafood.",
+   "includes": "shrimp / prawns, crab, lobster, mussels, clams, oysters, scallops, squid, octopus, surimi / crab sticks",
+   "excludes": "seafood dishes → 3006",
+   "usda_examples": [
+    "Shrimp, fried",
+    "Shrimp, steamed or boiled",
+    "Shrimp, NFS",
+    "Shrimp, baked or broiled",
+    "Crab",
+    "Shrimp, grilled"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2502",
+   "name": "Eggs and omelets",
+   "group": "Protein foods",
+   "subgroup": "Eggs",
+   "definition": "Eggs and simple egg preparations.",
+   "includes": "eggs, egg whites, liquid egg, egg substitutes, boiled eggs, omelettes, scrambled eggs, egg salad",
+   "excludes": "breakfast sandwiches → 3706",
+   "usda_examples": [
+    "Egg, whole",
+    "Egg omelet or scrambled egg",
+    "Egg, white",
+    "Egg, deviled",
+    "Egg salad, made with mayonnaise",
+    "Egg, yolk only"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2602",
+   "name": "Cold cuts and cured meats",
+   "group": "Protein foods",
+   "subgroup": "Cured meats",
+   "definition": "Cold cuts and cured or dried meats.",
+   "includes": "ham, deli turkey or chicken slices, salami, pepperoni, bologna, prosciutto, pastrami, corned beef, beef jerky, cured chorizo slices",
+   "excludes": "bacon → 2604; hot dogs → 2606; fresh sausages → 2608; liver pâté → 2010",
+   "usda_examples": [
+    "Ham",
+    "Ham, prepackaged or deli",
+    "Beef jerky",
+    "Salami, NFS",
+    "Turkey, prepackaged or deli",
+    "Pepperoni, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2604",
+   "name": "Bacon",
+   "group": "Protein foods",
+   "subgroup": "Cured meats",
+   "definition": "Bacon and similar.",
+   "includes": "pork bacon, turkey bacon, pancetta, bacon bits",
+   "excludes": "",
+   "usda_examples": [
+    "Pork bacon, NS as to fresh",
+    "Bacon, NS as to type of meat",
+    "Turkey bacon",
+    "Bacon bits",
+    "Beef, bacon",
+    "Pork bacon, smoked or cured"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2606",
+   "name": "Frankfurters",
+   "group": "Protein foods",
+   "subgroup": "Cured meats",
+   "definition": "Frankfurters / hot dog sausages, without a bun.",
+   "includes": "hot dogs, frankfurters, wieners",
+   "excludes": "hot dog in a bun → 3703; other sausages → 2608",
+   "usda_examples": [
+    "Hot dog, beef",
+    "Hot dog, meat and poultry",
+    "Hot dog, NFS",
+    "Hot dog, turkey",
+    "Hot dog, reduced fat"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2608",
+   "name": "Sausages",
+   "group": "Protein foods",
+   "subgroup": "Cured meats",
+   "definition": "Sausages other than frankfurters.",
+   "includes": "pork, beef, chicken or turkey sausages, bratwurst, Polish / Italian sausage, breakfast links, fresh chorizo, smoked sausages",
+   "excludes": "hot dogs → 2606; salami → 2602; meatless sausages → 2806",
+   "usda_examples": [
+    "Pork sausage",
+    "Turkey or chicken sausage",
+    "Bratwurst",
+    "Polish sausage",
+    "Sausage, NFS",
+    "Beef sausage"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2802",
+   "name": "Beans, peas, legumes",
+   "group": "Protein foods",
+   "subgroup": "Plant-based protein",
+   "definition": "Dry legumes (pulses), plain or simply prepared.",
+   "includes": "beans (black, kidney, pinto, white), lentils, chickpeas, split peas, baked beans, refried beans, edamame",
+   "excludes": "green beans → 6412; green peas → 6418; hummus → 8412; bean dishes and dal → 3102; soy products → 2806",
+   "usda_examples": [
+    "Baked beans",
+    "Refried beans",
+    "Black beans, NFS",
+    "Pinto beans, from dried",
+    "Lentils, from dried",
+    "Beans, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2804",
+   "name": "Nuts and seeds",
+   "group": "Protein foods",
+   "subgroup": "Plant-based protein",
+   "definition": "Nuts and seeds.",
+   "includes": "almonds, walnuts, cashews, pistachios, peanuts (raw, roasted, salted), mixed nuts, trail mix, sunflower, pumpkin, chia and flax seeds, dried coconut",
+   "excludes": "nut and seed butters → X07; chocolate-coated nuts → 5702",
+   "usda_examples": [
+    "Peanut butter",
+    "Walnuts, excluding honey roasted",
+    "Almonds, unsalted",
+    "Pistachio nuts",
+    "Peanuts, dry roasted",
+    "Cashews, salted"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "2806",
+   "name": "Soy and meat-alternative products",
+   "group": "Protein foods",
+   "subgroup": "Plant-based protein",
+   "definition": "Soy foods and plant-based meat, cheese and other alternatives.",
+   "includes": "tofu, tempeh, seitan, veggie burger patties, meatless sausages, nuggets and deli slices, vegan cheese",
+   "excludes": "veggie burger in a bun → 3744; plant milk → 1902; plant yogurt → 1904; tofu stir-fry → 3404",
+   "usda_examples": [
+    "Soybean curd",
+    "Breakfast link",
+    "Frozen dessert",
+    "Veggie burger patty",
+    "Meatball, meatless",
+    "Chicken, meatless"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3002",
+   "name": "Meat mixed dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Meat, poultry, seafood",
+   "definition": "Dishes where beef, pork, lamb or game is the main part.",
+   "includes": "stews, chili con carne, meatballs in sauce, meat loaf, shepherd's pie, goulash, meat curries, moussaka, meat with rice or vegetables",
+   "excludes": "with pasta → 3204; sandwiches → 37xx; soups → 38xx; Asian stir-fry → 3404",
+   "usda_examples": [
+    "Meat loaf made with beef",
+    "Chili with meat and beans",
+    "Stew, beef",
+    "Barbecue pork",
+    "Shepherd's pie",
+    "Chili with meat"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3004",
+   "name": "Poultry mixed dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Meat, poultry, seafood",
+   "definition": "Dishes where chicken or turkey is the main part.",
+   "includes": "chicken curry, chicken pot pie, chicken salad, chicken with rice or vegetables, chicken parmigiana",
+   "excludes": "with pasta → 3204; Asian stir-fry → 3404; chicken sandwiches → 3704",
+   "usda_examples": [
+    "Pot pie, chicken",
+    "Chicken curry",
+    "Chicken or turkey and rice",
+    "Chicken or turkey salad",
+    "Chicken or turkey and vegetables including carrots",
+    "Chicken or turkey salad with nuts and/or fruits"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3006",
+   "name": "Seafood mixed dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Meat, poultry, seafood",
+   "definition": "Dishes where fish or seafood is the main part.",
+   "includes": "tuna salad, fish cakes, crab cakes, salmon patties, seafood stew, ceviche, gumbo, fish pie",
+   "excludes": "plain fish → 2402; sushi → 3406; seafood sandwiches → 3730",
+   "usda_examples": [
+    "Tuna salad, made with mayonnaise",
+    "Fish, salmon cake or patty",
+    "Stew, fish",
+    "Ceviche",
+    "Gumbo with rice",
+    "Shrimp and vegetables excluding carrots"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3102",
+   "name": "Bean, pea, legume dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Bean & vegetable",
+   "definition": "Dishes based on beans, lentils or chickpeas.",
+   "includes": "beans and rice, dal, lentil curry, falafel, bean stew, vegetarian chili",
+   "excludes": "plain beans → 2802; hummus → 8412",
+   "usda_examples": [
+    "Beans and rice",
+    "Beans and white rice",
+    "Black beans and white rice",
+    "Lentil curry",
+    "Kidney beans and white rice",
+    "Lentil curry with rice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3104",
+   "name": "Vegetable dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Bean & vegetable",
+   "definition": "Dishes based on vegetables (no meat as the main part).",
+   "includes": "vegetable curry, ratatouille, stuffed vegetables, vegetable casseroles and bakes, eggplant parmesan, vegetable stew",
+   "excludes": "fried vegetables → 6430; salads → 6410 / 6432",
+   "usda_examples": [
+    "Vegetable curry",
+    "Green bean casserole",
+    "Ratatouille",
+    "Stew, vegetable",
+    "Stuffed pepper",
+    "Vegetable curry with rice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3202",
+   "name": "Rice mixed dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Grain-based",
+   "definition": "Dishes based on rice.",
+   "includes": "flavoured or seasoned rice mixes, pilaf, Spanish rice, paella, risotto, jambalaya, biryani, stuffed vine leaves (dolmades)",
+   "excludes": "plain rice → 4002; fried rice → 3402; rice pudding → 5804; sushi → 3406",
+   "usda_examples": [
+    "Spanish rice",
+    "Flavored rice mixture",
+    "Flavored rice and pasta mixture",
+    "Rice, white",
+    "Rice pilaf",
+    "Cake made with glutinous rice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3204",
+   "name": "Pasta mixed dishes, excludes macaroni and cheese",
+   "group": "Mixed dishes",
+   "subgroup": "Grain-based",
+   "definition": "Dishes based on pasta, except macaroni and cheese.",
+   "includes": "pasta with sauce, lasagna, ravioli and tortellini, pasta salad, baked pasta, pastitsio, gnocchi with sauce",
+   "excludes": "mac and cheese → 3206; plain pasta → 4004; Asian noodles → 3402",
+   "usda_examples": [
+    "Pasta with tomato-based sauce and meat",
+    "Pasta with tomato-based sauce",
+    "Macaroni or pasta salad",
+    "Macaroni or pasta salad with cheese",
+    "Pasta with cream sauce and poultry",
+    "Pasta with cream sauce"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3206",
+   "name": "Macaroni and cheese",
+   "group": "Mixed dishes",
+   "subgroup": "Grain-based",
+   "definition": "Macaroni and cheese.",
+   "includes": "mac and cheese (boxed, frozen, prepared), with added meat or vegetables",
+   "excludes": "",
+   "usda_examples": [
+    "Macaroni or noodles with cheese",
+    "Macaroni or noodles with cheese and egg",
+    "Macaroni or noodles with cheese and meat",
+    "Macaroni or noodles with cheese and chicken or turkey",
+    "Macaroni or noodles with cheese and tuna",
+    "Macaroni or noodles with cheese and frankfurters or hot dogs"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3208",
+   "name": "Turnovers and other grain-based items",
+   "group": "Mixed dishes",
+   "subgroup": "Grain-based",
+   "definition": "Savoury pies, pastries and other grain-based items.",
+   "includes": "hot pockets, calzones, empanadas, quiche, spanakopita and other savoury filled pastries, sausage rolls, savoury strudel, bread stuffing",
+   "excludes": "pizza → 3602; sweet pies → 5502",
+   "usda_examples": [
+    "Cornbread stuffing",
+    "Turnover or hot pocket",
+    "Spinach quiche",
+    "Quiche with meat",
+    "Empanada, beef",
+    "Bread stuffing"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3402",
+   "name": "Fried rice and lo/chow mein",
+   "group": "Mixed dishes",
+   "subgroup": "Asian",
+   "definition": "Asian rice and noodle stir-fries.",
+   "includes": "fried rice, lo mein, chow mein, pad thai, yakisoba",
+   "excludes": "ramen / noodle soups → 3808",
+   "usda_examples": [
+    "Rice, fried",
+    "Chow mein or chop suey",
+    "Lo mein, meatless",
+    "Chicken or turkey chow mein or chop suey with noodles",
+    "Rice, white",
+    "Pork chow mein or chop suey with noodles"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3404",
+   "name": "Stir-fry and soy-based sauce mixtures",
+   "group": "Mixed dishes",
+   "subgroup": "Asian",
+   "definition": "Stir-fries and dishes in soy-based or Asian sauces.",
+   "includes": "teriyaki chicken, sweet and sour dishes, orange or sesame chicken, beef and broccoli, General Tso, tofu and vegetables",
+   "excludes": "fried rice and noodles → 3402",
+   "usda_examples": [
+    "Chicken or turkey with teriyaki",
+    "Orange chicken",
+    "Chicken or turkey and vegetables including carrots",
+    "Sesame chicken",
+    "Sweet and sour chicken or turkey",
+    "Beef and broccoli"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3406",
+   "name": "Egg rolls, dumplings, sushi",
+   "group": "Mixed dishes",
+   "subgroup": "Asian",
+   "definition": "Egg rolls, dumplings and sushi.",
+   "includes": "sushi, maki, gyoza, dumplings, wontons, potstickers, egg rolls, spring rolls, bao",
+   "excludes": "wonton soup → 3808",
+   "usda_examples": [
+    "Wonton, dumpling or pot sticker",
+    "Egg roll, meatless",
+    "Sushi roll, California",
+    "Egg roll, with beef and/or pork",
+    "Sushi roll tuna",
+    "Sushi roll, salmon"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3502",
+   "name": "Burritos and tacos",
+   "group": "Mixed dishes",
+   "subgroup": "Mexican",
+   "definition": "Burritos and tacos.",
+   "includes": "burritos, tacos, taco kits",
+   "excludes": "breakfast burritos → 3706; burrito bowls → 3506",
+   "usda_examples": [
+    "Taco, meat",
+    "Taco, corn tortilla",
+    "Taco, flour tortilla",
+    "Taco, fish",
+    "Burrito, beef",
+    "Burrito, with beans"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3504",
+   "name": "Nachos",
+   "group": "Mixed dishes",
+   "subgroup": "Mexican",
+   "definition": "Nachos.",
+   "includes": "nachos with cheese, meat or beans",
+   "excludes": "plain tortilla chips → 5004",
+   "usda_examples": [
+    "Nachos, beef or pork",
+    "Nachos, cheese only",
+    "Nachos, with beans",
+    "Nachos, chicken",
+    "Nachos, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3506",
+   "name": "Other Mexican mixed dishes",
+   "group": "Mixed dishes",
+   "subgroup": "Mexican",
+   "definition": "Other Mexican dishes.",
+   "includes": "quesadillas, enchiladas, fajitas, burrito bowls, taquitos, tamales",
+   "excludes": "",
+   "usda_examples": [
+    "Quesadilla, cheese only",
+    "Quesadilla, chicken",
+    "Enchilada, chicken",
+    "Burrito bowl",
+    "Quesadilla, beef or pork",
+    "Fajita, chicken"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3602",
+   "name": "Pizza",
+   "group": "Mixed dishes",
+   "subgroup": "Pizza",
+   "definition": "Pizza of any kind.",
+   "includes": "frozen, chilled and restaurant pizza, pizza slices, pizza rolls and bites, flatbread pizza",
+   "excludes": "calzone → 3208; pizza sauce → 8410",
+   "usda_examples": [
+    "Pizza with pepperoni",
+    "Pizza, cheese",
+    "Pizza with meat other than pepperoni",
+    "Pizza rolls",
+    "Pizza with meat and vegetables",
+    "Pizza, with pepperoni"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3702",
+   "name": "Burgers",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Burgers with a meat patty in a bun.",
+   "includes": "hamburgers, cheeseburgers, double burgers, fast-food burgers",
+   "excludes": "chicken burgers → 3704; veggie burgers → 3744; patty without bun → 2004",
+   "usda_examples": [
+    "Cheeseburger",
+    "Cheeseburger (McDonalds)",
+    "Hamburger, on white bun",
+    "Double cheeseburger",
+    "Big Mac (McDonalds)",
+    "Double cheeseburger (McDonalds)"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3703",
+   "name": "Frankfurter sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Hot dogs and sausages in a bun or dough.",
+   "includes": "hot dogs, corn dogs, sausage in a bun, pigs in blankets",
+   "excludes": "hot dogs without bun → 2606",
+   "usda_examples": [
+    "Hot dog sandwich",
+    "Corn dog",
+    "Chili hot dog sandwich",
+    "Italian sausage sandwich on white",
+    "Pig in a blanket"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3704",
+   "name": "Chicken fillet sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Chicken sandwiches.",
+   "includes": "chicken fillet sandwiches, chicken burgers, chicken wraps, chicken salad sandwiches",
+   "excludes": "",
+   "usda_examples": [
+    "Chicken fillet sandwich",
+    "Chicken salad sandwich on white",
+    "Chicken salad sandwich on wheat",
+    "Chicken fillet biscuit",
+    "Chicken fillet wrap sandwich",
+    "Chicken salad sandwich wrap"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3706",
+   "name": "Egg/breakfast sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Egg and breakfast sandwiches.",
+   "includes": "breakfast sandwiches and muffins, egg sandwiches, breakfast burritos, sausage biscuit sandwiches",
+   "excludes": "",
+   "usda_examples": [
+    "Egg burrito, with sausage",
+    "Egg burrito",
+    "Sausage biscuit sandwich",
+    "Egg sandwich on white bread",
+    "Egg sandwich on croissant",
+    "Egg sandwich on English muffin"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3720",
+   "name": "Cheese sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Sandwiches with cheese only.",
+   "includes": "grilled cheese, cheese sandwiches and toasties",
+   "excludes": "ham and cheese → 3740",
+   "usda_examples": [
+    "Grilled cheese sandwich",
+    "Cheese sandwich"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3722",
+   "name": "Peanut butter and jelly sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Sandwiches with nut butter, sweet spread or jam.",
+   "includes": "peanut butter and jelly, nut butter sandwiches, chocolate spread sandwiches",
+   "excludes": "",
+   "usda_examples": [
+    "Peanut butter and jelly sandwich",
+    "Peanut butter sandwich",
+    "Nutella sandwich on wheat bread",
+    "Nutella sandwich on white bread",
+    "Almond butter and jelly sandwich",
+    "Jelly sandwich"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3730",
+   "name": "Seafood sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Fish and seafood sandwiches.",
+   "includes": "tuna, fish, crab and salmon sandwiches or wraps, fish burgers",
+   "excludes": "",
+   "usda_examples": [
+    "Tuna salad sandwich on white",
+    "Tuna salad sandwich on wheat",
+    "Fish sandwich",
+    "Seafood salad sandwich",
+    "Tuna salad sandwich wrap",
+    "Salmon cake sandwich"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3740",
+   "name": "Deli and cured meat sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Sandwiches with deli or cured meats.",
+   "includes": "ham, turkey or salami sandwiches, ham and cheese toasties, BLT, club sandwiches, deli subs and wraps",
+   "excludes": "",
+   "usda_examples": [
+    "Ham sandwich on white",
+    "Ham sandwich on wheat",
+    "Turkey sandwich on white",
+    "Turkey sandwich on wheat",
+    "Turkey sandwich wrap",
+    "Turkey sandwich or sub"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3742",
+   "name": "Meat and BBQ sandwiches",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Sandwiches with cooked meat.",
+   "includes": "cheesesteak, steak sandwiches, pulled pork or BBQ sandwiches, sloppy joes, meatball subs, gyros and kebab wraps",
+   "excludes": "",
+   "usda_examples": [
+    "Cheese steak sandwich or sub on white",
+    "Barbecue pork sandwich",
+    "Sloppy joe sandwich",
+    "Steak sandwich or sub on white",
+    "Gyro sandwich",
+    "Meatball sandwich or sub"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3744",
+   "name": "Vegetable sandwiches/burgers",
+   "group": "Mixed dishes",
+   "subgroup": "Sandwiches",
+   "definition": "Vegetable sandwiches and veggie burgers.",
+   "includes": "veggie burgers in a bun, falafel wraps, vegetable sandwiches and wraps, bruschetta",
+   "excludes": "",
+   "usda_examples": [
+    "Veggie burger",
+    "Tomato sandwich on white",
+    "Vegetable sandwich wrap",
+    "Vegetable sandwich on wheat",
+    "Vegetable sandwich on white",
+    "Tomato sandwich on wheat"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3804",
+   "name": "Soups, broth-based",
+   "group": "Mixed dishes",
+   "subgroup": "Soups",
+   "definition": "Broth-based soups.",
+   "includes": "chicken noodle, vegetable, minestrone, bean and lentil soups, tomato soup, ready-to-drink broth, gazpacho",
+   "excludes": "stock cubes / cooking stock → X04; Asian noodle soups → 3808",
+   "usda_examples": [
+    "Soup, chicken noodle",
+    "Soup, vegetable",
+    "Soup, chicken",
+    "Soup, beef",
+    "Soup, tomato",
+    "Soup, broth"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3806",
+   "name": "Soups, cream-based",
+   "group": "Mixed dishes",
+   "subgroup": "Soups",
+   "definition": "Cream-based soups.",
+   "includes": "cream soups, chowders, bisques, potato soup, pumpkin cream soup",
+   "excludes": "",
+   "usda_examples": [
+    "Soup, broccoli cheese",
+    "Soup, potato",
+    "Soup, New England clam chowder",
+    "Soup, pumpkin",
+    "Soup, potato with meat",
+    "Soup, cream of mushroom"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "3808",
+   "name": "Ramen and Asian broth-based soups",
+   "group": "Mixed dishes",
+   "subgroup": "Soups",
+   "definition": "Ramen and Asian broth-based soups.",
+   "includes": "instant ramen and cup noodles, pho, miso soup, wonton soup, tom yum, hot and sour soup",
+   "excludes": "dry noodles without seasoning → 4004",
+   "usda_examples": [
+    "Soup, ramen noodles",
+    "Soup, miso or tofu",
+    "Soup, wonton",
+    "Soup, pho",
+    "Ramen bowl with beef",
+    "Ramen bowl with meat and egg"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4002",
+   "name": "Rice",
+   "group": "Grains",
+   "subgroup": "Cooked grains",
+   "definition": "Plain rice, dry or cooked.",
+   "includes": "white, brown, basmati, jasmine, wild, arborio and sushi rice, microwave rice (plain), congee",
+   "excludes": "flavoured rice mixes → 3202; rice cakes → 5202; rice flour → X01",
+   "usda_examples": [
+    "Rice, white",
+    "Rice, cooked",
+    "Rice, brown",
+    "Yellow rice, cooked",
+    "Rice, wild",
+    "Rice, white and wild"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4004",
+   "name": "Pasta, noodles, cooked grains",
+   "group": "Grains",
+   "subgroup": "Cooked grains",
+   "definition": "Plain pasta, noodles and other grains, dry or cooked.",
+   "includes": "pasta (dry or fresh), egg noodles, rice noodles, soba, couscous, quinoa, bulgur, barley, farro, millet, plain potato gnocchi",
+   "excludes": "filled pasta (ravioli) and pasta dishes → 3204; instant noodles with seasoning → 3808",
+   "usda_examples": [
+    "Pasta, cooked",
+    "Pasta, gluten free",
+    "Noodles, cooked",
+    "Quinoa, no added fat",
+    "Couscous, plain",
+    "Quinoa, NS as to fat"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4202",
+   "name": "Yeast breads",
+   "group": "Grains",
+   "subgroup": "Breads, rolls, tortillas",
+   "definition": "Loaf and flat yeast breads.",
+   "includes": "white, wholemeal, multigrain, rye and sourdough bread, baguette, pita, naan, flatbreads, garlic bread",
+   "excludes": "rolls and buns → 4204; tortillas → 4208; crispbread and rusks → 5202; sweet bread → 5506",
+   "usda_examples": [
+    "Bread, white",
+    "Bread, wheat or cracked wheat",
+    "Bread, whole wheat",
+    "Bread, multigrain",
+    "Bread, French or Vienna",
+    "Bread, sour dough"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4204",
+   "name": "Rolls and buns",
+   "group": "Grains",
+   "subgroup": "Breads, rolls, tortillas",
+   "definition": "Rolls and buns.",
+   "includes": "dinner rolls, burger and hot dog buns, ciabatta rolls, brioche buns, soft breadsticks",
+   "excludes": "sweet rolls → 5506",
+   "usda_examples": [
+    "Roll, white",
+    "Breadsticks, soft",
+    "Roll, wheat or cracked wheat",
+    "Roll, whole wheat",
+    "Roll, sour dough",
+    "Roll, Mexican"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4206",
+   "name": "Bagels and English muffins",
+   "group": "Grains",
+   "subgroup": "Breads, rolls, tortillas",
+   "definition": "Bagels and English muffins.",
+   "includes": "bagels, English muffins",
+   "excludes": "muffins (cake-like) → 4402",
+   "usda_examples": [
+    "Bagel",
+    "Muffin, English",
+    "Bagel, with raisins",
+    "Bagel, with fruit other than raisins",
+    "Bagel, wheat",
+    "Bagel, multigrain"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4208",
+   "name": "Tortillas",
+   "group": "Grains",
+   "subgroup": "Breads, rolls, tortillas",
+   "definition": "Tortillas and taco shells.",
+   "includes": "corn and flour tortillas, plain wraps, taco shells, tostada shells",
+   "excludes": "filled burritos → 3502",
+   "usda_examples": [
+    "Tortilla, corn",
+    "Tortilla, flour",
+    "Tortilla, whole wheat",
+    "Taco shell, corn",
+    "Taco shell, flour",
+    "Tortilla, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4402",
+   "name": "Biscuits, muffins, quick breads",
+   "group": "Grains",
+   "subgroup": "Quick breads",
+   "definition": "Quick breads and cake-like muffins.",
+   "includes": "muffins, scones, US-style biscuits, cornbread, banana bread, soda bread",
+   "excludes": "UK / European biscuits (cookies) → 5504; cakes → 5502",
+   "usda_examples": [
+    "Muffin, fruit",
+    "Bread, fruit",
+    "Biscuit, from refrigerated dough",
+    "Biscuit, from fast food / restaurant",
+    "Cornbread, made from home recipe",
+    "Cornbread, prepared from mix"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4404",
+   "name": "Pancakes, waffles, French toast",
+   "group": "Grains",
+   "subgroup": "Quick breads",
+   "definition": "Pancakes, waffles and French toast.",
+   "includes": "pancakes, waffles (incl. frozen), crêpes, French toast",
+   "excludes": "pancake mix → X02; syrup → 8806",
+   "usda_examples": [
+    "Pancakes, plain",
+    "Waffle, plain",
+    "French toast",
+    "Waffle, fruit",
+    "Pancakes, whole grain",
+    "Pancakes, fruit"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4602",
+   "name": "Ready-to-eat cereal, higher sugar (>21.2g/100g)",
+   "group": "Grains",
+   "subgroup": "Ready-to-eat cereals",
+   "definition": "Ready-to-eat breakfast cereal with more than 21.2 g sugars per 100 g.",
+   "includes": "frosted and chocolate cereals, sweetened flakes, many granolas and mueslis",
+   "excludes": "cereal bars → 5402",
+   "usda_examples": [
+    "Cereal, granola",
+    "Cereal, O's",
+    "Cereal, corn flakes",
+    "Cereal, bran flakes",
+    "Cereal, cinnamon toast",
+    "Cereal, fruit rings"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4604",
+   "name": "Ready-to-eat cereal, lower sugar (=<21.2g/100g)",
+   "group": "Grains",
+   "subgroup": "Ready-to-eat cereals",
+   "definition": "Ready-to-eat breakfast cereal with 21.2 g sugars per 100 g or less.",
+   "includes": "corn flakes, shredded wheat, bran flakes, plain O's, unsweetened muesli",
+   "excludes": "oats → 4802",
+   "usda_examples": [
+    "Cereal, O's",
+    "Cereal, oat bunches",
+    "Cereal, shredded wheat",
+    "Cereal, corn flakes",
+    "Cereal, bran flakes",
+    "Cereal, multigrain"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4802",
+   "name": "Oatmeal",
+   "group": "Grains",
+   "subgroup": "Cooked cereals",
+   "definition": "Oats and oatmeal.",
+   "includes": "rolled, quick and steel-cut oats, instant oatmeal, porridge, overnight oats",
+   "excludes": "granola → 4602 / 4604; oat bars → 5402",
+   "usda_examples": [
+    "Oatmeal, regular or quick",
+    "Oatmeal, instant",
+    "Oatmeal, multigrain",
+    "Oatmeal, reduced sugar",
+    "Oatmeal, fast food",
+    "Oatmeal, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "4804",
+   "name": "Grits and other cooked cereals",
+   "group": "Grains",
+   "subgroup": "Cooked cereals",
+   "definition": "Other cooked (hot) cereals.",
+   "includes": "grits, cream of wheat, semolina porridge, cream of rice, cooked polenta, hominy",
+   "excludes": "cornmeal and semolina as flour → X01",
+   "usda_examples": [
+    "Grits, regular or quick",
+    "Grits, instant",
+    "Cream of wheat",
+    "Whole wheat cereal",
+    "Grits, NFS",
+    "Cream of rice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5002",
+   "name": "Potato chips",
+   "group": "Snacks & sweets",
+   "subgroup": "Savory snacks",
+   "definition": "Potato chips / crisps.",
+   "includes": "potato chips, crisps, stackable and baked potato crisps, potato sticks",
+   "excludes": "fries → 6804",
+   "usda_examples": [
+    "Potato chips",
+    "Potato sticks"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5004",
+   "name": "Tortilla, corn, other chips",
+   "group": "Snacks & sweets",
+   "subgroup": "Savory snacks",
+   "definition": "Chips and crunchy snacks not made from potato slices.",
+   "includes": "tortilla and corn chips, cheese puffs and curls, vegetable chips, multigrain chips, pita chips, puffed corn or rice snacks",
+   "excludes": "popcorn → 5006; pretzels → 5008; crackers → 5202",
+   "usda_examples": [
+    "Tortilla chips",
+    "Cheese flavored corn snacks (Cheetos)",
+    "Vegetable chips",
+    "Multigrain chips (Sun Chips)",
+    "Cheese flavored corn snacks",
+    "Corn chips, plain"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5006",
+   "name": "Popcorn",
+   "group": "Snacks & sweets",
+   "subgroup": "Savory snacks",
+   "definition": "Popcorn.",
+   "includes": "microwave, ready-to-eat, sweet, caramel or chocolate-coated popcorn",
+   "excludes": "",
+   "usda_examples": [
+    "Popcorn, microwave",
+    "Popcorn, ready-to-eat",
+    "Popcorn, movie theater",
+    "Popcorn, caramel coated",
+    "Popcorn, air-popped",
+    "Popcorn, popped in oil"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5008",
+   "name": "Pretzels/snack mix",
+   "group": "Snacks & sweets",
+   "subgroup": "Savory snacks",
+   "definition": "Pretzels and snack mixes.",
+   "includes": "hard and soft pretzels, pretzel sticks and chips, snack mixes",
+   "excludes": "nut and fruit trail mix → 2804",
+   "usda_examples": [
+    "Pretzels, hard",
+    "Snack mix, plain (Chex Mix)",
+    "Snack mix",
+    "Pretzel chips",
+    "Pretzels, soft",
+    "Pretzels, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5202",
+   "name": "Crackers, excludes saltines",
+   "group": "Snacks & sweets",
+   "subgroup": "Crackers",
+   "definition": "Crackers and crisp breads (except saltines).",
+   "includes": "crackers, cheese crackers, crispbread, rusks, rice cakes, crunchy breadsticks (grissini), croutons, melba toast",
+   "excludes": "saltines → 5204; sweet biscuits → 5504",
+   "usda_examples": [
+    "Croutons",
+    "Crackers, cheese (Goldfish)",
+    "Crackers, butter",
+    "Crackers, cheese (Cheez-It)",
+    "Crackers, butter (Ritz)",
+    "Crackers, sandwich"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5204",
+   "name": "Saltine crackers",
+   "group": "Snacks & sweets",
+   "subgroup": "Crackers",
+   "definition": "Saltine and soda crackers.",
+   "includes": "saltines, soda crackers, oyster crackers",
+   "excludes": "",
+   "usda_examples": [
+    "Crackers, saltine",
+    "Crackers, oyster"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5402",
+   "name": "Cereal bars",
+   "group": "Snacks & sweets",
+   "subgroup": "Bars",
+   "definition": "Cereal and granola bars.",
+   "includes": "granola, cereal, muesli and oat bars, fruit and nut bars, breakfast bars",
+   "excludes": "protein / energy / meal-replacement bars → 5404; chocolate bars → 5702",
+   "usda_examples": [
+    "Cereal or Granola bar",
+    "Cereal or granola bar (General Mills Nature Valley Crunchy Granola Bar)",
+    "Cereal or granola bar (Kellogg's Nutri-Grain Cereal Bar)",
+    "Cereal or granola bar (Quaker Chewy Granola Bar)",
+    "Cereal or granola bar (General Mills Nature Valley Sweet and Salty Granola Bar)",
+    "Cereal or granola bar with nuts"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5404",
+   "name": "Nutrition bars",
+   "group": "Snacks & sweets",
+   "subgroup": "Bars",
+   "definition": "Protein, energy and meal-replacement bars.",
+   "includes": "protein bars, energy bars, meal-replacement bars",
+   "excludes": "granola bars → 5402",
+   "usda_examples": [
+    "Nutrition bar or meal replacement bar",
+    "Nutrition bar (Clif Bar)",
+    "Nutrition bar (Clif Kids Organic Zbar)",
+    "Nutrition bar (Zone Perfect Classic Crunch)",
+    "Nutrition bar (PowerBar)",
+    "Nutrition bar (Balance Original Bar)"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5502",
+   "name": "Cakes and pies",
+   "group": "Snacks & sweets",
+   "subgroup": "Sweet bakery",
+   "definition": "Cakes and sweet pies.",
+   "includes": "cakes, cupcakes, snack cakes, cheesecake, sweet pies and tarts, strudel, baklava, custard pies",
+   "excludes": "muffins → 4402; doughnuts and pastries → 5506; cake mix → X02",
+   "usda_examples": [
+    "Cake or cupcake",
+    "Pie, apple",
+    "Snack cake, white",
+    "Snack cake, chocolate",
+    "Cheesecake, fruit",
+    "Cake, pound"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5504",
+   "name": "Cookies and brownies",
+   "group": "Snacks & sweets",
+   "subgroup": "Sweet bakery",
+   "definition": "Cookies, sweet biscuits and brownies.",
+   "includes": "cookies, sweet biscuits (UK sense), wafers, brownies, shortbread, digestives, graham crackers, macarons, sandwich cookies",
+   "excludes": "chocolate-covered wafer bars → 5702; savoury crackers → 5202",
+   "usda_examples": [
+    "Cookie, chocolate chip",
+    "Cookie, chocolate sandwich",
+    "Cookie, butter or sugar",
+    "Cookie, brownie",
+    "Graham crackers",
+    "Cookie, animal"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5506",
+   "name": "Doughnuts, sweet rolls, pastries",
+   "group": "Snacks & sweets",
+   "subgroup": "Sweet bakery",
+   "definition": "Doughnuts, sweet rolls and pastries.",
+   "includes": "doughnuts, croissants, Danish, cinnamon rolls, sweet buns, pain au chocolat, toaster pastries, churros",
+   "excludes": "savoury pastries → 3208",
+   "usda_examples": [
+    "Breakfast tart",
+    "Croissant",
+    "Roll, sweet",
+    "Doughnut, yeast type",
+    "Doughnut, cake type",
+    "Pan Dulce, no topping"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5702",
+   "name": "Candy containing chocolate",
+   "group": "Snacks & sweets",
+   "subgroup": "Candy",
+   "definition": "Candy and confectionery containing chocolate.",
+   "includes": "chocolate bars and tablets, pralines, truffles, chocolate-coated nuts or fruit, chocolate-covered wafer and caramel bars, chocolate chips, chocolate eggs",
+   "excludes": "chocolate spreads → X08; cocoa powder → X02 / X09; chocolate cookies → 5504",
+   "usda_examples": [
+    "Chocolate candy",
+    "Dark chocolate candy",
+    "Chocolate chips",
+    "Chocolate candy with nuts",
+    "Dark chocolate candy with nuts",
+    "Almonds, chocolate covered candy"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5704",
+   "name": "Candy not containing chocolate",
+   "group": "Snacks & sweets",
+   "subgroup": "Candy",
+   "definition": "Candy without chocolate.",
+   "includes": "gummies, hard candy, lollipops, licorice, marshmallows, mints, chewing gum (incl. sugar-free), fruit snacks and fruit leather, halva, nougat, toffee and caramels",
+   "excludes": "chocolate candy → 5702",
+   "usda_examples": [
+    "Candy, gummy",
+    "Candy, hard",
+    "Candy, fruit snacks",
+    "Chewing gum",
+    "Candy, lollipop",
+    "Candy, non chocolate"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5802",
+   "name": "Ice cream and frozen dairy desserts",
+   "group": "Snacks & sweets",
+   "subgroup": "Other desserts",
+   "definition": "Ice cream and frozen dairy desserts.",
+   "includes": "ice cream (tubs, cones, bars, sandwiches), gelato, frozen yogurt, plant-based ice cream (differs from USDA)",
+   "excludes": "sorbet and ice lollies → 5806; milkshakes → 1402",
+   "usda_examples": [
+    "Ice cream, vanilla",
+    "Ice cream cone",
+    "Ice cream sandwich",
+    "Ice cream bar",
+    "Ice cream, chocolate",
+    "Light ice cream"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5804",
+   "name": "Pudding",
+   "group": "Snacks & sweets",
+   "subgroup": "Other desserts",
+   "definition": "Puddings and custards.",
+   "includes": "pudding, custard, flan, crème caramel, rice pudding, mousse, panna cotta, tapioca",
+   "excludes": "cakes and pies → 5502",
+   "usda_examples": [
+    "Pudding, rice",
+    "Pudding, chocolate",
+    "Flan",
+    "Banana pudding",
+    "Pudding, flavors other than chocolate",
+    "Custard"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "5806",
+   "name": "Gelatins, ices, sorbets",
+   "group": "Snacks & sweets",
+   "subgroup": "Other desserts",
+   "definition": "Gelatin desserts, ices and sorbets.",
+   "includes": "sorbet, ice lollies / popsicles, freezer pops, frozen juice bars, jelly / gelatin desserts, granita",
+   "excludes": "ice cream → 5802",
+   "usda_examples": [
+    "Popsicle",
+    "Freezer pop",
+    "Frozen fruit juice bar",
+    "Gelatin dessert",
+    "Gelatin dessert with fruit",
+    "Snow cone"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6002",
+   "name": "Apples",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Apples.",
+   "includes": "apples (fresh, baked, canned), applesauce and apple purée, apple pie filling",
+   "excludes": "apple juice → 7004; dried apple → 6016",
+   "usda_examples": [
+    "Apple, raw",
+    "Applesauce, regular",
+    "Applesauce, unsweetened",
+    "Applesauce, flavored",
+    "Apple, baked",
+    "Apple pie filling"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6004",
+   "name": "Bananas",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Bananas.",
+   "includes": "bananas",
+   "excludes": "plantains → 6418; banana chips → 6016",
+   "usda_examples": [
+    "Banana, raw",
+    "Banana, baked"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6006",
+   "name": "Grapes",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Grapes.",
+   "includes": "grapes",
+   "excludes": "raisins → 6016; grape juice → 7006",
+   "usda_examples": [
+    "Grapes, raw"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6008",
+   "name": "Peaches and nectarines",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Peaches and nectarines.",
+   "includes": "fresh, canned and frozen peaches, nectarines",
+   "excludes": "",
+   "usda_examples": [
+    "Peach, raw",
+    "Peach, canned",
+    "Nectarine, raw",
+    "Peach, frozen"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6009",
+   "name": "Strawberries",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Strawberries.",
+   "includes": "fresh and frozen strawberries",
+   "excludes": "strawberry jam → 8806",
+   "usda_examples": [
+    "Strawberries"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6011",
+   "name": "Blueberries and other berries",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Blueberries and other berries.",
+   "includes": "blueberries, raspberries, blackberries, fresh or frozen cranberries, mixed berries, cranberry sauce",
+   "excludes": "dried cranberries → 6016",
+   "usda_examples": [
+    "Blueberries, raw",
+    "Raspberries, raw",
+    "Blackberries",
+    "Blueberries, frozen",
+    "Berries, NFS",
+    "Cranberry sauce"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6012",
+   "name": "Citrus fruits",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Citrus fruit.",
+   "includes": "oranges, mandarins, clementines, grapefruit, lemons, limes, canned orange segments",
+   "excludes": "juice → 7002; lemon juice as condiment → 8406",
+   "usda_examples": [
+    "Orange, raw",
+    "Clementine, raw",
+    "Tangerine, raw",
+    "Grapefruit, raw",
+    "Orange, canned",
+    "Lemon, raw"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6014",
+   "name": "Melons",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Melons.",
+   "includes": "watermelon, cantaloupe, honeydew",
+   "excludes": "",
+   "usda_examples": [
+    "Watermelon, raw",
+    "Cantaloupe, raw",
+    "Honeydew melon",
+    "Melon, frozen"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6016",
+   "name": "Dried fruits",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Dried fruit.",
+   "includes": "raisins, dates, prunes, dried apricots, figs, mango, cranberries, banana chips, freeze-dried fruit",
+   "excludes": "fruit snacks and fruit leather → 5704; trail mix → 2804",
+   "usda_examples": [
+    "Raisins",
+    "Cranberries, dried",
+    "Prune, dried",
+    "Date",
+    "Dried, fruit",
+    "Mango, dried"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6018",
+   "name": "Other fruits and fruit salads",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Other fruit and fruit mixes.",
+   "includes": "cherries, plums, kiwi, apricots, figs, pomegranate, fresh coconut, fruit salad, fruit cups, fruit cocktail, mixed fruit purées, compote",
+   "excludes": "apple purée → 6002",
+   "usda_examples": [
+    "Cherries, raw",
+    "Fruit cocktail",
+    "Kiwi fruit, raw",
+    "Plum, raw",
+    "Fruit salad, fresh or raw",
+    "Pomegranate, raw"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6020",
+   "name": "Pears",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Pears.",
+   "includes": "fresh and canned pears",
+   "excludes": "",
+   "usda_examples": [
+    "Pear, raw",
+    "Pear, canned",
+    "Pear, Asian"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6022",
+   "name": "Pineapple",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Pineapple.",
+   "includes": "fresh, canned and frozen pineapple",
+   "excludes": "",
+   "usda_examples": [
+    "Pineapple, raw",
+    "Pineapple, canned",
+    "Pineapple, frozen"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6024",
+   "name": "Mango and papaya",
+   "group": "Fruit",
+   "subgroup": "Fruits",
+   "definition": "Mango and papaya.",
+   "includes": "mango and papaya (fresh, frozen, canned)",
+   "excludes": "dried mango → 6016",
+   "usda_examples": [
+    "Mango, raw",
+    "Papaya, raw",
+    "Mango, frozen",
+    "Papaya, canned",
+    "Mango, canned"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6402",
+   "name": "Tomatoes",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Tomatoes.",
+   "includes": "fresh and cherry tomatoes, canned or chopped tomatoes, passata, tomato purée and paste, sun-dried tomatoes",
+   "excludes": "ketchup → 8402; pasta sauce → 8410; tomato juice → 7008",
+   "usda_examples": [
+    "Tomatoes, raw",
+    "Tomatoes, fresh",
+    "Tomatoes, canned",
+    "Sun-dried tomatoes",
+    "Tomatoes, NS as to form"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6404",
+   "name": "Carrots",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Carrots.",
+   "includes": "carrots (fresh, baby, frozen, canned)",
+   "excludes": "carrot juice → 7008",
+   "usda_examples": [
+    "Carrots, raw",
+    "Carrots, fresh",
+    "Carrots, cooked",
+    "Carrots, NS as to form",
+    "Carrots, glazed",
+    "Carrots, frozen"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6406",
+   "name": "Other red and orange vegetables",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Other red and orange vegetables.",
+   "includes": "sweet potatoes, sweet peppers, pumpkin, winter squash, butternut squash",
+   "excludes": "sweet potato fries → 6430",
+   "usda_examples": [
+    "Sweet potato",
+    "Peppers, sweet",
+    "Peppers, red",
+    "Winter squash",
+    "Pumpkin, cooked",
+    "Spaghetti squash"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6407",
+   "name": "Broccoli",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Broccoli.",
+   "includes": "broccoli (fresh, frozen), broccoli rabe",
+   "excludes": "",
+   "usda_examples": [
+    "Broccoli, fresh",
+    "Broccoli, raw",
+    "Broccoli, cooked",
+    "Broccoli, frozen",
+    "Broccoli, NS as to form",
+    "Broccoli raab"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6409",
+   "name": "Spinach",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Spinach.",
+   "includes": "spinach (fresh, frozen, creamed)",
+   "excludes": "",
+   "usda_examples": [
+    "Spinach, raw",
+    "Spinach, fresh",
+    "Spinach, creamed",
+    "Spinach, canned",
+    "Spinach, NS as to form",
+    "Spinach, frozen"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6410",
+   "name": "Lettuce and lettuce salads",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Lettuce and green salads.",
+   "includes": "lettuce, mixed salad greens, rocket, salad bags and salad kits, green salads with toppings",
+   "excludes": "coleslaw and salads without lettuce → 6432",
+   "usda_examples": [
+    "Lettuce, raw",
+    "Mixed salad greens",
+    "Romaine lettuce",
+    "Lettuce, arugula",
+    "Lettuce, Boston",
+    "Lettuce, salad with assorted vegetables including tomatoes and/or carrots"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6411",
+   "name": "Other dark green vegetables",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Other dark green vegetables.",
+   "includes": "kale, collards, chard, turnip and mustard greens, watercress, dark leafy greens",
+   "excludes": "spinach → 6409; broccoli → 6407",
+   "usda_examples": [
+    "Kale, raw",
+    "Kale, fresh",
+    "Collards, fresh",
+    "Turnip greens",
+    "Greens with ham or pork",
+    "Watercress, raw"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6412",
+   "name": "String beans",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "String beans.",
+   "includes": "green beans, runner beans, yellow wax beans (fresh, frozen, canned)",
+   "excludes": "dry beans → 2802",
+   "usda_examples": [
+    "Green beans, canned",
+    "Green beans, cooked",
+    "Green beans, fresh",
+    "Green beans, frozen",
+    "Green beans, raw",
+    "Green beans, NS as to form"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6413",
+   "name": "Cabbage",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Cabbage.",
+   "includes": "green, red, savoy and Chinese cabbage",
+   "excludes": "coleslaw → 6432; sauerkraut, kimchi → 8408",
+   "usda_examples": [
+    "Cabbage, green",
+    "Cabbage, red",
+    "Cabbage, Chinese",
+    "Cabbage, savoy"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6414",
+   "name": "Onions",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Onions and leeks.",
+   "includes": "onions, spring onions, shallots, leeks",
+   "excludes": "onion rings → 6430",
+   "usda_examples": [
+    "Onions, raw",
+    "Onions, cooked",
+    "Onions, green",
+    "Onions, pearl",
+    "Leeks"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6416",
+   "name": "Corn",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Sweet corn.",
+   "includes": "corn on the cob, canned, frozen and creamed corn",
+   "excludes": "popcorn → 5006; corn chips → 5004; cornmeal → X01",
+   "usda_examples": [
+    "Corn, NS as to form",
+    "Corn, cooked",
+    "Corn, fresh",
+    "Corn, canned",
+    "Corn, frozen",
+    "Corn, creamed"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6418",
+   "name": "Other starchy vegetables",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Other starchy vegetables.",
+   "includes": "green peas, plantains, cassava, taro, yams, lima beans, black-eyed peas",
+   "excludes": "potatoes → 6802; sweet potatoes → 6406",
+   "usda_examples": [
+    "Plantain, cooked with oil",
+    "Plantain, cooked",
+    "Green peas, frozen",
+    "Green peas, canned",
+    "Green peas, NS as to form",
+    "Cassava, cooked"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6420",
+   "name": "Other vegetables and combinations",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Other vegetables and vegetable mixes.",
+   "includes": "cucumbers, avocados, zucchini, eggplant, mushrooms, cauliflower, celery, asparagus, beets, radishes, Brussels sprouts, mixed frozen vegetables, seaweed",
+   "excludes": "vegetable dishes → 3104; guacamole → 8412",
+   "usda_examples": [
+    "Cucumber, raw",
+    "Avocado, raw",
+    "Peppers, raw",
+    "Celery, raw",
+    "Radish",
+    "Peppers, jalapenos"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6430",
+   "name": "Fried vegetables",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Fried vegetables.",
+   "includes": "onion rings, sweet potato fries, vegetable tempura, fried okra or zucchini, vegetable fritters",
+   "excludes": "potato fries → 6804",
+   "usda_examples": [
+    "Fried onion rings",
+    "Sweet potato fries",
+    "Fried okra",
+    "Pickles, fried",
+    "Vegetable tempura",
+    "Fried summer squash"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6432",
+   "name": "Coleslaw, non-lettuce salads",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Coleslaw and salads without lettuce.",
+   "includes": "coleslaw, tomato and cucumber salad, Greek (village) salad, beet salad, bean-free vegetable salads, tabbouleh",
+   "excludes": "green salads → 6410; potato salad → 6806; pasta salad → 3204",
+   "usda_examples": [
+    "Coleslaw, fast food / restaurant",
+    "Coleslaw",
+    "Tomato and cucumber salad made with tomato",
+    "Broccoli slaw salad",
+    "Cabbage salad",
+    "Cucumber salad made with cucumber and vinegar"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6489",
+   "name": "Vegetables on a sandwich",
+   "group": "Vegetables",
+   "subgroup": "Vegetables",
+   "definition": "Survey-only: vegetables added to a sandwich. Never assign to a product.",
+   "includes": "—",
+   "excludes": "use the vegetable's own category",
+   "assignable": false
+  },
+  {
+   "code": "6802",
+   "name": "White potatoes, baked or boiled",
+   "group": "Vegetables",
+   "subgroup": "White potatoes",
+   "definition": "White potatoes, baked, boiled or roasted.",
+   "includes": "fresh potatoes, baked, boiled and roasted potatoes, canned potatoes",
+   "excludes": "fries → 6804; mashed → 6806; potato chips → 5002",
+   "usda_examples": [
+    "Potato, NFS",
+    "Potato, baked",
+    "Potato, boiled",
+    "Potato, roasted",
+    "Potato, canned",
+    "Potato only from Puerto Rican mixed dishes"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6804",
+   "name": "French fries and other fried white potatoes",
+   "group": "Vegetables",
+   "subgroup": "White potatoes",
+   "definition": "Fries and other fried potatoes.",
+   "includes": "French fries (frozen, restaurant), hash browns, wedges, tots, rösti, potato croquettes",
+   "excludes": "potato chips → 5002",
+   "usda_examples": [
+    "Potato, french fries",
+    "Potato, hash brown",
+    "Potato, home fries",
+    "Potato tots, frozen",
+    "Potato tots, fast food / restaurant",
+    "Potato tots, school"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "6806",
+   "name": "Mashed potatoes and white potato mixtures",
+   "group": "Vegetables",
+   "subgroup": "White potatoes",
+   "definition": "Mashed potatoes and potato mixtures.",
+   "includes": "mashed potatoes, instant mash, potato salad, potato gratin / scalloped potatoes, potato pancakes",
+   "excludes": "",
+   "usda_examples": [
+    "Potato, mashed",
+    "Potato salad",
+    "Potato salad with egg",
+    "Potato, scalloped",
+    "Potato pancake",
+    "Stewed potatoes with tomatoes"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7002",
+   "name": "Citrus juice",
+   "group": "Beverages",
+   "subgroup": "100% juice",
+   "definition": "100 % citrus juice.",
+   "includes": "100 % orange, grapefruit and mandarin juice",
+   "excludes": "orange drinks or nectars (< 100 % juice) → 7204",
+   "usda_examples": [
+    "Orange juice",
+    "Grapefruit juice",
+    "Tangerine juice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7004",
+   "name": "Apple juice",
+   "group": "Beverages",
+   "subgroup": "100% juice",
+   "definition": "100 % apple juice.",
+   "includes": "100 % apple juice, non-alcoholic apple cider",
+   "excludes": "hard cider → 7502",
+   "usda_examples": [
+    "Apple juice, 100%",
+    "Apple cider"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7006",
+   "name": "Other fruit juice",
+   "group": "Beverages",
+   "subgroup": "100% juice",
+   "definition": "Other 100 % fruit juice.",
+   "includes": "100 % grape, pineapple, pomegranate, prune and cranberry blends, multifruit and fruit-and-vegetable juices",
+   "excludes": "nectars and juice drinks → 7204",
+   "usda_examples": [
+    "Fruit juice blend",
+    "Cranberry juice blend",
+    "Grape juice, 100%",
+    "Vegetable and fruit juice",
+    "Pineapple juice",
+    "Fruit juice, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7008",
+   "name": "Vegetable juice",
+   "group": "Beverages",
+   "subgroup": "100% juice",
+   "definition": "Vegetable juice.",
+   "includes": "tomato juice, carrot juice, beet juice, vegetable juice blends",
+   "excludes": "",
+   "usda_examples": [
+    "Tomato and vegetable juice",
+    "Carrot juice",
+    "Tomato juice",
+    "Mixed vegetable juice",
+    "Tomato juice cocktail",
+    "Celery juice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7102",
+   "name": "Diet soft drinks",
+   "group": "Beverages",
+   "subgroup": "Diet drinks",
+   "definition": "Diet / sugar-free soft drinks.",
+   "includes": "zero, diet and light colas, lemon-lime, orange, ginger ale, root beer and other sodas with ≤ 1 g sugars per 100 ml",
+   "excludes": "regular soft drinks → 7202",
+   "usda_examples": [
+    "Soft drink, cola",
+    "Soft drink, fruit flavored",
+    "Soft drink, pepper type",
+    "Soft drink, root beer",
+    "Soft drink, ginger ale",
+    "Soft drink, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7104",
+   "name": "Diet sport and energy drinks",
+   "group": "Beverages",
+   "subgroup": "Diet drinks",
+   "definition": "Diet / sugar-free sport and energy drinks.",
+   "includes": "sugar-free energy drinks, zero-sugar sports drinks",
+   "excludes": "regular → 7206",
+   "usda_examples": [
+    "Sports drink",
+    "Energy drink"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7106",
+   "name": "Other diet drinks",
+   "group": "Beverages",
+   "subgroup": "Diet drinks",
+   "definition": "Other diet drinks.",
+   "includes": "sugar-free fruit-flavoured drinks, sugar-free squash / cordial, diet fruit drinks",
+   "excludes": "unsweetened flavoured water → 7802; iced tea → X10",
+   "usda_examples": [
+    "Fruit flavored drink",
+    "Vegetable and fruit juice drink",
+    "Slush frozen drink"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7202",
+   "name": "Soft drinks",
+   "group": "Beverages",
+   "subgroup": "Sweetened drinks",
+   "definition": "Regular (sugar-sweetened) soft drinks.",
+   "includes": "cola, lemon-lime, orange and other sodas, ginger ale, root beer, cream soda",
+   "excludes": "diet → 7102; tonic water → 7802",
+   "usda_examples": [
+    "Soft drink, cola",
+    "Soft drink, fruit flavored",
+    "Soft drink, pepper type",
+    "Soft drink, ginger ale",
+    "Soft drink, root beer",
+    "Soft drink, NFS"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7204",
+   "name": "Fruit drinks",
+   "group": "Beverages",
+   "subgroup": "Sweetened drinks",
+   "definition": "Fruit drinks and nectars (less than 100 % juice).",
+   "includes": "juice drinks, nectars, lemonade, fruit-flavoured drinks, sweetened squash / cordial, coconut water, sweetened flavoured water, fruit drink powders",
+   "excludes": "100 % juice → 7002–7006; diet → 7106",
+   "usda_examples": [
+    "Fruit juice drink",
+    "Lemonade, fruit juice drink",
+    "Lemonade, fruit flavored drink",
+    "Fruit flavored drink",
+    "Fruit juice drink (Capri Sun)",
+    "Cranberry juice drink"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7206",
+   "name": "Sport and energy drinks",
+   "group": "Beverages",
+   "subgroup": "Sweetened drinks",
+   "definition": "Regular sport and energy drinks.",
+   "includes": "sports drinks, energy drinks, electrolyte drinks",
+   "excludes": "sugar-free → 7104",
+   "usda_examples": [
+    "Sports drink (Gatorade G)",
+    "Energy drink (Monster)",
+    "Sports drink (Powerade)",
+    "Energy drink (Red Bull)",
+    "Sports drink",
+    "Energy Drink"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7208",
+   "name": "Nutritional beverages",
+   "group": "Beverages",
+   "subgroup": "Sweetened drinks",
+   "definition": "Ready-to-drink nutritional beverages.",
+   "includes": "protein shakes, meal-replacement drinks, nutrition drinks",
+   "excludes": "protein powders → 9802",
+   "usda_examples": [
+    "Nutritional drink or shake"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7220",
+   "name": "Smoothies and grain drinks",
+   "group": "Beverages",
+   "subgroup": "Sweetened drinks",
+   "definition": "Smoothies and grain drinks.",
+   "includes": "fruit and vegetable smoothies, horchata, atole",
+   "excludes": "plant-based milk → 1902; drinkable yogurt → 1820",
+   "usda_examples": [
+    "Fruit smoothie",
+    "Fruit and vegetable smoothie",
+    "Licuado or Batido",
+    "Fruit smoothie juice drink",
+    "Vegetable smoothie",
+    "Horchata, made with milk"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7302",
+   "name": "Coffee",
+   "group": "Beverages",
+   "subgroup": "Coffee & tea",
+   "definition": "Coffee in any form.",
+   "includes": "coffee beans, ground and instant coffee, capsules / pods, espresso, latte, cappuccino, iced coffee, bottled and canned coffee drinks",
+   "excludes": "coffee creamer → 8008",
+   "usda_examples": [
+    "Coffee, brewed",
+    "Coffee, instant",
+    "Iced Coffee, brewed",
+    "Coffee, espresso",
+    "Coffee, bottled/canned",
+    "Coffee, Latte"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7304",
+   "name": "Tea",
+   "group": "Beverages",
+   "subgroup": "Coffee & tea",
+   "definition": "Tea and infusions (except ready-to-drink iced tea).",
+   "includes": "tea bags, loose tea, green and black tea, herbal and fruit infusions, matcha, kombucha, bubble tea, chai",
+   "excludes": "ready-to-drink iced tea → X10",
+   "usda_examples": [
+    "Tea, hot",
+    "Tea, iced",
+    "Iced Tea / Lemonade juice drink",
+    "Tea, kombucha",
+    "Tea, ginger",
+    "Tea, bubble"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7502",
+   "name": "Beer",
+   "group": "Alcoholic beverages",
+   "subgroup": "Alcohol",
+   "definition": "Beer and similar drinks.",
+   "includes": "beer, lager, ale, stout, light and non-alcoholic beer, hard cider, hard seltzer, malt beverages",
+   "excludes": "",
+   "usda_examples": [
+    "Beer",
+    "Beer, light",
+    "Beer, higher alcohol",
+    "Hard seltzer",
+    "Alcoholic malt beverage",
+    "Hard cider"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7504",
+   "name": "Wine",
+   "group": "Alcoholic beverages",
+   "subgroup": "Alcohol",
+   "definition": "Wine.",
+   "includes": "red, white, rosé, sparkling, dessert and fortified wine, sangria, wine coolers",
+   "excludes": "",
+   "usda_examples": [
+    "Wine, red",
+    "Wine, white",
+    "Wine, rose",
+    "Wine, dessert",
+    "Wine, sparkling",
+    "Mimosa"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7506",
+   "name": "Liquor and cocktails",
+   "group": "Alcoholic beverages",
+   "subgroup": "Alcohol",
+   "definition": "Spirits, liqueurs and cocktails.",
+   "includes": "vodka, whisky, rum, gin, tequila, brandy, ouzo, tsipouro, liqueurs, ready-to-drink cocktails and mixed drinks",
+   "excludes": "beer-based → 7502; wine-based → 7504",
+   "usda_examples": [
+    "Whiskey",
+    "Vodka",
+    "Margarita",
+    "Rum",
+    "Brandy",
+    "Tequila"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7702",
+   "name": "Tap water",
+   "group": "Water",
+   "subgroup": "Plain water",
+   "definition": "Survey-only: tap water. Never assign to a product.",
+   "includes": "—",
+   "excludes": "bottled water → 7704",
+   "assignable": false
+  },
+  {
+   "code": "7704",
+   "name": "Bottled water",
+   "group": "Water",
+   "subgroup": "Plain water",
+   "definition": "Plain bottled water.",
+   "includes": "still and mineral water (plain)",
+   "excludes": "sparkling or flavoured → 7802",
+   "usda_examples": [
+    "Water, bottled"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7802",
+   "name": "Flavored or carbonated water",
+   "group": "Water",
+   "subgroup": "Flavored/enhanced water",
+   "definition": "Sparkling and unsweetened flavoured water.",
+   "includes": "sparkling / soda water, sparkling mineral water, seltzer (non-alcoholic), tonic water, flavoured water without sugar",
+   "excludes": "sugar-sweetened flavoured water → 7204; vitamin water → 7804",
+   "usda_examples": [
+    "Water, carbonated",
+    "Water, non-carbonated",
+    "Water, tonic",
+    "Water beverage"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "7804",
+   "name": "Enhanced water",
+   "group": "Water",
+   "subgroup": "Flavored/enhanced water",
+   "definition": "Enhanced water.",
+   "includes": "vitamin water, electrolyte water, protein water",
+   "excludes": "",
+   "usda_examples": [
+    "Water, enhanced"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8002",
+   "name": "Butter and animal fats",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Butter and animal fats.",
+   "includes": "butter (salted, unsalted, spreadable), ghee, lard, tallow, duck fat",
+   "excludes": "margarine → 8004",
+   "usda_examples": [
+    "Butter, stick",
+    "Butter, tub",
+    "Butter, NFS",
+    "Table fat, NFS",
+    "Butter, light",
+    "Ghee, clarified butter"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8004",
+   "name": "Margarine",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Margarine and vegetable fat spreads.",
+   "includes": "margarine, vegetable fat spreads, shortening, butter substitutes and blends",
+   "excludes": "oils → X06",
+   "usda_examples": [
+    "Margarine, tub",
+    "Margarine, stick",
+    "Margarine, light",
+    "Butter replacement",
+    "Margarine, NFS",
+    "Oil or table fat"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8006",
+   "name": "Cream cheese, sour cream, whipped cream",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Cream cheese, sour cream and whipped cream.",
+   "includes": "cream cheese, sour cream, crème fraîche, whipped cream, aerosol and frozen whipped toppings",
+   "excludes": "cottage cheese → 1604; cream → 8008",
+   "usda_examples": [
+    "Sour cream, regular",
+    "Cream cheese",
+    "Cream, whipped",
+    "Whipped topping",
+    "Sour cream, light",
+    "Cheese spread"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8008",
+   "name": "Cream and cream substitutes",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Cream and cream substitutes.",
+   "includes": "single, double, heavy and cooking cream, half-and-half, dairy and non-dairy coffee creamers, plant-based cooking cream",
+   "excludes": "whipped cream → 8006",
+   "usda_examples": [
+    "Coffee creamer",
+    "Cream, half and half",
+    "Cream, heavy",
+    "Cream, NS as to light",
+    "Cream, light"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8010",
+   "name": "Mayonnaise",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Mayonnaise and similar.",
+   "includes": "mayonnaise (regular, light, vegan), aioli, tartar sauce, salad cream, sandwich spreads",
+   "excludes": "salad dressings → 8012",
+   "usda_examples": [
+    "Mayonnaise, regular",
+    "Mayonnaise-type salad dressing",
+    "Tartar sauce",
+    "Mayonnaise, light",
+    "Salad dressing",
+    "Vegan mayonnaise"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8012",
+   "name": "Salad dressings and vegetable oils",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Salad dressings (narrowed: oils are X06).",
+   "includes": "vinaigrettes, ranch, Caesar, Italian, French, Thousand Island, blue cheese and honey mustard dressings",
+   "excludes": "oils → X06; vinegar → X05; mayonnaise → 8010",
+   "usda_examples": [
+    "Italian dressing",
+    "Ranch dressing",
+    "Olive oil",
+    "Caesar dressing",
+    "Thousand Island dressing",
+    "Blue or roquefort cheese dressing"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8402",
+   "name": "Tomato-based condiments",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Tomato-based condiments.",
+   "includes": "ketchup, BBQ sauce, jarred salsa, steak sauce, cocktail sauce, taco sauce",
+   "excludes": "pasta sauce → 8410",
+   "usda_examples": [
+    "Ketchup",
+    "Salsa, NFS",
+    "Barbecue sauce",
+    "Salsa, red",
+    "Salsa, pico de gallo",
+    "Steak sauce"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8404",
+   "name": "Soy-based condiments",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Soy-based and other Asian condiments.",
+   "includes": "soy sauce, teriyaki, hoisin, oyster and fish sauce, miso, ponzu",
+   "excludes": "stir-fry dishes → 3404",
+   "usda_examples": [
+    "Soy sauce",
+    "Soy sauce, reduced sodium",
+    "Teriyaki sauce",
+    "Fish sauce",
+    "Oyster sauce",
+    "Miso"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8406",
+   "name": "Mustard and other condiments",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Mustard and other condiments (narrowed: vinegar is X05).",
+   "includes": "mustard, hot sauce, sriracha, horseradish, wasabi, lemon or lime juice used as a condiment, sweet and sour sauce, chutney",
+   "excludes": "vinegar → X05; relish → 8408",
+   "usda_examples": [
+    "Mustard",
+    "Hot pepper sauce",
+    "Lemon juice, 100%",
+    "Vinegar",
+    "Fry sauce",
+    "Sweet and sour sauce"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8408",
+   "name": "Olives, pickles, pickled vegetables",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Olives, pickles and pickled vegetables.",
+   "includes": "olives, pickles and gherkins, relish, sauerkraut, kimchi, capers, pickled peppers and beets, marinated vegetables in jars",
+   "excludes": "",
+   "usda_examples": [
+    "Pickles, NFS",
+    "Olives, NFS",
+    "Pickles, dill",
+    "Olives, black",
+    "Relish, pickle",
+    "Beets, pickled"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8410",
+   "name": "Pasta sauces, tomato-based",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Tomato-based pasta sauces.",
+   "includes": "marinara, arrabbiata, bolognese, tomato and basil, vodka sauce, pizza sauce",
+   "excludes": "pesto, cream and cheese sauces → 8412; plain passata → 6402",
+   "usda_examples": [
+    "Spaghetti sauce",
+    "Spaghetti sauce with added vegetables",
+    "Spaghetti sauce with meat and added vegetables",
+    "Spaghetti sauce with meat",
+    "Vodka sauce with tomatoes and cream",
+    "Spaghetti sauce with poultry"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8412",
+   "name": "Dips, gravies, other sauces",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Dips, gravies and other sauces.",
+   "includes": "hummus, guacamole, tzatziki, taramasalata, cheese dips, salsa con queso, pesto, Alfredo and cheese sauces, curry and other cooking sauces, gravy, white sauce",
+   "excludes": "stock cubes → X04; tomato pasta sauce → 8410",
+   "usda_examples": [
+    "Guacamole, NFS",
+    "Ranch dip, regular",
+    "Hummus, plain",
+    "Salsa verde or salsa",
+    "Cheese dip",
+    "Hummus, flavored"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8802",
+   "name": "Sugars and honey",
+   "group": "Sugars",
+   "subgroup": "Sugars",
+   "definition": "Sugar and honey.",
+   "includes": "white, brown, cane and icing sugar, honey, agave syrup, molasses",
+   "excludes": "sweeteners → 8804; maple and pancake syrup → 8806",
+   "usda_examples": [
+    "Sugar, white",
+    "Honey",
+    "Sugar, brown",
+    "Sugar, NFS",
+    "Agave liquid sweetener",
+    "Sugar, cinnamon"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8804",
+   "name": "Sugar substitutes",
+   "group": "Sugars",
+   "subgroup": "Sugars",
+   "definition": "Sugar substitutes.",
+   "includes": "stevia, sucralose, aspartame, erythritol, xylitol, sweetener tablets and sugar-sweetener blends",
+   "excludes": "",
+   "usda_examples": [
+    "Sugar substitute",
+    "Sugar substitute and sugar blend"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "8806",
+   "name": "Jams, syrups, toppings",
+   "group": "Sugars",
+   "subgroup": "Sugars",
+   "definition": "Jams, syrups and toppings (narrowed: sweet spreads are X08).",
+   "includes": "jam, jelly, marmalade, fruit spreads, maple and pancake syrup, chocolate and caramel syrups, dessert toppings and sauces",
+   "excludes": "chocolate / hazelnut spreads → X08; honey → 8802",
+   "usda_examples": [
+    "Pancake syrup",
+    "Jelly",
+    "Jam",
+    "Chocolate syrup",
+    "Chocolate hazelnut spread",
+    "Simple syrup"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9002",
+   "name": "Baby food: cereals",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby cereals.",
+   "includes": "infant and toddler cereals and porridges",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler cereal"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9004",
+   "name": "Baby food: fruit",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby fruit.",
+   "includes": "fruit purées and pouches for babies",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler multiple fruit",
+    "Baby Toddler bananas",
+    "Baby Toddler apples",
+    "Baby Toddler pears",
+    "Baby Toddler prunes",
+    "Baby Toddler peaches"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9006",
+   "name": "Baby food: vegetables",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby vegetables.",
+   "includes": "vegetable purées and pouches for babies",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler multiple vegetables",
+    "Baby Toddler sweet potatoes",
+    "Baby Toddler carrots",
+    "Baby Toddler squash",
+    "Baby Toddler peas",
+    "Baby Toddler green beans"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9007",
+   "name": "Baby food: mixtures",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby food mixtures.",
+   "includes": "mixed fruit-and-vegetable or mixed pouches for babies",
+   "excludes": "meals with meat → 9008",
+   "usda_examples": [
+    "Baby Toddler fruit and vegetables",
+    "Baby Toddler vegetables and meat",
+    "Baby Toddler fruit",
+    "Baby Toddler food",
+    "Baby Toddler vegetables",
+    "Baby Toddler juice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9008",
+   "name": "Baby food: meat and dinners",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby meat and dinners.",
+   "includes": "baby and toddler meals, meat purées, toddler dinners",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler meat",
+    "Toddler meal",
+    "Baby Toddler chicken",
+    "Baby Toddler turkey",
+    "Baby Toddler meat stick",
+    "Baby Toddler ham"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9010",
+   "name": "Baby food: yogurt",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby yogurt.",
+   "includes": "yogurts made for babies and toddlers",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler yogurt"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9012",
+   "name": "Baby food: snacks and sweets",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby food",
+   "definition": "Baby snacks and sweets.",
+   "includes": "puffs, teething biscuits, baby crackers, yogurt melts, toddler bars and cookies",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler puffs",
+    "Baby Toddler biscuit",
+    "Baby Toddler cookie",
+    "Baby Toddler yogurt melts",
+    "Baby Toddler bar",
+    "Baby Toddler crunchies"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9202",
+   "name": "Baby juice",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby drinks",
+   "definition": "Baby juice.",
+   "includes": "juices made for babies and toddlers",
+   "excludes": "",
+   "usda_examples": [
+    "Baby Toddler juice"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9204",
+   "name": "Baby water",
+   "group": "Infant formula & baby food",
+   "subgroup": "Baby drinks",
+   "definition": "Baby water.",
+   "includes": "water sold for babies",
+   "excludes": "",
+   "usda_examples": [
+    "Water, baby"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9402",
+   "name": "Formula, ready-to-feed",
+   "group": "Infant formula & baby food",
+   "subgroup": "Infant formula",
+   "definition": "Ready-to-feed (liquid) formula.",
+   "includes": "liquid infant, follow-on and toddler formula",
+   "excludes": "powder → 9404",
+   "usda_examples": [
+    "Toddler formula",
+    "Infant formula"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9404",
+   "name": "Formula, prepared from powder",
+   "group": "Infant formula & baby food",
+   "subgroup": "Infant formula",
+   "definition": "Powdered formula.",
+   "includes": "powdered infant, follow-on and toddler formula",
+   "excludes": "liquid → 9402",
+   "usda_examples": [
+    "Infant formula",
+    "Toddler formula"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9602",
+   "name": "Human milk",
+   "group": "Infant formula & baby food",
+   "subgroup": "Human milk",
+   "definition": "Survey-only: human milk. Never assign to a product.",
+   "includes": "—",
+   "excludes": "",
+   "assignable": false
+  },
+  {
+   "code": "9802",
+   "name": "Protein and nutritional powders",
+   "group": "Other",
+   "subgroup": "Protein & nutritional powders",
+   "definition": "Protein and nutritional powders.",
+   "includes": "whey and plant protein powders, meal-replacement and weight-loss powders, mass gainers, collagen protein powders",
+   "excludes": "ready-to-drink shakes → 7208; vitamins → X11; cocoa / malt drink powders → X09",
+   "usda_examples": [
+    "Nutritional powder mix",
+    "Nutritional powder mix (Carnation Instant Breakfast)",
+    "Nutritional powder mix (Isopure)",
+    "Nutritional powder mix (Muscle Milk)",
+    "Nutritional powder mix (Slim Fast)",
+    "Nutritional powder mix (EAS Whey Protein Powder)"
+   ],
+   "assignable": true
+  },
+  {
+   "code": "9999",
+   "name": "Not included in a food category",
+   "group": "Other",
+   "subgroup": "Not in a category",
+   "definition": "Not included in a food category: last resort.",
+   "includes": "non-food items, pet food, anything that fits no definition (target < 1 %)",
+   "excludes": "",
+   "assignable": true
+  },
+  {
+   "code": "X01",
+   "name": "Flour",
+   "group": "Grains",
+   "subgroup": "Flour & baking",
+   "definition": "Flour and starch.",
+   "includes": "wheat, whole wheat and spelt flour, cornmeal, semolina, rice, almond and chickpea flour, corn starch",
+   "excludes": "baking mixes → X02",
+   "assignable": true
+  },
+  {
+   "code": "X02",
+   "name": "Baking ingredients and mixes",
+   "group": "Cooking & baking",
+   "subgroup": "Cooking & baking",
+   "definition": "Baking ingredients and mixes.",
+   "includes": "baking powder and soda, yeast, gelatin powder, baking cocoa, vanilla, cake, brownie, bread and pancake mixes, pastry dough and sheets (filo, puff, pie crust), icing, sprinkles and decorations, breadcrumbs",
+   "excludes": "flour → X01; chocolate chips → 5702",
+   "assignable": true
+  },
+  {
+   "code": "X03",
+   "name": "Salt, herbs and spices",
+   "group": "Cooking & baking",
+   "subgroup": "Cooking & baking",
+   "definition": "Salt, herbs and spices.",
+   "includes": "salt, pepper, dried herbs, spices, spice blends, seasoning mixes and rubs, garlic and onion powder",
+   "excludes": "stock cubes → X04; sauces → 84xx",
+   "assignable": true
+  },
+  {
+   "code": "X04",
+   "name": "Stocks and bouillon",
+   "group": "Cooking & baking",
+   "subgroup": "Cooking & baking",
+   "definition": "Stocks and bouillon for cooking.",
+   "includes": "stock cubes, bouillon powder, stock pots and concentrates, liquid cooking stock",
+   "excludes": "soup or sipping broth → 3804; gravy → 8412",
+   "assignable": true
+  },
+  {
+   "code": "X05",
+   "name": "Vinegar",
+   "group": "Condiments & sauces",
+   "subgroup": "Condiments & sauces",
+   "definition": "Vinegar.",
+   "includes": "all vinegars (wine, apple cider, balsamic, rice), balsamic glaze",
+   "excludes": "dressings → 8012",
+   "assignable": true
+  },
+  {
+   "code": "X06",
+   "name": "Cooking oils",
+   "group": "Fats & oils",
+   "subgroup": "Fats & oils",
+   "definition": "Cooking oils.",
+   "includes": "olive oil, sunflower, canola / rapeseed, vegetable, coconut, sesame and avocado oil, cooking sprays",
+   "excludes": "butter → 8002; margarine → 8004; dressings → 8012",
+   "assignable": true
+  },
+  {
+   "code": "X07",
+   "name": "Nut and seed butters",
+   "group": "Protein foods",
+   "subgroup": "Plant-based protein",
+   "definition": "Nut and seed butters.",
+   "includes": "peanut butter, almond, cashew and hazelnut butter (no chocolate), tahini, sunflower seed butter",
+   "excludes": "chocolate hazelnut spread → X08; nuts → 2804",
+   "assignable": true
+  },
+  {
+   "code": "X08",
+   "name": "Chocolate and sweet spreads",
+   "group": "Sugars",
+   "subgroup": "Sugars",
+   "definition": "Chocolate and sweet spreads.",
+   "includes": "chocolate and hazelnut spreads, speculoos / cookie butter, dulce de leche, sweet cream spreads",
+   "excludes": "jam → 8806; nut butters → X07",
+   "assignable": true
+  },
+  {
+   "code": "X09",
+   "name": "Hot chocolate and drink powders",
+   "group": "Beverages",
+   "subgroup": "Powders & mixes",
+   "definition": "Hot chocolate and malt drink powders.",
+   "includes": "cocoa and hot chocolate powder, malted drink powders, milkshake powders",
+   "excludes": "protein powders → 9802; fruit drink powders → 7204 / 7106; prepared chocolate milk → 1202–1208",
+   "assignable": true
+  },
+  {
+   "code": "X10",
+   "name": "Iced tea",
+   "group": "Beverages",
+   "subgroup": "Coffee & tea",
+   "definition": "Ready-to-drink iced tea.",
+   "includes": "bottled and canned iced tea (sweetened or sugar-free), iced tea concentrates and powders",
+   "excludes": "tea bags and hot tea → 7304",
+   "assignable": true
+  },
+  {
+   "code": "X11",
+   "name": "Vitamins and supplements",
+   "group": "Other",
+   "subgroup": "Supplements",
+   "definition": "Vitamins and supplements.",
+   "includes": "vitamins, minerals, fish oil and omega-3, probiotics, herbal and fibre supplements, collagen (non-protein-powder)",
+   "excludes": "protein powders → 9802; nutrition drinks → 7208",
+   "assignable": true
+  }
+ ]
+}

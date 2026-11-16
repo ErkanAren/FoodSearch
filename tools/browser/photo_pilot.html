@@ -66,6 +66,10 @@
     <nav class="runs" aria-label="Pilot run">
       <a href="?run=cutout" data-run="cutout">Cut-out · E11</a>
       <a href="?run=crop" data-run="crop">Crop · E14</a>
+      <a href="?run=trial50" data-run="trial50">Trial 50 · v2</a>
+      <a href="?run=cutoutall" data-run="cutoutall">Trial 2 · cut-out all</a>
+      <a href="?run=bigmodel" data-run="bigmodel">Trial 3 · big model</a>
+      <a href="?run=bitefix" data-run="bitefix">Trial 4 · bite fix</a>
     </nav>
     <select id="filter" aria-label="Show"></select>
     <a href="/">← Food browser</a>
@@ -92,10 +96,15 @@ function el(tag, attrs, ...children) {   // data is untrusted: text only, never 
 const RUNS = {
   cutout: { title: "Photo clean-up pilot · E11 (background removal)", after: "After (cut-out)" },
   crop: { title: "Product crop pilot · E14 (OFF crop model)", after: "Crop (rate this)" },
+  trial50: { title: "Trial · 50 products · v2 pipeline (best photo → pack type → method)", after: "New (rate this)" },
+  cutoutall: { title: "Trial 2 · same 50 · cut-out inside the product box for every pack type", after: "Trial 2 (rate this)" },
+  bigmodel: { title: "Trial 3 · same 50 · full BiRefNet + gap filling + soft edges", after: "Trial 3 (rate this)" },
+  bitefix: { title: "Trial 4 · same 50 · trial 3 + bite repair + partial-pack check", after: "Trial 4 (rate this)" },
 };
+const CMP_LABEL = { crop: "Old crop (E14)", cutout: "Cut-out (E11)", trial50: "Trial 1", cutoutall: "Trial 2", bigmodel: "Trial 3" };
 const RUN = RUNS[new URLSearchParams(location.search).get("run")] ? new URLSearchParams(location.search).get("run") : "cutout";
 $("heading").textContent = RUNS[RUN].title;
-document.title = RUN === "crop" ? "Crop Pilot Review" : "Photo Pilot Review";
+document.title = { crop: "Crop Pilot Review", trial50: "Trial 50 Review", cutoutall: "Trial 2 Review", bigmodel: "Trial 3 Review", bitefix: "Trial 4 Review" }[RUN] || "Photo Pilot Review";
 for (const a of document.querySelectorAll("nav.runs a")) if (a.dataset.run === RUN) a.setAttribute("aria-current", "page");
 
 let data = null;
@@ -106,7 +115,9 @@ const pct = (a, b) => b ? `${Math.round((100 * a) / b)} %` : "–";
 
 function setupFilter() {
   const opts = [["all", "All"], ["unreviewed", "Not reviewed yet"], ["flagged", "Auto-flagged"], ["good", "Rated good"], ["bad", "Rated bad"]];
-  if (cmp()) opts.push(["cmp_bad", "Cut-out was bad"], ["cmp_good", "Cut-out was good"]);
+  const cl = CMP_LABEL[data.summary.compare_run] || "Previous";
+  if (cmp()) opts.push(["cmp_bad", `${cl} was bad`], ["cmp_good", `${cl} was good`]);
+  for (const m of ["rectify", "cutout", "crop", "icon"]) if (data.items.some((i) => i.method === m)) opts.push(["m_" + m, `Method: ${m}`]);
   $("filter").replaceChildren(...opts.map(([v, t]) => el("option", { value: v, text: t })));
 }
 
@@ -131,7 +142,7 @@ function renderStats() {
   if (cr) {
     const cutGood = reviewed.filter((i) => cr[i.code] === "good").length;
     const either = reviewed.filter((i) => rv[i.code] === "good" || cr[i.code] === "good").length;
-    out.push(stat(pct(cutGood, reviewed.length), "cut-out good (same products)"),
+    out.push(stat(pct(cutGood, reviewed.length), (CMP_LABEL[data.summary.compare_run] || "previous") + " good (same products)"),
              stat(pct(either, reviewed.length), "good with either method"));
   }
   $("stats").replaceChildren(...out);
@@ -152,17 +163,22 @@ function card(item) {
         item.orig_w ? ` · original ${item.orig_w}×${item.orig_h}` : "",
         item.secs != null ? ` · ${item.secs}s` : "",
         item.front_prob != null ? ` · front ${Math.round(item.front_prob * 100)} %` : "",
-        item.box_conf != null ? ` · box ${Math.round(item.box_conf * 100)} %` : "")),
+        item.box_conf != null ? ` · box ${Math.round(item.box_conf * 100)} %` : ""),
+      item.method ? el("div", { class: "meta" }, el("b", { text: `${item.method}` }),
+        item.pack_type ? ` · pack: ${item.pack_type}${item.type_source === "clip" && item.type_prob != null ? ` (${Math.round(item.type_prob * 100)} %)` : ""}` : "",
+        item.n_candidates != null ? ` · ${item.n_candidates} photo(s) to choose from` : "") : null),
   );
   const chips = el("div", { class: "chips" });
   if (!item.flags.length) chips.append(el("span", { class: "chip ok", text: "no flags" }));
   for (const f of item.flags) chips.append(el("span", { class: "chip", text: f, title: (data.summary.flag_rules || {})[f] || f }));
+  for (const f of item.info || []) chips.append(el("span", { class: "chip ok", text: f, title: (data.summary.flag_rules || {})[f] || f }));
   c.append(chips);
   if (item.secs != null) {
     const img = (run, sub, alt) => el("img", { src: `/pilot/${run}/${sub}/${encodeURIComponent(item.code)}.jpg`, alt, loading: "lazy", decoding: "async" });
     const figs = [el("figure", null, img(RUN, "before", "Original photo"), el("figcaption", { text: "Original (OFF)" }))];
-    if (cr) figs.push(el("figure", null, img(data.summary.compare_run, "after", "Cut-out from E11"),
-      el("figcaption", null, "Cut-out", verdictText(cr[item.code]))));
+    const cmpLabel = CMP_LABEL[data.summary.compare_run] || "Previous";
+    if (cr) figs.push(el("figure", null, img(data.summary.compare_run, "after", cmpLabel),
+      el("figcaption", null, cmpLabel, verdictText(cr[item.code]))));
     figs.push(el("figure", { class: cr ? "rate" : "" }, img(RUN, "after", RUNS[RUN].after), el("figcaption", { text: RUNS[RUN].after })));
     const pair = el("div", { class: "pair" }, ...figs);
     pair.style.setProperty("--cols", String(figs.length));
@@ -186,6 +202,7 @@ function render() {
     : f === "flagged" ? i.flags.length > 0
     : f === "cmp_bad" ? cr[i.code] === "bad"
     : f === "cmp_good" ? cr[i.code] === "good"
+    : f.startsWith("m_") ? i.method === f.slice(2)
     : rv[i.code] === f);
   $("grid").replaceChildren(...items.map(card));
   $("empty").hidden = items.length > 0;

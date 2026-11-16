@@ -61,7 +61,7 @@
 | **KR3.2** Greek-market products with a **Greek name** | 4,925 | **≥ 10,000** | 4,925 | |
 | **KR3.3** Generic everyday foods with a Greek name **and** ≥ 1 household portion in grams | 0 | **≥ 1,000** | 0 | |
 | **KR3.4** Traditional Greek dishes with carbs per portion (μουσακάς, παστίτσιο, σπανακόπιτα, γεμιστά, φασολάδα, γύρος πίτα…) | 0 | **≥ 150** | 0 | |
-| **KR3.5** Search test set (100 queries in Greek, Greeklish and English): right item in top 5 | 83 % (old LIKE search, draft set) | **≥ 90 %** | 91 % (BM25, **draft** set, not yet reviewed) | |
+| **KR3.5** Search test set (100 queries in Greek, Greeklish and English): right item in top 5 | 83 % (old LIKE search, draft set) | **≥ 90 %** | 91 % BM25 on the first 100 queries. On all 120 (incl. 20 Greek → English): 85 % BM25, 88 % hybrid. **Draft** set, not yet reviewed | |
 
 **Tasks**
 - [ ] E5: Greek subset deep-dive (name languages, brands, categories, gaps)
@@ -70,7 +70,10 @@
 - [x] Draft search test set (100 queries) + scoring tool: `tools/search/` (2026-11-13)
 - [ ] Review the test set and add real user queries (needed before KR3.5 can be scored)
 - [ ] E9: search normalization (accents/τόνοι, final ς, Greeklish transliteration)
-- [ ] E15: hybrid search (BM25 + semantic embeddings): does it beat BM25 alone?
+- [x] E15: hybrid search tested with e5-small and Qwen3-0.6B (2026-11-16): +3 points hit@5, Greek → English not fixed
+- [ ] E15 decision: proposal is BM25 + Greek names for generic foods + E9 / fuzzy matching, no model for now
+- [x] E16: offline Greek word index on all OpenNutrition products: hit@5 32 → 77 % with no model at search time (83 % with e5-small) (2026-11-16)
+- [ ] E16 decision + review the top ~3,000 word translations
 - [ ] Find a source for Greek dishes (recipe-based calculation or a licensed composition table)
 
 ---
@@ -114,6 +117,16 @@ Strategy and specs: `IMAGES.md`.
 - [ ] E11b: better cut-outs and/or an automatic judge, scored against the 200 verdicts (**parked**; try OFF's ready-made crop + front-photo models first, see E11)
 - [x] E14: product crop with OFF's ready-made models, run on the same 200 (0.08 s per photo, 20 flagged)
 - [ ] E14: human review at `/photo-pilot?run=crop`, then decide crop vs cut-out
+- [x] Handoff v2 pipeline, trial 1 on 50 products (best-of-N, router, per-type method): 40 % good, `stages/00-trial-50/REPORT.md`
+- [x] Trial 2, box-limited cut-out for every pack type: 50 % good (cans and bottles 85 %, other packs 39 %), `stages/01-cutout-all/REPORT.md`
+- [x] Trial 3, full BiRefNet + gap filling + soft edges: **64 % good** (cans and bottles 92 %, other packs 63 %), 13.4 s per product on CPU, `stages/02-big-model/REPORT.md`
+- [x] Trial 4, colour-based bite repair: **no-go** (22 / 48 good; it added background slivers), `stages/03-bite-fix/REPORT.md`. Trial 3 stays the baseline
+- [x] Local automatic judge (CLIP + logistic regression) on 324 rated images: **no-go** (never reaches 90 % precision), `stages/04-judge/REPORT.md`
+- [ ] Vision-LLM judge, scored against the same 324 verdicts (needs provider + API key)
+- [x] Product decision: a category icon **is** acceptable when no good photo exists (2026-11-16)
+- [x] Food categories for every product: USDA WWEIA (172, unmerged) + 11 additions = 183, with definitions: `CATEGORIES.md`, `CATEGORY-DEFINITIONS.md`
+- [ ] Category pilot: AI assigns a category to ~1,000 products, owner spot-checks ~100 (needs provider + API key)
+- [ ] Split the 85 % photo target into quality of shown photos + coverage?
 - [ ] E12: AI image pilot (30 Greek dishes / generic foods). Needs a provider choice + API key
 - [ ] E13: category icon set + mapping from OFF food groups
 - [ ] Attribution line for cleaned OFF photos on the detail screen (CC BY-SA)
@@ -141,3 +154,5 @@ Objective score = average of its KRs.
 | 2026-11-12 | Both datasets downloaded and profiled. Docs written. Key findings: carb-definition mismatch (Q-01), OFF serving double-scaling (Q-02), OpenNutrition grocery ≈ OFF subset, Greek names scarce (Q-09). | 0.75 | 0.0 | 0.0 | 0.0 |
 | 2026-11-12 (pm) | Data browser built (Greece only, with photos). Image strategy written (O5, `IMAGES.md`). E11 photo clean-up pilot run on 200 products and reviewed: only 31 % good, so no-go for an unattended full run; next is E11b. | 0.75 | 0.0 | 0.0 | 0.0 |
 | 2026-11-13 | **Architecture decision: all code runs on our backend, and the app is online-only.** So O4's on-device KRs no longer applied. KR4.1 (APK size ≤ 20 MB) became search API p95 < 100 ms on the server. KR4.2 (phone latency) became full index rebuild < 30 min. Search: the browser moved from a LIKE scan to FTS5 + BM25, which is ~1,000× faster on 326 k rows. A draft 100-query test set and the search lab (E15) are built: BM25 reaches 91 % hit@5 vs 83 % for the old search. KR3.5 is not scored until the test set is reviewed. | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-16 | E15 semantic search test: 20 Greek → English queries added (120 in total). BM25 85 % hit@5. Hybrid (BM25 + e5-small or Qwen3-0.6B) 88 %: it fixes Greeklish and typos but **not** Greek words for English-only foods (stays at 55 %), because both models match on script rather than meaning. Qwen3 needs ~140 ms per query on the CPU (over budget). Proposal: no model for now. Add Greek names to generic foods instead (KR3.3). | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-16 (pm) | Search catalogue = **all 326,759 OpenNutrition products** (user decision). There, BM25 reaches only 32 % hit@5 (no Greek text). **E16:** translating OpenNutrition's 28,754 distinct words to Greek once (51 s) and indexing them gives **77 %** with no model at search time (~2.5 ms, ≈ 400 searches/s per core), and **83 %** with e5-small on top (~26 ms). Translating queries at search time is worse (52–65 %). Next: review word translations, Greeklish (E9), ranking boosts. | 0.75 | 0.0 | 0.0 | 0.0 |

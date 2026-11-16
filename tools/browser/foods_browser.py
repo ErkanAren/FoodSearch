@@ -48,8 +48,16 @@ PILOT_HTML = HERE / "photo_pilot.html"
 PILOT_RUNS = {  # photo pilot runs: name -> output folder
     "cutout": ROOT / "work" / "photo_pilot",  # E11 background removal, tools/photos/cleanup_pilot.py
     "crop": ROOT / "work" / "photo_pilot_crop",  # E14 OFF crop model, tools/photos/crop_pilot.py
+    "trial50": ROOT / "stages" / "00-trial-50" / "out",  # v2 pipeline trial, stages/00-trial-50/run_trial.py
+    "cutoutall": ROOT / "stages" / "01-cutout-all" / "out",  # trial 2: run_trial.py --variant cutout-all
+    "bigmodel": ROOT / "stages" / "02-big-model" / "out",  # trial 3: run_trial.py --variant big
+    "bitefix": ROOT / "stages" / "03-bite-fix" / "out",  # trial 4: run_trial.py --variant bitefix
 }
-PILOT_SCRIPTS = {"cutout": "cleanup_pilot.py", "crop": "crop_pilot.py"}
+PILOT_SCRIPTS = {"cutout": "tools/photos/cleanup_pilot.py", "crop": "tools/photos/crop_pilot.py",
+                 "trial50": "stages/00-trial-50/run_trial.py",
+                 "cutoutall": "stages/00-trial-50/run_trial.py --variant cutout-all",
+                 "bigmodel": "stages/00-trial-50/run_trial.py --variant big",
+                 "bitefix": "stages/00-trial-50/run_trial.py --variant bitefix"}
 PAGE_SIZE = 50
 NO_NAME_SORT = "￿"  # rows without a name sort last
 
@@ -432,7 +440,7 @@ def counts():
 
 
 # --- Photo pilots (E11 cut-out, E14 crop): manifest, images and good/bad reviews --------------
-_PILOT_IMG = re.compile(r"^/pilot/(cutout|crop)/(before|after)/([0-9A-Za-z_-]{1,40})\.jpg$")
+_PILOT_IMG = re.compile(r"^/pilot/(cutout|crop|trial50|cutoutall|bigmodel|bitefix)/(before|after)/([0-9A-Za-z_-]{1,40})\.jpg$")
 _review_lock = threading.Lock()
 
 
@@ -447,7 +455,7 @@ def pilot_data(run):
     folder = PILOT_RUNS[run]
     manifest = folder / "manifest.json"
     if not manifest.exists():
-        return {"error": f"Pilot not run yet. Run: .venv/bin/python -I tools/photos/{PILOT_SCRIPTS[run]}"}
+        return {"error": f"Pilot not run yet. Run: .venv/bin/python -I {PILOT_SCRIPTS[run]}"}
     data = json.loads(manifest.read_text())
     data["run"] = run
     data["reviews"] = _read_reviews(folder)
