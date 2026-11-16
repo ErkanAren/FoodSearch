@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Compare</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --line: #e3e3de;
+    --accent: #2f6fdb; --ok: #1f8a4c; --ok-bg: #e6f4ec; --bad: #b3261e; --bad-bg: #fbeae9; --chip: #efefea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161615; --panel: #1f1f1d; --text: #ecece8; --muted: #9a9a93; --line: #33332f;
+      --accent: #7aa7ff; --ok: #5cc98a; --ok-bg: #173324; --bad: #f08a83; --bad-bg: #3a1b19; --chip: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1600px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  #q { flex: 1 1 320px; font-size: 17px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+       background: var(--panel); color: var(--text); min-width: 0; }
+  #q:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  select { flex: 0 1 300px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+           color: var(--text); font-size: 14px; min-width: 0; max-width: 100%; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 0; }
+  .chip { border: 0; background: var(--chip); color: var(--text); padding: 4px 10px; border-radius: 999px; cursor: pointer; font-size: 13px; }
+  .chip:hover { outline: 1px solid var(--accent); }
+  #info { margin: 12px 0 0; font-size: 14px; color: var(--muted); min-height: 20px; }
+  #info b { color: var(--text); font-weight: 600; }
+  main { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;
+         padding: 8px 16px 32px; max-width: 1600px; margin: 0 auto; }
+  .col { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 0; }
+  .col h2 { font-size: 14px; margin: 0; padding: 10px 12px 2px; }
+  .meta { display: flex; gap: 8px; align-items: center; padding: 0 12px 8px; font-size: 12px; color: var(--muted);
+          border-bottom: 1px solid var(--line); }
+  .badge { padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+  li:last-child { border-bottom: 0; }
+  li.ok { background: var(--ok-bg); }
+  .rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 1px; }
+  .name { overflow-wrap: anywhere; }
+  .mark { font-weight: 700; margin-right: 4px; }
+  li.ok .mark { color: var(--ok); }
+  li.bad .mark { color: var(--bad); }
+  .small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .empty { padding: 12px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Search compare</h1>
+  <p class="sub">Type a query and see the top 10 of each method side by side. For a query from the test set, correct results are marked ✓ (green) and wrong ones ✗.</p>
+  <p class="sub" id="corpus"></p>
+  <div class="bar">
+    <input id="q" type="search" placeholder="e.g. καρπουζι, giaourti, coca cola zero" autocomplete="off" autofocus>
+    <select id="tests" aria-label="Test-set queries"><option value="">Test-set queries…</option></select>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="info"></div>
+</header>
+<main id="cols"></main>
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  for (const k of kids) n.append(k);
+  return n;
+};
+const CHIPS = ["καρπουζι", "αρνι", "σολομος", "giaourti", "kotopoulo", "nutela", "kinder beuno",
+               "χωριατικη σαλατα", "γεμιστα", "sugar free cola", "coca cola zero", "γιαο"];
+let seq = 0, timer = null;
+
+function srcLabel(r) { return r.src === "off" ? "Open Food Facts" : `OpenNutrition · ${r.type}`; }
+
+function render(res) {
+  const t = res.test;
+  $("info").replaceChildren();
+  if (t) {
+    $("info").append("Test query ", el("b", {}, t.id), ` · ${t.kind} · correct = `, el("b", {}, t.want));
+  } else if (res.q) {
+    $("info").textContent = "Not a test-set query, so results aren't judged.";
+  }
+  $("cols").replaceChildren(...res.columns.map((c) => {
+    const meta = el("div", { class: "meta" }, `${c.ms} ms`);
+    if (t) meta.append(c.first_ok ? el("span", { class: "badge ok" }, `first correct: #${c.first_ok}`)
+                                  : el("span", { class: "badge bad" }, "none in top 10"));
+    const list = c.results.length ? el("ol", {}, ...c.results.map((r, i) => {
+      const cls = r.ok === null ? "" : r.ok ? "ok" : "bad";
+      const name = el("div", { class: "name" });
+      if (r.ok !== null) name.append(el("span", { class: "mark" }, r.ok ? "✓" : "✗"));
+      name.append(r.name || "(no name)");
+      const small = el("div", { class: "small" }, [r.brand, srcLabel(r)].filter(Boolean).join(" · "));
+      return el("li", cls ? { class: cls } : {}, el("span", { class: "rank" }, String(i + 1)), el("div", {}, name, small));
+    })) : el("div", { class: "empty" }, res.q ? "No results." : "Type a query.");
+    return el("section", { class: "col" }, el("h2", {}, c.label), meta, list);
+  }));
+}
+
+async function run(q) {
+  const my = ++seq;
+  try { history.replaceState(null, "", q ? "#q=" + encodeURIComponent(q) : "#"); } catch (e) {}
+  const res = await (await fetch("/api/compare?q=" + encodeURIComponent(q))).json();
+  if (my === seq) render(res);
+}
+
+function setQuery(q) { $("q").value = q; run(q); }
+
+$("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => run($("q").value), 250); });
+$("tests").addEventListener("change", (e) => { if (e.target.value) setQuery(e.target.value); e.target.value = ""; });
+$("chips").append(...CHIPS.map((q) => { const b = el("button", { class: "chip", type: "button" }, q); b.onclick = () => setQuery(q); return b; }));
+
+(async () => {
+  const ex = await (await fetch("/api/examples")).json();
+  $("corpus").replaceChildren("Searching: ", el("b", {}, `${ex.corpus.items.toLocaleString("en-US")} products`),
+                              ` · ${ex.corpus.description} (corpus "${ex.corpus.name}")`);
+  const groups = {};
+  for (const e of ex.examples) (groups[e.kind] ||= []).push(e);
+  for (const [kind, list] of Object.entries(groups)) {
+    $("tests").append(el("optgroup", { label: kind }, ...list.map((e) => el("option", { value: e.q }, `${e.id} · ${e.q}`))));
+  }
+  const fromHash = new URLSearchParams(location.hash.slice(1)).get("q");
+  setQuery(fromHash || "");
+})();
+</script>
+</body>
+</html>

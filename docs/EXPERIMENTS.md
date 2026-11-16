@@ -21,7 +21,8 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E12 | AI image pilot for generic foods & Greek dishes | KR5.3, KR5.4 | ⬜ |
 | E13 | Category icons for foods without a picture | KR5.5 | ⬜ |
 | E14 | Product crop with OFF's ready-made models | KR5.1, KR5.2 | 🔄 |
-| E15 | Hybrid search: BM25 + semantic (embeddings) | KR3.5, KR4.1 | 🔄 (BM25 baseline done) |
+| E15 | Hybrid search: BM25 + semantic (embeddings) | KR3.5, KR4.1 | 🔄 (results in: +3 points, gate not met; decision pending) |
+| E16 | Greek queries on English-only products: offline Greek index vs query translation | KR3.5, KR4.1 | ✅ results in (offline word index wins); decision pending |
 
 ---
 
@@ -166,12 +167,13 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 - **Setup:** `tools/search/search_lab.py` + `tools/search/queries.json` (commands in the README).
   - **Corpus (39,971 items)**, roughly the future library: OFF Greek market (26,654) + OpenNutrition everyday / prepared / restaurant (13,317). OpenNutrition grocery is left out because those items are OFF barcodes.
   - **Test set: 100 queries in 7 kinds:** Greek generic 20, English generic 20, brand 20, Greek dish 12, Greeklish 15, typo / prefix 8, descriptive 5. Each query describes a correct result with regexes on the product name, so new products count automatically. **A draft written by Claude from the data. It needs a human review plus real user queries, and is likely easier than real traffic.**
-  - **Metrics:** hit@1, hit@5 (= KR3.5), MRR@10, ms per query.
+  - **+20 queries (2026-11-16), kind `greek_to_english`:** Greek words for foods that exist mostly or only with English names (OpenNutrition), e.g. `καρπουζι` → "Watermelon", `αρνι` → "Lamb Chops". This is the case semantic search is meant to fix. The set now has 120 queries.
+  - **Metrics:** hit@1, hit@5 (= KR3.5), MRR@10, ms per query. Semantic timings include embedding the query on the CPU, as on a plain server.
 - **Plan:**
   1. ✅ Baseline: old LIKE search vs FTS5 BM25.
-  2. ⬜ Embed the corpus with `multilingual-e5-small` (cheap baseline) and `Qwen3-Embedding-0.6B`. Score semantic-only.
-  3. ⬜ Fusion: RRF vs weighted sum, sweeping the BM25 weight from 0 to 1 (including 0.25).
-  4. ⬜ Decide.
+  2. ✅ Embed the corpus with `multilingual-e5-small` (cheap baseline) and `Qwen3-Embedding-0.6B`. Score semantic-only.
+  3. ✅ Fusion: RRF vs weighted sum, sweeping the BM25 weight from 0 to 1 (including 0.25).
+  4. 🔄 Decide (proposal below).
 - **Result 1: BM25 baseline (2026-11-13)**
 
   | Method | hit@1 | hit@5 | MRR@10 | p95 ms |
@@ -189,7 +191,99 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
     - **Descriptive** (`χωρις ζαχαρη σοκολατα`): no product has all three words. Semantic search.
   - The any-word fill-up (`bm25_or`) changed nothing on this set.
   - **Test-set lesson:** the first run scored BM25 at only 82 %, because the regexes didn't know Greeklish product names. Those were correct results judged as wrong. Fixing the regexes gave 91 %. When a query looks like a miss, check the top 5 in `details.json` before blaming search.
-- **Decision:** _after steps 2–3_. Ship hybrid only if it clearly beats BM25 (≥ +5 points hit@5, or it fixes most cross-language misses) within the latency budget. Otherwise ship BM25 + the E9 fixes and skip the model.
+- **Result 2: semantic and hybrid (2026-11-16, 120 queries, M2 Max)**
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `bm25` | 77 % | 85 % | 0.80 | 3.6 | 4.5 |
+  | `dense:e5-small` (semantic only) | 63 % | 87 % | 0.73 | 14 | 18 |
+  | `dense:qwen3-0.6b` (semantic only) | 69 % | 86 % | 0.76 | 142 | 189 |
+  | `rrf:e5-small` | **79 %** | **88 %** | **0.83** | 16 | 31 |
+  | `rrf:qwen3-0.6b` | 78 % | 88 % | 0.82 | 144 | 183 |
+  | `mix:qwen3-0.6b:0.25` (0.25 BM25 + 0.75 semantic) | 76 % | 88 % | 0.81 | 141 | 179 |
+  | `mix:qwen3-0.6b:0.75` | 79 % | 87 % | 0.82 | 142 | 184 |
+
+  - **Where hybrid helps (hit@5, BM25 → RRF):** Greeklish 87 → 100 %, typo / prefix 75 → 88 % (e5) or 100 % (Qwen3), Greek dish 83 → 92 %. Brand, English generic, Greek generic and descriptive queries are unchanged.
+  - **Where it doesn't: Greek → English stays at 55 %** with both models. Semantic search alone is worse there (45 %). Both models favour items written in the same script as the query: `αρνι` (lamb) finds "Αριάνι" (a yogurt drink), `εσπρεσο` finds "Greek Cheese", and `καρπουζι` finds carob products. The English items ("Watermelon", "Cucumber", "Zucchini") never reach the top 10. **The main reason for semantic search is not solved by these two models.**
+  - **Weight sweep (BM25 weight W from 0 to 1):** hit@5 stays flat at 86–88 % for any W from 0.1 to 0.9, for both models. hit@1 rises with more BM25 weight: e5-small goes from 75 % at W = 0.25 to 80 % at W = 0.75–0.9. The suggested 0.25 / 0.75 is fine for hit@5 but loses top-1 accuracy. RRF is as good as the best weight without any tuning. Full tables: `work/search_lab/sweep_*.md`.
+  - **Qwen3-0.6B gives no gain over e5-small and is ~10× slower.** A query takes ~140 ms on the CPU, over the 100 ms budget, so it would need a GPU server.
+  - **Cost:**
+
+    | Model | Embed 40 k items (Mac GPU) | Vectors for 40 k | Estimate for 300 k items |
+    |---|---|---|---|
+    | e5-small | 18 s (2,169 items/s) | 61 MB | ≈ 2.5 min; ≈ 460 MB float32 (≈ 115 MB as int8) |
+    | Qwen3-0.6B | 7.9 min (84 items/s) | 164 MB | ≈ 1 h; ≈ 1.2 GB float32 |
+
+    Models: 1.6 GB of downloads in `work/models/hf`. Comparing a query with all vectors is a few ms even at 300 k, so the query model sets the speed.
+- **Result 3: all OpenNutrition products (2026-11-16, 326,759 items, `--corpus opennutrition`)**
+  - **109 of 120 queries are answerable.** The 11 without a correct item are Greek brands OpenNutrition doesn't carry (ΜΕΒΓΑΛ, ΔΕΛΤΑ, Caprice, Zagori, Βίκος, Lacta, ΙΟΝ, Μπάρμπα Στάθης, Παπαδοπούλου, Tsakiris) and μπουγάτσα.
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `like` (old search) | 21 % | 30 % | 0.25 | 51 | 69 |
+  | `bm25` | 27 % | 32 % | 0.29 | 3 | 10 |
+  | `dense:e5-small` | 39 % | 50 % | 0.43 | 27 | 32 |
+  | `rrf:e5-small` | **42 %** | **51 %** | **0.46** | 41 | 59 |
+  | `mix:e5-small:0.25` | 43 % | 50 % | 0.46 | 38 | 55 |
+  | `mix:e5-small:0.75` | 39 % | 50 % | 0.43 | 39 | 54 |
+
+  - **BM25 alone collapses here (32 %), because OpenNutrition has no Greek text at all.** Every Greek query (generic, dishes, Greek → English) gets 0 % with BM25.
+  - **Semantic search helps much more on this set (+19 points)**:
+    - Greek dishes 0 → 55 % (`μουσακας` → "Moussaka").
+    - Typos 25 → 62 %.
+    - English generic foods 75 → 90 %: `banana` → "Banana" first, where BM25 buries it under "Banana Muffins".
+  - **It still mostly fails on Greek words:** Greek generic 15 %, Greek → English 10 %. It mostly matches on spelling: `αρνι` → "Bread by Arnie's", `καρπουζι` → "Carbmastee by Kroger", `γιαουρτι` → "Fioretti". Some do work: `φετα` → "Feta by Odyssey".
+  - Cost: embedding 326,759 items with e5-small took 84 s on the Mac GPU (3,892 items/s), and the vectors take 502 MB. Qwen3-0.6B would take about 65 min.
+  - **Conclusion for an OpenNutrition-only catalogue:** semantic search is clearly worth it, but Greek queries need translation to reach English-only products. Either translate the query to English before searching, or add Greek names to the products.
+
+- **Decision (proposed 2026-11-16, waiting for sign-off, written for the `library` set):** the gate was "≥ +5 points hit@5 or fixes most cross-language misses". Hybrid gives **+3 points** and fixes **none** of the cross-language misses, so the gate is **not met**. Proposal:
+  1. **Don't ship Qwen3-0.6B** (no quality gain, over the latency budget).
+  2. **Keep BM25 as the search, and fix the cross-language gap with data instead of a model:** add Greek names and synonyms to OpenNutrition's generic foods (KR3.3), so BM25 finds `καρπουζι` directly. One-off translation, then human review.
+  3. **Get the Greeklish and typo gains without a model first:** Greeklish → Greek conversion (E9) and fuzzy matching (e.g. an FTS5 trigram index). If those fall short, `rrf:e5-small` is a cheap add-on (~15 ms per query, 18 s to embed 40 k items).
+  4. Optional before deciding: try a model known for strong cross-language retrieval (e.g. BGE-M3), or translate the query to English before searching.
+
+## E16: Greek queries on English-only products ✅ (decision pending)
+- **Question:** OpenNutrition has no Greek text, so Greek queries fail (E15 result 3: 0 % with BM25). Is it better to translate the products to Greek once (offline), or to translate each Greek query to English at search time? And what does each cost per search when there are many users?
+- **Hypothesis:** an offline Greek index gives most of the gain with no extra work per search. Translating at search time costs a model call per Greek query and is less accurate on short, unaccented queries.
+- **Setup:** `--corpus opennutrition` (326,759 items, 109 answerable test queries). Translation models are Marian / OPUS-MT, run locally.
+  - **Offline, English → Greek** (`translate` command, `opus-mt-tc-big-en-el`, CC-BY-4.0):
+    - `words`: every distinct English word in the names (28,754) translated once; a product's Greek text = its words' translations.
+    - `names`: every distinct product name without "by Brand" (211,348) translated in context.
+    - Both are indexed as an extra FTS5 index with a light Greek stemmer: one ending removed, stems of 4+ letters match as prefixes, shorter stems only as whole words, each word once per product.
+  - **At search time, Greek → English** (`opus-mt_tiny_ell-eng`, 51 MB, Apache-2.0): only for queries in Greek script.
+  - `opus-mt-tc-big-el-en` was also tried at search time. It output garbage with transformers 5.23 and was dropped.
+  - Speed measured on **one CPU core** (`--threads 1`), so it shows per-core capacity.
+- **Result (2026-11-16):**
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms (1 core) | p95 ms | ≈ searches/s per core |
+  |---|---|---|---|---|---|---|
+  | `bm25` (current) | 27 % | 32 % | 0.29 | 1.6 | 5.5 | ~600 |
+  | `rrf:e5-small` (E15 hybrid) | 42 % | 51 % | 0.46 | 33 | 47 | ~30 |
+  | **`kw_el:words`** (keyword + offline Greek index, **no model**) | 65 % | **77 %** | 0.70 | **2.5** | 5.5 | **~400** |
+  | `kw_el:names` | 55 % | 73 % | 0.63 | 1.7 | 4.9 | ~600 |
+  | **`hyb_el:words:e5-small`** (+ semantic) | **71 %** | **83 %** | **0.76** | 26 | 39 | ~38 |
+  | `hyb_el:names:e5-small` | 65 % | 80 % | 0.71 | 26 | 39 | ~39 |
+  | `kw_mt:el-en-tiny` (query translated at search time) | 42 % | 52 % | 0.46 | 7.3 | 19 | ~140 |
+  | `hyb_mt:el-en-tiny:e5-small` | 55 % | 65 % | 0.59 | 39 | 68 | ~26 |
+
+  - **By kind, `kw_el:words` vs `bm25`:** Greek generic 0 → **100 %**, Greek → English 0 → **95 %**, Greek dishes 0 → 64 %, typos 25 → 62 %. English and brand queries are unchanged.
+  - **Query translation at search time is worse and costs more:** the tiny model handles single words but garbles short phrases typed without accents (`φακες σουπα` → "Fifts of a suffocation", `μοσχαρισιος κιμας` → "vesicular ves").
+  - **Words beat full names** even though the name translations read better. Word translations use one consistent Greek word per food. Remaining word-level errors come from missing context: "ground" → "έδαφος" (soil), "ice" → "πάγος" (frozen water), "orange" → the colour.
+  - Two indexing bugs found and fixed on the way:
+    - Repeated words in translated names let "Banana Pops, Banana" outrank "Banana". Fixed by counting each word once per product.
+    - 3-letter stems matched as prefixes, so `γαλα` → `γαλ` found `γαλοπούλα` (turkey). Fixed by matching short stems only as whole words.
+  - **Still weak:** Greeklish (33 % without semantic, 60 % with), so E9 transliteration is still needed. In the hybrid, the semantic side adds noise to Greek queries (`αρνι` still pulls in "Arnie's").
+  - **Cost (one-off, this Mac's GPU):**
+    - Words: 51 s (559 per second).
+    - Names: 11.4 min (308 per second).
+    - Model downloads: ≈ 1.3 GB more in `work/models/hf` (2.7 GB in total with E15).
+    - The corpus DB with both Greek indexes: 291 MB.
+    - New or changed products only need their new words translated.
+- **Decision (proposed, waiting for sign-off):**
+  1. **Ship the offline Greek word index** (`kw_el:words`). It's the biggest gain (32 → 77 %) with no model at search time: ~2.5 ms on one core, roughly 400 searches per second per core.
+  2. **Add e5-small hybrid on top only if the server can afford ~26 ms per search** (≈ 38 per second per core): it brings 77 → 83 %.
+  3. **Don't translate queries at search time** (worse and slower).
+  4. **Next:** review the word translations (fix "ground", "ice", "orange"…, about 1–2 h for the top 3,000 words, which cover 93 % of word occurrences), Greeklish → Greek (E9), and ranking boosts (generic foods first).
 
 ---
 

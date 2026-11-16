@@ -1,0 +1,9 @@
+# Semantic part of the search lab (embed / sweep / dense, rrf and mix methods). Install into the project venv:
+#   .venv/bin/pip install -r tools/search/requirements.txt
+# build / check / eval of the keyword methods need only the Python standard library.
+# Models download on first use into work/models/hf (git-ignored).
+sentence-transformers==6.3.0
+transformers==5.23.0
+torch==2.15.0
+numpy==2.4.6
+sentencepiece==0.2.3

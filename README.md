@@ -67,17 +67,36 @@ Verdicts are saved to `review.json` in each run's folder. See `docs/IMAGES.md` �
 
 ## Search lab (experiment E15)
 
-Scores search methods against a test set of 100 queries in Greek, Greeklish and English (KR3.5: right item in the top 5).
+Scores search methods against a test set of 120 queries in Greek, Greeklish and English (KR3.5: right item in the top 5).
 
 ```bash
-python3 -I tools/search/search_lab.py build    # seconds: library-sized corpus (≈ 40 k items) + FTS5 → work/search_lab.sqlite
-python3 -I tools/search/search_lab.py check    # how many correct items each test query has (--show q001,q002 lists them)
-python3 -I tools/search/search_lab.py eval     # scores → work/search_lab/report.md + details.json (top 5 per query)
+C="--corpus opennutrition"   # which product set; see below
+python3 -I tools/search/search_lab.py build $C    # seconds: products + FTS5 index → work/search_lab/<corpus>/corpus.sqlite
+python3 -I tools/search/search_lab.py check $C    # how many correct items each test query has (--show q001,q002 lists them)
+python3 -I tools/search/search_lab.py eval $C     # keyword methods → work/search_lab/<corpus>/report.md + details.json
+
+# Semantic search (once: .venv/bin/pip install -r tools/search/requirements.txt; models download to work/models/hf)
+.venv/bin/python -I tools/search/search_lab.py embed $C --model e5-small    # item vectors (327 k items: 84 s on this Mac)
+.venv/bin/python -I tools/search/search_lab.py sweep $C --model e5-small    # BM25 weight 0 → 1, and RRF
+.venv/bin/python -I tools/search/search_lab.py eval $C --methods bm25,dense:e5-small,rrf:e5-small,mix:e5-small:0.25
+.venv/bin/python -I tools/search/search_lab.py serve $C --models e5-small   # http://127.0.0.1:8767: type a query, compare methods side by side
+
+# Greek queries on English names (E16): translate the product words to Greek once, then search with kw_el / hyb_el
+.venv/bin/python -I tools/search/search_lab.py translate $C --mode words --mt en-el-big   # 28,754 words: ~1 min on this Mac
+.venv/bin/python -I tools/search/search_lab.py eval $C --threads 1 --methods bm25,kw_el:words,hyb_el:words:e5-small,hyb_mt:el-en-tiny:e5-small
+.venv/bin/python -I tools/search/search_lab.py serve $C --methods bm25,kw_el:words,hyb_el:words:e5-small,rrf:e5-small
 ```
 
-- **Corpus:** OFF Greek market + OpenNutrition everyday/prepared/restaurant, which is roughly what the library will contain.
+- **Product sets (`--corpus`):**
+  - `library` (default, ≈ 40 k): OFF Greek market + OpenNutrition everyday/prepared/restaurant.
+  - `opennutrition` (326,759): all OpenNutrition products, grocery included.
+  - `all` (≈ 353 k): both.
 - **Test set:** `tools/search/queries.json`. Each query describes a correct result with patterns on the product name, so new products count automatically. It's a **draft**: review it and add real user queries.
-- **Methods so far:** `like` (the old browser search), `bm25`, and `bm25_or` (fills up with any-word matches). Semantic and hybrid methods come next.
+- **Methods:**
+  - `like` is the old browser search; `bm25` and `bm25_or` are keyword search.
+  - `dense:MODEL` is semantic search only.
+  - `rrf:MODEL` and `mix:MODEL:W` are hybrid. `W` is the BM25 weight, so `mix:qwen3-0.6b:0.25` = 0.25 BM25 + 0.75 semantic.
+  - Models: `e5-small` and `qwen3-0.6b`.
 
 ## Five things to know first
 
