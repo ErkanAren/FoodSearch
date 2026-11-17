@@ -15,7 +15,7 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E6 | Generic-food base selection | KR3.3 | ⬜ |
 | E7 | Portions / household measures | KR3.3 | ⬜ |
 | E8 | Server search index (SQLite FTS5): size + speed | KR4.1, KR4.2 | 🔄 (laptop numbers done) |
-| E9 | Greek / Greeklish search normalization | KR3.5 | ⬜ |
+| E9 | Greek / Greeklish search normalization | KR3.5 | ✅ Greeklish 60 → 87 % (2026-11-17) |
 | E10 | Manual audit of 200 items | KR2.5 | ⬜ |
 | E11 | OFF photo clean-up pilot (background removal) | KR5.1, KR5.2 | ✅ (31 % good, no-go) |
 | E12 | AI image pilot for generic foods & Greek dishes | KR5.3, KR5.4 | ⬜ |
@@ -23,6 +23,7 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E14 | Product crop with OFF's ready-made models | KR5.1, KR5.2 | 🔄 |
 | E15 | Hybrid search: BM25 + semantic (embeddings) | KR3.5, KR4.1 | 🔄 (results in: +3 points, gate not met; decision pending) |
 | E16 | Greek queries on English-only products: offline Greek index vs query translation | KR3.5, KR4.1 | ✅ results in (offline word index wins); decision pending |
+| E17 | Re-ranking: the right item first (closest name, generic before branded, typo-tolerant) | KR3.5, KR4.1 | ✅ results in; decision pending |
 
 ---
 
@@ -97,12 +98,21 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
   - Browser rebuild with one FTS5 index per tab: 68 s in total. The DB grew from ~850 to 957 MB.
 - **Decision:** FTS5 + BM25 is the keyword half of search. The browser was switched on 2026-11-13. Still to measure: the real server, under concurrent load.
 
-## E9: Greek / Greeklish search normalization ⬜
+## E9: Greek / Greeklish search normalization ✅
 - **Hypothesis:** Accent stripping + final-sigma folding + a Greeklish → Greek transliteration index raises top-5 hit rate on a 100-query set by ≥ 20 points vs a plain FTS.
 - **Method:** Build the query set (real user-style queries: "fakes", "giaourti", "spanakopita", "σπανακοπιτα"). Compare plain vs normalized index.
 - **Metrics:** top-1 / top-5 hit rate.
 - **Note (2026-11-13):** the query set now exists (`tools/search/queries.json`, see E15), and accent stripping + final-sigma folding are already in `norm()`. With BM25 alone, **Greeklish queries already reach 87 % hit@5 (13 of 15)**, because many Greek OFF products are named in Greeklish ("Giaourti", "Mousakas", "Fakes psiles", "Psomi Sitou"). The +20-point hypothesis can't hold on this set. Only `rizi` and `patates` still miss. Real user queries may be harder.
-- **Result:** _TBD_
+- **Result (2026-11-17, `--corpus opennutrition`):** Greeklish as a common "skeleton" spelling instead of guessing one Greek spelling.
+  - **How:** both sides are reduced to the same rough Latin form. The Greek words of the offline index become καρπουζι → `karpuz`, and the query becomes karpouzi → `karpuz`.
+    - Merged: η / ι / υ / ει / οι → i, ο / ω → o, ου → u, αι / ε → e, μπ → b, ντ → d, χ → h (and Latin x → h).
+    - Doubled letters collapse and one ending is removed.
+    - The skeletons get their own FTS index (`greeklish_fts`, built in 5 s for 326 k items). Queries in Latin letters search it next to the English names, and the re-ranker (E17) compares the skeletons too.
+  - **Greeklish queries:** hit@5 60 → **87 %** (`rrg:kw_el:words`).
+    - Examples: `karpouzi` → Watermelon, `giaourti` → Greek Yogurt, `fakes` → Lentil Soup, `rizi` → Rice, `patates` → Potatoes, `melitzana` → Eggplant, `souvlaki` → Chicken Souvlaki.
+    - Still missing: `pastitsio` (OpenNutrition calls it "Macarona Béchamel", rank 7) and `fasolada` (no item translates to φασολάδα).
+  - **Overall, no model:** `rrg:kw_el:words` is now at hit@1 **84 %**, hit@5 **92 %**, ~7 ms per search on one core. With e5-small: 86 % / 93 %.
+  - **Ambiguity:** `gala` is milk in Greeklish and also "Gala Apples" in English; both appear at the top.
 
 ## E10: Manual audit ⬜
 - **Method:** Random 200 items from the final Greek subset. Compare carbs, kcal and portion against the package photo (OFF images) or the producer's website.
@@ -284,6 +294,64 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
   2. **Add e5-small hybrid on top only if the server can afford ~26 ms per search** (≈ 38 per second per core): it brings 77 → 83 %.
   3. **Don't translate queries at search time** (worse and slower).
   4. **Next:** review the word translations (fix "ground", "ice", "orange"…, about 1–2 h for the top 3,000 words, which cover 93 % of word occurrences), Greeklish → Greek (E9), and ranking boosts (generic foods first).
+
+## E17: Re-ranking: the right item first ✅ (decision pending)
+- **Problem (2026-11-17):** the first result is often a variant instead of the food itself.
+  - `musaka` → "Moussaka B'zeit" (a Lebanese dish whose aliases include "musaka"), not "Moussaka".
+  - `banana` → "Banana Love, Banana Muffins".
+  - `greek yogurt` → "Greek Yogurt Covered Raisins".
+- **Method:** `rr:METHOD` takes any method's top 30 and reorders them by:
+  1. **Closest name.** The query is compared with the item's name without "by Brand", its full name and its Greek word translation (E16). Small spelling differences count (`musaka` ≈ `moussaka`, similarity 0.86), extra words in the name count against it, and a partial word ("milk" in "Milkadamia") scores below a whole word.
+  2. **Generic foods** (OpenNutrition everyday / prepared) +0.08 before branded variants.
+  3. **Original position**, up to +0.10.
+  - Extra candidates are always added: the 10 best **generic foods**, from a small FTS index of the ~9 k generic items, so the plain food is in the race even when thousands of branded products match first.
+  - **Typo-tolerant name matches** come from an FTS5 trigram index. They're only used when the query matches fewer than 3 items exactly, because that lookup is the slow part.
+  - No model.
+- **Result (2026-11-17, `--corpus opennutrition`, 109 answerable queries, 1 CPU core):**
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `kw_el:words` (E16) | 65 % | 77 % | 0.70 | 4.2 | 11.7 |
+  | **`rr:kw_el:words`** | **77 %** | **87 %** | **0.81** | **6.5** | 15.9 |
+  | `hyb_el:words:e5-small` (E16) | 71 % | 83 % | 0.76 | 30 | 45 |
+  | **`rr:hyb_el:words:e5-small`** | **79 %** | **89 %** | **0.83** | 32 | 51 |
+
+  - By kind (`kw_el:words` → `rr:kw_el:words`): typos 62 → **100 %**, English generic 75 → **95 %**, Greeklish 33 → 60 % (via typo-tolerant names). Greek generic stays at 100 % and Greek → English at 95 %.
+  - Examples:
+    - `musaka` → **Moussaka**
+    - `banana` → **Banana**
+    - `greek yogurt` → **Greek Yogurt**
+    - `nutela` → **Nutella**
+    - `milk` → **Milk** (was "Milkadamia")
+    - `μπανανα` → **Banana**
+    - `καρπουζι` → **Watermelon**
+  - **Speed:** the first version took ~15 ms (p95 44 ms) because the trigram lookup ran on every query (9 ms on average, 38 ms p95). Running it only for likely typos, plus a separate generic-food index, brought re-ranking down to **~2 ms extra**. Typo queries themselves still take 15–60 ms.
+  - **Still wrong:**
+    - `αρνι` → "Pureed Lamb" (baby food) first, because nothing in the data says which lamb item is the common one.
+    - `φετα` also finds "Slice…", because φέτα means both feta and slice.
+    - **Fixes:** a popularity signal (what users actually pick, or OFF scans via barcode), and reviewing ambiguous word translations.
+- **Non-brand first (`rrg:`, 2026-11-17):** generic foods (OpenNutrition everyday / prepared) whose name matches well (similarity ≥ 0.6) go above **every** branded product, **unless the query names a brand**.
+  - **Brand detection:** 7,922 brand names collected from the data ("… by Brand" and the OFF brand field). Two kinds are left out: brands made only of words that also name generic foods (a brand "Banana"), and single words found in more than 2,000 product names ("organic"). `yoplait greek yogurt`, `kroger milk` and `fage total` count as brand queries; `banana`, `milk` and `organic milk` don't.
+  - **Fixes added at the same time:**
+    - Greek queries are also spelled in Latin letters (`φετα` → feta, `μπανανα` → banana) and compared with the English names directly.
+    - A match through the offline word translation counts 0.9×. Otherwise `φετα` found "Apple Slices" first, because φέτα also means "slice".
+    - Neutral words (raw, cooked, boneless, skinless, plain, whole, fresh…) no longer count as extra words. So "Chicken Breast, Boneless Skinless, Cooked" beats "Fried Chicken Breast".
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `rr:kw_el:words` | 77 % | 87 % | 0.81 | 6.9 | 16.9 |
+  | **`rrg:kw_el:words`** | **80 %** | **88 %** | **0.83** | **6.2** | 15.4 |
+  | `rr:hyb_el:words:e5-small` | 79 % | 89 % | 0.83 | 34 | 54 |
+  | `rrg:hyb_el:words:e5-small` | 81 % | 89 % | 0.84 | 34 | 53 |
+
+  - English generic 95 → 100 %; brand queries unchanged at 90 %.
+  - Examples with `rrg:`:
+    - `milk` → Whole Milk
+    - `γιαουρτι` → Greek Yogurt
+    - `φετα` → Feta Cheese
+    - `chicken breast` → Chicken Breast, Boneless Skinless, Cooked
+    - `banana` → Banana, Banana Puree, Banana Bread… then the branded bananas
+- **Decision (proposed):** use `rrg:kw_el:words` as the no-model search: 80 % first result right, 88 % top 5, ~6 ms per search on one core. The app could also show two sections, "Foods" (generic) and "Brands", using the same generic flag.
 
 ---
 

@@ -85,6 +85,9 @@ python3 -I tools/search/search_lab.py eval $C     # keyword methods → work/sea
 .venv/bin/python -I tools/search/search_lab.py translate $C --mode words --mt en-el-big   # 28,754 words: ~1 min on this Mac
 .venv/bin/python -I tools/search/search_lab.py eval $C --threads 1 --methods bm25,kw_el:words,hyb_el:words:e5-small,hyb_mt:el-en-tiny:e5-small
 .venv/bin/python -I tools/search/search_lab.py serve $C --methods bm25,kw_el:words,hyb_el:words:e5-small,rrf:e5-small
+
+# Re-ranking (E17): prefix any method with rr: to put the closest name / generic food first (no model, ~2 ms)
+.venv/bin/python -I tools/search/search_lab.py serve $C --methods bm25,kw_el:words,rr:kw_el:words,rr:hyb_el:words:e5-small
 ```
 
 - **Product sets (`--corpus`):**

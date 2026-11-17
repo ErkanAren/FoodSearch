@@ -69,11 +69,13 @@
 - [ ] E7: portions: parse OFF `serving_size`, map OpenNutrition `serving`, build a curated Greek portion list (κουταλιά, φλιτζάνι, φέτα, μερίδα…)
 - [x] Draft search test set (100 queries) + scoring tool: `tools/search/` (2026-11-13)
 - [ ] Review the test set and add real user queries (needed before KR3.5 can be scored)
-- [ ] E9: search normalization (accents/τόνοι, final ς, Greeklish transliteration)
+- [x] E9: search normalization (accents/τόνοι, final ς, Greeklish): Greeklish 60 → 87 % (2026-11-17)
 - [x] E15: hybrid search tested with e5-small and Qwen3-0.6B (2026-11-16): +3 points hit@5, Greek → English not fixed
 - [ ] E15 decision: proposal is BM25 + Greek names for generic foods + E9 / fuzzy matching, no model for now
 - [x] E16: offline Greek word index on all OpenNutrition products: hit@5 32 → 77 % with no model at search time (83 % with e5-small) (2026-11-16)
 - [ ] E16 decision + review the top ~3,000 word translations
+- [x] E17: re-ranking (closest name, generic first, typo-tolerant): first result right 65 → 77 % (2026-11-17)
+- [ ] Popularity signal for ranking (which variant users pick; OFF scans via barcode)
 - [ ] Find a source for Greek dishes (recipe-based calculation or a licensed composition table)
 
 ---
@@ -156,3 +158,5 @@ Objective score = average of its KRs.
 | 2026-11-13 | **Architecture decision: all code runs on our backend, and the app is online-only.** So O4's on-device KRs no longer applied. KR4.1 (APK size ≤ 20 MB) became search API p95 < 100 ms on the server. KR4.2 (phone latency) became full index rebuild < 30 min. Search: the browser moved from a LIKE scan to FTS5 + BM25, which is ~1,000× faster on 326 k rows. A draft 100-query test set and the search lab (E15) are built: BM25 reaches 91 % hit@5 vs 83 % for the old search. KR3.5 is not scored until the test set is reviewed. | 0.75 | 0.0 | 0.0 | 0.0 |
 | 2026-11-16 | E15 semantic search test: 20 Greek → English queries added (120 in total). BM25 85 % hit@5. Hybrid (BM25 + e5-small or Qwen3-0.6B) 88 %: it fixes Greeklish and typos but **not** Greek words for English-only foods (stays at 55 %), because both models match on script rather than meaning. Qwen3 needs ~140 ms per query on the CPU (over budget). Proposal: no model for now. Add Greek names to generic foods instead (KR3.3). | 0.75 | 0.0 | 0.0 | 0.0 |
 | 2026-11-16 (pm) | Search catalogue = **all 326,759 OpenNutrition products** (user decision). There, BM25 reaches only 32 % hit@5 (no Greek text). **E16:** translating OpenNutrition's 28,754 distinct words to Greek once (51 s) and indexing them gives **77 %** with no model at search time (~2.5 ms, ≈ 400 searches/s per core), and **83 %** with e5-small on top (~26 ms). Translating queries at search time is worse (52–65 %). Next: review word translations, Greeklish (E9), ranking boosts. | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-17 | **E17 re-ranking:** top results reordered by closest name (typo-tolerant), generic foods before branded variants, then original order. First result right 65 → **77 %**, top 5 77 → **87 %** with no model, ~6.5 ms per search (+2 ms). With e5-small: 79 % / 89 %. `musaka` → Moussaka, `banana` → Banana, `nutela` → Nutella. Open: a popularity signal for which variant is the common one. | 0.75 | 0.0 | 0.0 | 0.0 |
+| 2026-11-17 (pm) | Non-brand foods first unless the query names a brand (`rrg:`), and **Greeklish** (E9): both the query and the Greek words are reduced to one common Latin spelling (karpouzi = καρπούζι → Watermelon). Greeklish 60 → 87 % hit@5. No-model search (`rrg:kw_el:words`, all OpenNutrition): first result right **84 %**, top 5 **92 %**, ~7 ms. Draft test set, not yet reviewed. | 0.75 | 0.0 | 0.0 | 0.0 |

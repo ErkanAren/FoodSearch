@@ -42,9 +42,14 @@ Methods (--methods, comma-separated):
                      (so mix:MODEL:0.25 = 0.25 BM25 + 0.75 semantic)
   Greek queries on English names (experiment E16; MODE = words | names, MT = a translation model below):
   kw_el:MODE         BM25 + an offline Greek index of the translated names (built by `translate`). No model at search time.
+                     Queries in Latin letters are also matched as Greeklish (karpouzi -> καρπούζι -> Watermelon).
   hyb_el:MODE:MODEL  RRF of BM25, the offline Greek index and semantic search.
   kw_mt:MT           BM25 + BM25 on the query translated to English at search time (only for Greek queries).
   hyb_mt:MT:MODEL    RRF of BM25 on the query, and BM25 + semantic on its English translation.
+  rr:METHOD          re-rank METHOD's top 30 (+ typo-tolerant name matches): closest name first, generic foods
+                     before branded variants, original order as tie-break. No model. e.g. rr:kw_el:words
+  rrg:METHOD         like rr:, but non-brand (generic) foods that match well always come before branded products,
+                     unless the query names a brand (e.g. "coca cola zero"). e.g. rrg:kw_el:words
   Translation models (MT): en-el-big, en-el-tiny (offline, English -> Greek); el-en-tiny (at search time).
   (opus-mt-tc-big-el-en was tried at search time: it produced garbage with transformers 5.23, so it is not listed.)
   Offline Greek index:
@@ -55,6 +60,7 @@ Metrics (over answerable queries, i.e. queries with at least one correct item in
   ms = time per query, including embedding the query on the CPU (as on a plain server).
 """
 import argparse
+import difflib
 import hashlib
 import json
 import os
@@ -331,6 +337,67 @@ def base_name(name):
     return _BY_BRAND.sub("", name or "").strip()
 
 
+# Greeklish (experiment E9): Greek written in Latin letters ("karpouzi"). Instead of guessing one Greek spelling,
+# both sides are reduced to the same rough Latin "skeleton": the Greek words of the index (καρπουζι -> karpuz) and
+# the query (karpouzi -> karpuz). Sounds Greeks spell in several ways are merged (η/ι/υ/ει/οι -> i, ο/ω -> o,
+# ου -> u, αι/ε -> e, μπ -> b, ντ -> d, χ -> h), doubled letters collapse and one ending is removed.
+_GR_SKEL_PAIRS = [("ου", "u"), ("αι", "e"), ("ει", "i"), ("οι", "i"), ("υι", "i"), ("αυ", "av"), ("ευ", "ev"),
+                  ("μπ", "b"), ("ντ", "d"), ("γκ", "g"), ("γγ", "g"), ("τσ", "ts"), ("τζ", "tz"),
+                  ("θ", "th"), ("χ", "h"), ("ψ", "ps"), ("ξ", "ks")]
+_GR_SKEL = str.maketrans("αβγδεζηικλμνοπρστυφω", "avgdeziiklmnoprstifo")
+_LAT_SKEL_PAIRS = [("ou", "u"), ("ai", "e"), ("ei", "i"), ("oi", "i"), ("ui", "i"), ("ph", "f"), ("ch", "h"),
+                   ("kh", "h"), ("mp", "b"), ("nt", "d"), ("gk", "g"), ("gg", "g"), ("x", "h"), ("w", "o"),
+                   ("y", "i"), ("c", "k"), ("q", "k")]
+_SKEL_ENDINGS = ["ies", "es", "as", "os", "is", "us", "ia", "io", "a", "e", "i", "o", "u", "s"]
+_DOUBLE = re.compile(r"(.)\1+")
+
+
+def skeleton(word):
+    """Rough common spelling of a normalized Greek or Greeklish word, without its ending."""
+    if _HAS_GREEK.search(word):
+        for a, b in _GR_SKEL_PAIRS:
+            word = word.replace(a, b)
+        word = word.translate(_GR_SKEL)
+    else:
+        for a, b in _LAT_SKEL_PAIRS:
+            word = word.replace(a, b)
+    word = _DOUBLE.sub(r"\1", word)
+    for e in _SKEL_ENDINGS:
+        if word.endswith(e) and len(word) - len(e) >= 3:
+            return word[: -len(e)]
+    return word
+
+
+def ensure_greeklish_index():
+    """FTS index of the skeletons of every item's Greek words: the offline translation (OpenNutrition) and Greek
+    names already in the data (Open Food Facts). Built once per corpus; `translate` drops it so it is rebuilt."""
+    with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
+        if con.execute("SELECT 1 FROM sqlite_master WHERE name = 'greeklish_fts'").fetchone():
+            return
+        t0 = time.time()
+        has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
+        el = dict(con.execute("SELECT rowid, text FROM el_words_fts")) if has_el else {}
+        rows = []
+        for rid, search in con.execute("SELECT rid, search FROM docs"):
+            greek = [el_stem(w) for w in (search or "").split() if _HAS_GREEK.search(w)] + el.get(rid, "").split()
+            skel = dict.fromkeys(skeleton(w) for w in greek if w)
+            if skel:
+                rows.append((rid, " ".join(skel)))
+        con.executescript("""CREATE VIRTUAL TABLE greeklish_fts USING fts5(text, tokenize='unicode61', prefix='2 3');""")
+        con.executemany("INSERT INTO greeklish_fts(rowid, text) VALUES (?, ?)", rows)
+        con.commit()
+        print(f"Built the Greeklish index ({len(rows):,} items) in {time.time() - t0:.0f}s", flush=True)
+
+
+def greeklish_ranked(con, words, op, limit):
+    """Ranked rids for a query in Latin letters, matched as Greeklish against the items' Greek words."""
+    if not con.execute("SELECT 1 FROM sqlite_master WHERE name = 'greeklish_fts'").fetchone():
+        ensure_greeklish_index()
+    skel = [skeleton(w) for w in words]
+    sql = "SELECT rowid FROM greeklish_fts WHERE greeklish_fts MATCH ? ORDER BY bm25(greeklish_fts), rowid LIMIT ?"
+    return [r for (r,) in con.execute(sql, (el_match(skel, op), limit))]
+
+
 class MT:
     """A Marian translation model. Queries are cached like the embedding cache (cleared per timed call in eval)."""
     _cache = {}
@@ -406,7 +473,7 @@ def translate_corpus(mode, mt_name, batch):
     else:
         load_s = secs = 0.0
     tr = dict(con.execute(f"SELECT src, el FROM mt_{mode}"))
-    con.executescript(f"""DROP TABLE IF EXISTS el_{mode}_fts;
+    con.executescript(f"""DROP TABLE IF EXISTS el_{mode}_fts; DROP TABLE IF EXISTS greeklish_fts;
         CREATE VIRTUAL TABLE el_{mode}_fts USING fts5(text, tokenize='unicode61 remove_diacritics 2', prefix='2 3');""")
     con.executemany(f"INSERT INTO el_{mode}_fts(rowid, text) VALUES (?, ?)",
                     ((rid, el_index_text(" ".join(tr.get(u, "") for u in us))) for rid, us in doc_units.items()))
@@ -425,19 +492,19 @@ def translate_corpus(mode, mt_name, batch):
 
 
 # ---------------------------------------------------------------------------
-# Search methods. Each takes (con, query) and returns up to K doc rids, best first.
+# Search methods. Each takes (con, query, k=K) and returns up to k doc rids, best first.
 # ---------------------------------------------------------------------------
 def like_escape(word):
     return "%" + word.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
 
 
-def m_like(con, q):
+def m_like(con, q, k=K):
     """The browser's search before 2026-11-13: every word as a substring, sorted A->Z (no ranking)."""
     words = norm(q).split()
     if not words:
         return []
     where = " AND ".join(["search LIKE ? ESCAPE '\\'"] * len(words))
-    sql = f"SELECT rid FROM docs WHERE {where} ORDER BY sort_key, id LIMIT {K}"
+    sql = f"SELECT rid FROM docs WHERE {where} ORDER BY sort_key, id LIMIT {int(k)}"
     return [r[0] for r in con.execute(sql, [like_escape(w) for w in words])]
 
 
@@ -449,21 +516,21 @@ def bm25_scored(con, words, op, limit):
     return con.execute(sql, (fts_match(words, op), limit)).fetchall()
 
 
-def m_bm25(con, q):
+def m_bm25(con, q, k=K):
     """FTS5 + BM25: every word must match the start of a word (the browser's search since 2026-11-13)."""
     words = norm(q).split()
-    return [r for r, _ in bm25_scored(con, words, "AND", K)] if words else []
+    return [r for r, _ in bm25_scored(con, words, "AND", k)] if words else []
 
 
-def m_bm25_or(con, q):
-    """Like bm25, but when fewer than K rows match ALL words, fill up with rows matching ANY word."""
+def m_bm25_or(con, q, k=K):
+    """Like bm25, but when fewer than k rows match ALL words, fill up with rows matching ANY word."""
     words = norm(q).split()
     if not words:
         return []
-    hits = [r for r, _ in bm25_scored(con, words, "AND", K)]
-    if len(hits) < K and len(words) > 1:
+    hits = [r for r, _ in bm25_scored(con, words, "AND", k)]
+    if len(hits) < k and len(words) > 1:
         seen = set(hits)
-        hits += [r for r, _ in bm25_scored(con, words, "OR", 2 * K) if r not in seen][: K - len(hits)]
+        hits += [r for r, _ in bm25_scored(con, words, "OR", 2 * k) if r not in seen][: k - len(hits)]
     return hits
 
 
@@ -488,15 +555,15 @@ def fusion_inputs(con, dense, q):
     return cand, b_n, d_n, ranks_b, ranks_d
 
 
-def mix_rank(inputs, w):
+def mix_rank(inputs, w, k=K):
     cand, b_n, d_n, _, _ = inputs
-    return sorted(cand, key=lambda r: (-(w * b_n.get(r, 0.0) + (1 - w) * d_n[r]), r))[:K]
+    return sorted(cand, key=lambda r: (-(w * b_n.get(r, 0.0) + (1 - w) * d_n[r]), r))[:k]
 
 
-def rrf_rank(inputs):
+def rrf_rank(inputs, k=K):
     cand, _, _, rb, rd = inputs
     score = {r: (1 / (RRF_K + rb[r]) if r in rb else 0) + (1 / (RRF_K + rd[r]) if r in rd else 0) for r in cand}
-    return sorted(cand, key=lambda r: (-score[r], r))[:K]
+    return sorted(cand, key=lambda r: (-score[r], r))[:k]
 
 
 def rrf_fuse(lists, k=K):
@@ -515,59 +582,321 @@ def el_ranked(con, mode, words, op, limit):
     return [r for (r,) in con.execute(sql, (el_match(stems, op), limit))]
 
 
-def m_kw_el(con, q, mode):
+def m_kw_el(con, q, mode, k=K):
     """Keyword only, plus the offline Greek index: Greek queries also search the translated names. No model."""
     words = norm(q).split()
     if not words:
         return []
-    en = [r for r, _ in bm25_scored(con, words, "AND", K)]
+    en = [r for r, _ in bm25_scored(con, words, "AND", k)]
     if not _HAS_GREEK.search(" ".join(words)):
-        return en
-    return rrf_fuse([en, el_ranked(con, mode, words, "AND", K)])
+        gl = greeklish_ranked(con, words, "AND", k)  # "karpouzi" -> items whose Greek words read karpuz...
+        return rrf_fuse([en, gl], k) if gl else en
+    return rrf_fuse([en, el_ranked(con, mode, words, "AND", k)], k)
 
 
-def m_hyb_el(con, q, mode, model):
+def m_hyb_el(con, q, mode, model, k=K):
     """Hybrid: BM25 (English names) + BM25 (offline Greek index) + semantic, fused with RRF."""
     words = norm(q).split()
     lists = [[r for r, _ in bm25_scored(con, words, "OR", POOL)]] if words else []
     if words and _HAS_GREEK.search(" ".join(words)):
         lists.append(el_ranked(con, mode, words, "OR", POOL))
+    elif words:
+        lists.append(greeklish_ranked(con, words, "OR", POOL))
     lists.append([r for r, _ in Dense.get(model).top(q, POOL)])
-    return rrf_fuse(lists)
+    return rrf_fuse(lists, k)
 
 
-def m_kw_mt(con, q, mt):
+def m_kw_mt(con, q, mt, k=K):
     """Keyword only, plus translating a Greek query to English at search time (model runs per Greek query)."""
     words = norm(q).split()
     if not words:
         return []
-    lists = [[r for r, _ in bm25_scored(con, words, "AND", K)]]
+    lists = [[r for r, _ in bm25_scored(con, words, "AND", k)]]
     if _HAS_GREEK.search(" ".join(words)):
         en_words = norm(MT.get(mt).query(q)).split()
         if en_words:
-            lists.append([r for r, _ in bm25_scored(con, en_words, "AND", K)])
-    return rrf_fuse(lists)
+            lists.append([r for r, _ in bm25_scored(con, en_words, "AND", k)])
+    return rrf_fuse(lists, k)
 
 
-def m_hyb_mt(con, q, mt, model):
+def m_hyb_mt(con, q, mt, model, k=K):
     """Hybrid with query translation: for a Greek query, BM25 on the original + BM25 and semantic on the English."""
     words = norm(q).split()
     if not words or not _HAS_GREEK.search(" ".join(words)):
-        return rrf_rank(fusion_inputs(con, Dense.get(model), q))
+        return rrf_rank(fusion_inputs(con, Dense.get(model), q), k)
     q_en = MT.get(mt).query(q)
     en_words = norm(q_en).split()
     lists = [[r for r, _ in bm25_scored(con, words, "OR", POOL)]]
     if en_words:
         lists.append([r for r, _ in bm25_scored(con, en_words, "OR", POOL)])
     lists.append([r for r, _ in Dense.get(model).top(q_en or q, POOL)])
-    return rrf_fuse(lists)
+    return rrf_fuse(lists, k)
+
+
+# ---------------------------------------------------------------------------
+# Re-ranking (rr:METHOD): put "the real one" first.
+#   1. closest name first: query vs the item's name, its name with brand, and its Greek translation,
+#      allowing small spelling differences (musaka ~ moussaka); extra words in the name count against it
+#   2. generic foods (OpenNutrition everyday / prepared) before branded variants
+#   3. the original order breaks ties
+# Candidates = the method's top RR_DEPTH + the best generic foods + typo-tolerant name matches (trigram index,
+# only when the query matches fewer than 3 items exactly).
+# No model.
+# ---------------------------------------------------------------------------
+RR_DEPTH = 30
+GENERIC_BONUS = 0.08
+TRANSLATED_WEIGHT = 0.9  # a name match through the offline word translation counts a little less than a direct one
+GENERIC_FIRST_MIN_SIM = 0.6  # rrg: a generic food goes above all brands only if its name matches this well
+POSITION_WEIGHT = 0.10
+
+
+def ensure_name_trigrams():
+    """Trigram index over each item's normalized name without 'by Brand' (built once per corpus, seconds)."""
+    with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
+        if con.execute("SELECT 1 FROM sqlite_master WHERE name = 'names_tri'").fetchone():
+            return
+        t0 = time.time()
+        con.create_function("base_norm", 1, lambda n: norm(base_name(n)), deterministic=True)
+        con.executescript("""CREATE VIRTUAL TABLE names_tri USING fts5(name, tokenize='trigram');
+                             INSERT INTO names_tri(rowid, name) SELECT rid, base_norm(name) FROM docs;""")
+        con.commit()
+        print(f"Built the name trigram index in {time.time() - t0:.0f}s", flush=True)
+
+
+def trigram_candidates(con, q, limit):
+    """Items whose name shares the most 3-letter pieces with the query, e.g. 'moussaka' for 'musaka'."""
+    grams = sorted({w[i:i + 3] for w in norm(q).split() for i in range(len(w) - 2)})
+    if not grams:
+        return []
+    sql = "SELECT rowid FROM names_tri WHERE names_tri MATCH ? ORDER BY bm25(names_tri), rowid LIMIT ?"
+    return [r for (r,) in con.execute(sql, (" OR ".join(f'"{g}"' for g in grams), limit))]
+
+
+GENERIC_TYPES = ("everyday", "prepared")
+
+
+def build_generic_index():
+    """Small FTS index of the generic foods only (OpenNutrition everyday + prepared, ~9 k items): English names and
+    synonyms + the offline Greek words when they exist. Rebuilt when the re-ranker starts (under a second)."""
+    with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
+        has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
+        greek = f"COALESCE((SELECT e.text FROM el_words_fts e WHERE e.rowid = d.rid), '')" if has_el else "''"
+        greek += " || ' ' || COALESCE((SELECT g.text FROM greeklish_fts g WHERE g.rowid = d.rid), '')"
+        con.executescript(f"""DROP TABLE IF EXISTS generic_fts;
+            CREATE VIRTUAL TABLE generic_fts USING fts5(text, tokenize='unicode61 remove_diacritics 2', prefix='2 3');
+            INSERT INTO generic_fts(rowid, text)
+                SELECT d.rid, d.search || ' ' || {greek} FROM docs d
+                WHERE d.src = 'on' AND d.type IN {GENERIC_TYPES};""")
+        con.commit()
+
+
+def generic_candidates(con, q, limit):
+    """Best-matching generic foods, so the plain food is always a candidate even when thousands of branded
+    products match the query first."""
+    words = norm(q).split()
+    if not words:
+        return []
+    if _HAS_GREEK.search(" ".join(words)):
+        match = el_match([el_stem(w) for w in words], "AND")
+    else:  # English words, or Greeklish matched against the skeletons
+        match = f"({fts_match(words, 'AND')}) OR ({el_match([skeleton(w) for w in words], 'AND')})"
+    sql = "SELECT rowid FROM generic_fts WHERE generic_fts MATCH ? ORDER BY bm25(generic_fts), rowid LIMIT ?"
+    return [r for (r,) in con.execute(sql, (match, limit))]
+
+
+def few_keyword_hits(con, q, n=3):
+    """True when the query's words match fewer than n items exactly (English or Greek index): a typo is likely,
+    so the slower typo-tolerant trigram lookup is worth it."""
+    words = norm(q).split()
+    if not words:
+        return False
+    hits = con.execute("SELECT COUNT(*) FROM (SELECT 1 FROM docs_fts WHERE docs_fts MATCH ? LIMIT ?)",
+                       (fts_match(words, "AND"), n)).fetchone()[0]
+    if hits < n and not _HAS_GREEK.search(" ".join(words)):
+        hits += len(greeklish_ranked(con, words, "AND", n))
+    if hits < n and _HAS_GREEK.search(" ".join(words)) and con.execute(
+            "SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone():
+        hits += con.execute("SELECT COUNT(*) FROM (SELECT 1 FROM el_words_fts WHERE el_words_fts MATCH ? LIMIT ?)",
+                            (el_match([el_stem(w) for w in words], "AND"), n)).fetchone()[0]
+    return hits < n
+
+
+def token_sim(qt, nt):
+    if qt == nt:
+        return 1.0
+    if len(qt) >= 3 and nt.startswith(qt):  # still typing: "γιαο" -> "γιαουρτ" (below a whole-word match)
+        return 0.8
+    if len(qt) >= 4 and len(nt) >= 4:
+        r = difflib.SequenceMatcher(None, qt, nt).ratio()  # spelling: "musaka" vs "moussaka" = 0.86
+        if r >= 0.75:
+            return r
+    return 0.0
+
+
+# Words that don't make a product "something else" (normalized, stemmed): "Chicken Breast, Boneless Skinless, Cooked"
+# counts as plain chicken breast, while "Fried Chicken Breast" has an extra word.
+NEUTRAL_WORDS = {"raw", "cooked", "fresh", "plain", "boneless", "skinless", "boiled", "steamed", "regular", "original",
+                 "whole", "classic", "natural", "ωμο", "ωμα", "ωμη", "μαγειρεμεν", "φρεσκ", "βραστ", "σκετ",
+                 "ολοκληρ", "πληρ", "αποστεωμεν", "φυσικ", "κλασικ"}
+
+
+def name_sim(q_tokens, n_tokens):
+    """How well the query covers the name AND the name covers the query (extra words in the name cost,
+    neutral words such as 'raw' or 'cooked' don't)."""
+    if not q_tokens or not n_tokens:
+        return 0.0
+    used, total = set(), 0.0
+    for qt in q_tokens:
+        best, bi = 0.0, None
+        for i, nt in enumerate(n_tokens):
+            s = token_sim(qt, nt)
+            if s > best:
+                best, bi = s, i
+        total += best
+        if bi is not None:
+            used.add(bi)
+    content = [i for i, t in enumerate(n_tokens) if t not in NEUTRAL_WORDS]
+    cover = len(used & set(content)) / len(content) if content else 1.0
+    return (total / len(q_tokens)) * (0.6 + 0.4 * cover)
+
+
+_EL2LAT_PAIRS = [("ου", "ou"), ("γκ", "g"), ("γγ", "ng"), ("τσ", "ts"), ("τζ", "tz"), ("θ", "th"), ("χ", "ch"),
+                 ("ψ", "ps"), ("ξ", "x")]
+_EL2LAT = str.maketrans("αβγδεζηικλμνοπρστυφω", "avgdeziiklmnoprstyfo")
+
+
+def greek_to_latin(word):
+    """Rough Greek -> Latin spelling of a normalized word, to compare a Greek query with English names
+    (φετα -> feta, μουσακασ -> mousakas, μπανανα -> banana)."""
+    if word.startswith("μπ"):
+        word = "b" + word[2:]
+    elif word.startswith("ντ"):
+        word = "d" + word[2:]
+    word = word.replace("μπ", "mp").replace("ντ", "nt")
+    for a, b in _EL2LAT_PAIRS:
+        word = word.replace(a, b)
+    return word.translate(_EL2LAT)
+
+
+class Reranker:
+    _inst = None
+
+    @classmethod
+    def get(cls):
+        if cls._inst is None:
+            cls._inst = cls()
+        return cls._inst
+
+    def __init__(self):
+        ensure_name_trigrams()
+        ensure_greeklish_index()
+        build_generic_index()
+        with closing(connect()) as con:
+            has_mt = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'mt_words'").fetchone()
+            self.mt_words = dict(con.execute("SELECT src, el FROM mt_words")) if has_mt else {}
+            self.brands = self._brand_phrases(con)
+
+    @staticmethod
+    def _brand_phrases(con):
+        """Brand names seen in the data ("... by Brand" in OpenNutrition, the brand field in OFF), used to tell a
+        brand query ("coca cola zero") from a food query ("banana"). Left out: brands made only of words that also
+        name generic foods (a brand called "Banana"), and single words that are common in product names ("organic")."""
+        generic_words, word_freq, counts = set(), defaultdict(int), defaultdict(int)
+        for name, src, typ, brand in con.execute("SELECT name, src, type, brand FROM docs"):
+            base = norm(base_name(name)).split()
+            for w in set(base):
+                word_freq[w] += 1
+            if src == "on" and typ in GENERIC_TYPES:
+                generic_words.update(base)
+            m = re.search(r"\s+by\s+(.+)$", name or "", re.IGNORECASE)
+            phrase = norm(m.group(1)) if src == "on" and m else norm((brand or "").split(",")[0]) if src == "off" else ""
+            if phrase:
+                counts[phrase] += 1
+        out = set()
+        for phrase, c in counts.items():
+            toks = phrase.split()
+            if c < 2 or len(phrase) < 3 or len(toks) > 4 or set(toks) <= generic_words:
+                continue
+            if len(toks) == 1 and word_freq[toks[0]] > 2000:  # a descriptor like "organic", not a brand
+                continue
+            out.add(phrase)
+        return out
+
+    def query_brand(self, q):
+        """The first brand name found in the query (as whole words), or None."""
+        toks = norm(q).split()
+        for n in range(min(4, len(toks)), 0, -1):
+            for i in range(len(toks) - n + 1):
+                phrase = " ".join(toks[i:i + n])
+                if phrase in self.brands:
+                    return phrase
+        return None
+
+    def reps(self, name, src):
+        """(direct, translated) token lists the query is compared with: the name without brand and the full name,
+        and the Greek word translation of OpenNutrition names."""
+        base = base_name(name)
+        direct = [[el_stem(t) for t in toks] for toks in (norm(base).split(), norm(name).split()) if toks]
+        translated = []
+        if src == "on" and self.mt_words:
+            greek = norm(" ".join(self.mt_words.get(w, "") for w in _EN_WORD.findall(base.lower()))).split()
+            if greek:
+                translated.append([el_stem(t) for t in greek])
+        return direct, translated
+
+    def similarity(self, q_tokens, q_latin, q_skel, name, src):
+        """Best match of the query with the item's names. A match through the word translation counts a little
+        less than a direct one, so for φετα "Feta Cheese" (also matched as 'feta') beats "Apple Slices" (φέτες)."""
+        direct, translated = self.reps(name, src)
+        sims = [name_sim(q_tokens, toks) for toks in direct]
+        if q_latin:
+            sims += [name_sim(q_latin, toks) for toks in direct]
+        sims += [TRANSLATED_WEIGHT * name_sim(q_tokens, toks) for toks in translated]
+        if q_skel:  # Greeklish query: compare skeletons with the item's Greek words
+            for toks in translated + [t for t in direct if any(_HAS_GREEK.search(x) for x in t)]:
+                sims.append(TRANSLATED_WEIGHT * name_sim(q_skel, [skeleton(t) for t in toks]))
+        return max(sims, default=0.0)
+
+    def rerank(self, con, q, ranked, k=K, generic_first=False):
+        """generic_first: non-brand foods that match well (name similarity >= GENERIC_FIRST_MIN_SIM) go above every
+        branded product, unless the query names a brand."""
+        q_tokens = [el_stem(t) for t in norm(q).split()]
+        if not q_tokens:
+            return ranked[:k]
+        q_latin = [greek_to_latin(t) for t in norm(q).split()] if _HAS_GREEK.search(norm(q)) else None
+        q_skel = None if q_latin else [skeleton(t) for t in norm(q).split()]
+        typo = trigram_candidates(con, q, RR_DEPTH) if few_keyword_hits(con, q) else []
+        cand = list(dict.fromkeys(ranked + typo + generic_candidates(con, q, 10 if not generic_first else RR_DEPTH)))
+        if not cand:
+            return []
+        pos = {r: i for i, r in enumerate(ranked)}
+        info = {r: (n, s, t) for r, n, s, t in con.execute(
+            f"SELECT rid, name, src, type FROM docs WHERE rid IN ({','.join('?' * len(cand))})", cand)}
+        group_generic = generic_first and self.query_brand(q) is None
+
+        def score(r):
+            name, src, typ = info[r]
+            sim = self.similarity(q_tokens, q_latin, q_skel, name, src)
+            is_generic = src == "on" and typ in GENERIC_TYPES
+            position = POSITION_WEIGHT * (1 - pos[r] / len(ranked)) if r in pos else 0.0
+            group = 0 if (group_generic and is_generic and sim >= GENERIC_FIRST_MIN_SIM) else 1
+            return group, sim + (GENERIC_BONUS if is_generic else 0.0) + position
+
+        scored = {r: score(r) for r in cand}
+        return sorted(cand, key=lambda r: (scored[r][0], -scored[r][1], pos.get(r, RR_DEPTH), r))[:k]
 
 
 EL_MODES = ("words", "names")
 
 
 def get_method(spec):
-    """Parse a method spec (see the module docstring) into a function (con, query) -> rids."""
+    """Parse a method spec (see the module docstring) into a function (con, query, k=K) -> rids."""
+    if spec.startswith("rr:"):
+        base = get_method(spec[3:])
+        return lambda con, q, k=K: Reranker.get().rerank(con, q, base(con, q, RR_DEPTH), k)
+    if spec.startswith("rrg:"):
+        base = get_method(spec[4:])
+        return lambda con, q, k=K: Reranker.get().rerank(con, q, base(con, q, RR_DEPTH), k, generic_first=True)
     static = {"like": m_like, "bm25": m_bm25, "bm25_or": m_bm25_or}
     if spec in static:
         return static[spec]
@@ -584,19 +913,19 @@ def get_method(spec):
     if kind not in ok or not ok[kind](args):
         sys.exit(f"unknown method {spec!r} (see --help)")
     if kind == "dense":
-        return lambda con, q: [r for r, _ in Dense.get(args[0]).top(q, K)]
+        return lambda con, q, k=K: [r for r, _ in Dense.get(args[0]).top(q, k)]
     if kind == "rrf":
-        return lambda con, q: rrf_rank(fusion_inputs(con, Dense.get(args[0]), q))
+        return lambda con, q, k=K: rrf_rank(fusion_inputs(con, Dense.get(args[0]), q), k)
     if kind == "mix":
         weight = float(args[1])
-        return lambda con, q: mix_rank(fusion_inputs(con, Dense.get(args[0]), q), weight)
+        return lambda con, q, k=K: mix_rank(fusion_inputs(con, Dense.get(args[0]), q), weight, k)
     if kind == "kw_el":
-        return lambda con, q: m_kw_el(con, q, args[0])
+        return lambda con, q, k=K: m_kw_el(con, q, args[0], k)
     if kind == "hyb_el":
-        return lambda con, q: m_hyb_el(con, q, args[0], args[1])
+        return lambda con, q, k=K: m_hyb_el(con, q, args[0], args[1], k)
     if kind == "kw_mt":
-        return lambda con, q: m_kw_mt(con, q, args[0])
-    return lambda con, q: m_hyb_mt(con, q, args[0], args[1])
+        return lambda con, q, k=K: m_kw_mt(con, q, args[0], k)
+    return lambda con, q, k=K: m_hyb_mt(con, q, args[0], args[1], k)
 
 
 def clear_query_caches():
@@ -812,6 +1141,10 @@ COMPARE_HTML = HERE / "compare.html"
 
 
 def method_label(spec):
+    if spec.startswith("rr:"):
+        return "Re-ranked · " + method_label(spec[3:])
+    if spec.startswith("rrg:"):
+        return "Re-ranked, non-brand first · " + method_label(spec[4:])
     kind, *a = spec.split(":")
     return {
         "like": lambda: "Old search (substring, A→Z)",
