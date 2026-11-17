@@ -351,6 +351,53 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
     - `φετα` → Feta Cheese
     - `chicken breast` → Chicken Breast, Boneless Skinless, Cooked
     - `banana` → Banana, Banana Puree, Banana Bread… then the branded bananas
+- **On all products (2026-11-17, `--corpus all`: 26,654 Greek-market OFF + 326,759 OpenNutrition = 353,413 items; all 120 queries answerable):**
+  - **Why:** OpenNutrition alone has no Greek brands. `τρικαλινο` found nothing (0 of 11 Trikalino cheeses), and neither did ΜΕΒΓΑΛ, ΔΕΛΤΑ or Lacta.
+  - **Two fixes at the same time:**
+    - **Greek queries also search the Latin spelling** (`τρικαλινο` → trikalino), which finds products named "Trikalino Cheese" / "Trikalinó". Greeklish (E9) covers the other direction.
+    - **Minimum similarity 0.5 for the re-ranker's own extra candidates** (typo matches, generic foods). A query with no match now shows nothing instead of unrelated guesses (`trikalino` on OpenNutrition gave "Paprika"; `xyzqk` → no results). The hybrid still always returns something, because its semantic side has no cutoff.
+  - **Trikalino:** `τρικαλινο`, `Τρικαλινό` and `trikalino` each return 10 Trikalino cheeses as the top 10 (11 exist). Plain BM25 found 7 per spelling.
+
+  | Method | hit@1 | hit@5 | MRR@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `bm25` (current) | 73 % | 81 % | 0.77 | 1.7 | 7.1 |
+  | `kw_el:words` | 75 % | 92 % | 0.83 | 3.2 | 10.5 |
+  | `rr:kw_el:words` | 92 % | 96 % | 0.94 | 5.0 | 12.5 |
+  | **`rrg:kw_el:words`** | **92 %** | **98 %** | **0.95** | **5.2** | 12.7 |
+  | `rrg:hyb_el:words:e5-small` | 92 % | 96 % | 0.93 | 33 | 53 |
+
+  - **e5-small adds nothing here.** Brand queries even drop 100 → 90 %, and each search takes ~6× longer. **The no-model search is the best option on this set.**
+  - Vectors: 543 MB; embedding 353 k items took 96 s on the Mac GPU. Greek words: 51 s.
+- **Koulouri fix (2026-11-17):** `κουλουρι` and `koulouri` showed Bagels, Hamburger Bun, Pretzel… and none of the 12 koulouri products in the top 10. Plain BM25 found them.
+  - **Cause:**
+    - The offline word translation turned bagel, bun and pretzel into "κουλούρι".
+    - `rrg:` then put those generic foods above every branded product, and OpenNutrition has no generic koulouri.
+    - For `koulouri`, the Greeklish index mixed a product's own Greek name with its translated words, so thousands of translated bagels pushed the 12 real products out of the candidates.
+  - **Fixes:**
+    - **Ambiguous translations count less** (0.5× instead of 0.9×). A translation is ambiguous when one Greek word that matches the query is the translation of two or more unrelated English words, each behind at least 2 of the generic candidates: κουλούρι ← bagel + bun.
+    - **Words that aren't ambiguous:**
+      - Same food: γάλα ← milk; μήλο ← apple, applesauce; ψωμί ← bread, crispbread.
+      - One odd translation: Galia Melon → Γαλλία.
+      - Different Greek words that only look alike in Greeklish: `rizi` (ρύζι ← rice, ρίζα ← root).
+      - The query's own word ("Gala Apples" for `gala`).
+    - **Greeklish index split into two columns:** the item's own Greek name (weight 4) and its translated words (weight 1).
+    - **The generic-food lookup** runs English and Greeklish matches separately and merges them, so for `gala` English prefix hits (Gala Apples, Galangal) don't push out the milks.
+  - **New test queries:** `κουλουρι` (q121), `koulouri` (q122) and `sesame bread ring` (q123). q123 can't be found yet: no product has an English name for koulouri. It needs our own list of generic Greek foods with English names.
+
+  | Method (123 queries) | hit@1 | hit@5 | MRR@10 | mean ms* | p95 ms* |
+  |---|---|---|---|---|---|
+  | `bm25` (current) | 73 % | 80 % | 0.77 | 2.0 | 11.3 |
+  | `kw_el:words` | 74 % | 91 % | 0.82 | 5.0 | 12.1 |
+  | `rr:kw_el:words` | 93 % | 95 % | 0.94 | 6.8 | 15.1 |
+  | **`rrg:kw_el:words`** | **93 %** | **97 %** | **0.94** | **6.6** | 14.5 |
+  | `rrg:hyb_el:words:e5-small` | 92 % | 95 % | 0.93 | 42 | 64 |
+
+  \* Measured while the Mac was under heavy load (load average 80–170), so about 25 % slower than the earlier run; the code adds well under 1 ms.
+  - **On the 120 earlier queries, `rrg:kw_el:words` changed in only three places, and all three are still right:**
+    - `apple`: Apples moved up to #1 (it was second, after "Plain Waffle": απλό = plain looks like "apple" in Greeklish).
+    - `μακαρονια`: Macaroni instead of Spaghetti.
+    - `καρυδια`: the Greek product "Καρύδια" instead of generic "Walnuts", because walnut and coconut share the Greek stem καρυδ-.
+  - The 97 % top-5 is lower than the earlier 98 % only because of q123.
 - **Decision (proposed):** use `rrg:kw_el:words` as the no-model search: 80 % first result right, 88 % top 5, ~6 ms per search on one core. The app could also show two sections, "Foods" (generic) and "Brands", using the same generic flag.
 
 ---

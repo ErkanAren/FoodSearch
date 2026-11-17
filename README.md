@@ -67,7 +67,7 @@ Verdicts are saved to `review.json` in each run's folder. See `docs/IMAGES.md` �
 
 ## Search lab (experiment E15)
 
-Scores search methods against a test set of 120 queries in Greek, Greeklish and English (KR3.5: right item in the top 5).
+Scores search methods against a test set of 123 queries in Greek, Greeklish and English (KR3.5: right item in the top 5).
 
 ```bash
 C="--corpus opennutrition"   # which product set; see below
@@ -93,7 +93,7 @@ python3 -I tools/search/search_lab.py eval $C     # keyword methods → work/sea
 - **Product sets (`--corpus`):**
   - `library` (default, ≈ 40 k): OFF Greek market + OpenNutrition everyday/prepared/restaurant.
   - `opennutrition` (326,759): all OpenNutrition products, grocery included.
-  - `all` (≈ 353 k): both.
+  - `all` (353,413): both. **Best results so far** (E17): `rrg:kw_el:words` gets 93 % first result right, 97 % top 5, no model.
 - **Test set:** `tools/search/queries.json`. Each query describes a correct result with patterns on the product name, so new products count automatically. It's a **draft**: review it and add real user queries.
 - **Methods:**
   - `like` is the old browser search; `bm25` and `bm25_or` are keyword search.

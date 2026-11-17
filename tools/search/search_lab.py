@@ -368,33 +368,47 @@ def skeleton(word):
     return word
 
 
+GREEKLISH_COLUMNS = ["own", "tr"]
+GREEKLISH_WEIGHTS = "4.0, 1.0"  # the item's own Greek name counts more than its translated words, so for koulouri
+                                # the 11 products named Κουλούρι beat thousands of bagels translated as κουλούρι
+
+
 def ensure_greeklish_index():
-    """FTS index of the skeletons of every item's Greek words: the offline translation (OpenNutrition) and Greek
-    names already in the data (Open Food Facts). Built once per corpus; `translate` drops it so it is rebuilt."""
+    """FTS index of the skeletons of every item's Greek words, in two columns: `own` = Greek names already in the
+    data (Open Food Facts), `tr` = the offline word translation (OpenNutrition). Built once per corpus (an index in
+    the old one-column layout is rebuilt); `translate` drops it so it is rebuilt."""
     with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
-        if con.execute("SELECT 1 FROM sqlite_master WHERE name = 'greeklish_fts'").fetchone():
+        cols = [r[1] for r in con.execute("PRAGMA table_info(greeklish_fts)")]
+        if cols == GREEKLISH_COLUMNS:
             return
+        if cols:
+            con.execute("DROP TABLE greeklish_fts")
         t0 = time.time()
         has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
         el = dict(con.execute("SELECT rowid, text FROM el_words_fts")) if has_el else {}
         rows = []
         for rid, search in con.execute("SELECT rid, search FROM docs"):
-            greek = [el_stem(w) for w in (search or "").split() if _HAS_GREEK.search(w)] + el.get(rid, "").split()
-            skel = dict.fromkeys(skeleton(w) for w in greek if w)
-            if skel:
-                rows.append((rid, " ".join(skel)))
-        con.executescript("""CREATE VIRTUAL TABLE greeklish_fts USING fts5(text, tokenize='unicode61', prefix='2 3');""")
-        con.executemany("INSERT INTO greeklish_fts(rowid, text) VALUES (?, ?)", rows)
+            own = dict.fromkeys(skeleton(el_stem(w)) for w in (search or "").split() if _HAS_GREEK.search(w))
+            tr = dict.fromkeys(skeleton(w) for w in el.get(rid, "").split() if w)
+            if own or tr:
+                rows.append((rid, " ".join(own), " ".join(tr)))
+        con.executescript("""CREATE VIRTUAL TABLE greeklish_fts USING fts5(own, tr, tokenize='unicode61', prefix='2 3');""")
+        con.executemany("INSERT INTO greeklish_fts(rowid, own, tr) VALUES (?, ?, ?)", rows)
         con.commit()
         print(f"Built the Greeklish index ({len(rows):,} items) in {time.time() - t0:.0f}s", flush=True)
 
 
+_GREEKLISH_READY = set()
+
+
 def greeklish_ranked(con, words, op, limit):
     """Ranked rids for a query in Latin letters, matched as Greeklish against the items' Greek words."""
-    if not con.execute("SELECT 1 FROM sqlite_master WHERE name = 'greeklish_fts'").fetchone():
+    if LAB_DB not in _GREEKLISH_READY:  # once per corpus and process: build it, or rebuild an old layout
         ensure_greeklish_index()
+        _GREEKLISH_READY.add(LAB_DB)
     skel = [skeleton(w) for w in words]
-    sql = "SELECT rowid FROM greeklish_fts WHERE greeklish_fts MATCH ? ORDER BY bm25(greeklish_fts), rowid LIMIT ?"
+    sql = (f"SELECT rowid FROM greeklish_fts WHERE greeklish_fts MATCH ? "
+           f"ORDER BY bm25(greeklish_fts, {GREEKLISH_WEIGHTS}), rowid LIMIT ?")
     return [r for (r,) in con.execute(sql, (el_match(skel, op), limit))]
 
 
@@ -591,7 +605,10 @@ def m_kw_el(con, q, mode, k=K):
     if not _HAS_GREEK.search(" ".join(words)):
         gl = greeklish_ranked(con, words, "AND", k)  # "karpouzi" -> items whose Greek words read karpuz...
         return rrf_fuse([en, gl], k) if gl else en
-    return rrf_fuse([en, el_ranked(con, mode, words, "AND", k)], k)
+    # Greek query: the offline Greek index, and the query spelled in Latin letters for products named that way
+    # (τρικαλινο -> trikalino -> "Trikalino Cheese")
+    lat = [r for r, _ in bm25_scored(con, [greek_to_latin(w) for w in words], "AND", k)]
+    return rrf_fuse([en, el_ranked(con, mode, words, "AND", k), lat], k)
 
 
 def m_hyb_el(con, q, mode, model, k=K):
@@ -600,6 +617,7 @@ def m_hyb_el(con, q, mode, model, k=K):
     lists = [[r for r, _ in bm25_scored(con, words, "OR", POOL)]] if words else []
     if words and _HAS_GREEK.search(" ".join(words)):
         lists.append(el_ranked(con, mode, words, "OR", POOL))
+        lists.append([r for r, _ in bm25_scored(con, [greek_to_latin(w) for w in words], "OR", POOL)])
     elif words:
         lists.append(greeklish_ranked(con, words, "OR", POOL))
     lists.append([r for r, _ in Dense.get(model).top(q, POOL)])
@@ -646,7 +664,11 @@ def m_hyb_mt(con, q, mt, model, k=K):
 RR_DEPTH = 30
 GENERIC_BONUS = 0.08
 TRANSLATED_WEIGHT = 0.9  # a name match through the offline word translation counts a little less than a direct one
+# ... and much less when the query word is the translation of several unrelated foods (κουλούρι <- bagel, bun):
+# then products named with the word itself come first, and the translated matches can't jump ahead as generic foods.
+AMBIGUOUS_TRANSLATED_WEIGHT = 0.5
 GENERIC_FIRST_MIN_SIM = 0.6  # rrg: a generic food goes above all brands only if its name matches this well
+EXTRA_MIN_SIM = 0.5  # typo / generic candidates below this name similarity are dropped (no junk for no-match queries)
 POSITION_WEIGHT = 0.10
 
 
@@ -681,7 +703,7 @@ def build_generic_index():
     with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
         has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
         greek = f"COALESCE((SELECT e.text FROM el_words_fts e WHERE e.rowid = d.rid), '')" if has_el else "''"
-        greek += " || ' ' || COALESCE((SELECT g.text FROM greeklish_fts g WHERE g.rowid = d.rid), '')"
+        greek += " || ' ' || COALESCE((SELECT g.own || ' ' || g.tr FROM greeklish_fts g WHERE g.rowid = d.rid), '')"
         con.executescript(f"""DROP TABLE IF EXISTS generic_fts;
             CREATE VIRTUAL TABLE generic_fts USING fts5(text, tokenize='unicode61 remove_diacritics 2', prefix='2 3');
             INSERT INTO generic_fts(rowid, text)
@@ -696,12 +718,16 @@ def generic_candidates(con, q, limit):
     words = norm(q).split()
     if not words:
         return []
-    if _HAS_GREEK.search(" ".join(words)):
-        match = el_match([el_stem(w) for w in words], "AND")
-    else:  # English words, or Greeklish matched against the skeletons
-        match = f"({fts_match(words, 'AND')}) OR ({el_match([skeleton(w) for w in words], 'AND')})"
     sql = "SELECT rowid FROM generic_fts WHERE generic_fts MATCH ? ORDER BY bm25(generic_fts), rowid LIMIT ?"
-    return [r for (r,) in con.execute(sql, (match, limit))]
+
+    def run(match):
+        return [r for (r,) in con.execute(sql, (match, limit))]
+
+    if _HAS_GREEK.search(" ".join(words)):
+        return run(el_match([el_stem(w) for w in words], "AND"))
+    # English words, or Greeklish matched against the skeletons. Looked up separately and merged, so a few
+    # English prefix hits (gala -> Gala Apples, Galangal) don't push the Greeklish ones (gala = γάλα -> Milk) out.
+    return rrf_fuse([run(fts_match(words, "AND")), run(el_match([skeleton(w) for w in words], "AND"))], limit)
 
 
 def few_keyword_hits(con, q, n=3):
@@ -778,6 +804,25 @@ def greek_to_latin(word):
     return word.translate(_EL2LAT)
 
 
+def en_lemma(word):
+    """Rough English singular: bagels -> bagel, cherries -> cherry, tomatoes -> tomato."""
+    if word.endswith("ies") and len(word) > 4:
+        return word[:-3] + "y"
+    if word.endswith(("ches", "shes", "xes", "oes", "sses")):
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+        return word[:-1]
+    return word
+
+
+def same_food_word(a, b):
+    """Two English words that name the same food: one starts or ends with the other (apple / applesauce,
+    bread / breaded / crispbread) or a misspelling (bagel / bagle)."""
+    if min(len(a), len(b)) >= 3 and (a.startswith(b) or b.startswith(a) or a.endswith(b) or b.endswith(a)):
+        return True
+    return difflib.SequenceMatcher(None, a, b).ratio() >= 0.8
+
+
 class Reranker:
     _inst = None
 
@@ -844,18 +889,48 @@ class Reranker:
                 translated.append([el_stem(t) for t in greek])
         return direct, translated
 
-    def similarity(self, q_tokens, q_latin, q_skel, name, src):
+    def similarity(self, q_tokens, q_latin, q_skel, name, src, t_weight=TRANSLATED_WEIGHT):
         """Best match of the query with the item's names. A match through the word translation counts a little
-        less than a direct one, so for φετα "Feta Cheese" (also matched as 'feta') beats "Apple Slices" (φέτες)."""
+        less than a direct one (t_weight), so for φετα "Feta Cheese" (also matched as 'feta') beats "Apple Slices"
+        (φέτες)."""
         direct, translated = self.reps(name, src)
         sims = [name_sim(q_tokens, toks) for toks in direct]
         if q_latin:
             sims += [name_sim(q_latin, toks) for toks in direct]
-        sims += [TRANSLATED_WEIGHT * name_sim(q_tokens, toks) for toks in translated]
-        if q_skel:  # Greeklish query: compare skeletons with the item's Greek words
-            for toks in translated + [t for t in direct if any(_HAS_GREEK.search(x) for x in t)]:
-                sims.append(TRANSLATED_WEIGHT * name_sim(q_skel, [skeleton(t) for t in toks]))
+        sims += [t_weight * name_sim(q_tokens, toks) for toks in translated]
+        if q_skel:  # Greeklish query: compare skeletons with the item's Greek words (translated, or its own name)
+            sims += [t_weight * name_sim(q_skel, [skeleton(t) for t in toks]) for toks in translated]
+            sims += [TRANSLATED_WEIGHT * name_sim(q_skel, [skeleton(t) for t in toks])
+                     for toks in direct if any(_HAS_GREEK.search(x) for x in toks)]
         return max(sims, default=0.0)
+
+    def ambiguous_translation(self, q_tokens, q_skel, names):
+        """True when, among these generic food names, one Greek word that matches the query is the translation of two
+        or more unrelated English words, each behind at least 2 of the names: κουλούρι <- bagel (Bagels, Plain
+        Bagel…) and bun (Hamburger Bun, Potato Bun…) is ambiguous. Not ambiguous: γάλα <- milk; μήλο <- apple,
+        applesauce; one odd translation; or different Greek words that only look alike in Greeklish (rizi: ρύζι <-
+        rice, ρίζα <- root). A word the query matches as it is doesn't count ('gala' in "Gala Apples")."""
+        if not self.mt_words:
+            return False
+        wanted, key = (set(q_skel), skeleton) if q_skel else (set(q_tokens), lambda s: s)
+        words = defaultdict(list)  # Greek stem -> [[English food word, how many names it comes from], ...]
+        for name in names:
+            seen = set()
+            for w in _EN_WORD.findall(base_name(name).lower()):
+                if w in q_tokens:
+                    continue
+                lemma = en_lemma(w)
+                for stem in {el_stem(t) for t in norm(self.mt_words.get(w, "")).split()}:
+                    if key(stem) not in wanted:
+                        continue
+                    entry = next((e for e in words[stem] if same_food_word(lemma, e[0])), None)
+                    if entry is None:
+                        entry = [lemma, 0]
+                        words[stem].append(entry)
+                    if id(entry) not in seen:
+                        seen.add(id(entry))
+                        entry[1] += 1
+        return any(sum(1 for _, n in entries if n >= 2) >= 2 for entries in words.values())
 
     def rerank(self, con, q, ranked, k=K, generic_first=False):
         """generic_first: non-brand foods that match well (name similarity >= GENERIC_FIRST_MIN_SIM) go above every
@@ -873,16 +948,22 @@ class Reranker:
         info = {r: (n, s, t) for r, n, s, t in con.execute(
             f"SELECT rid, name, src, type FROM docs WHERE rid IN ({','.join('?' * len(cand))})", cand)}
         group_generic = generic_first and self.query_brand(q) is None
+        generic_names = [n for n, s, t in info.values() if s == "on" and t in GENERIC_TYPES]
+        t_weight = (AMBIGUOUS_TRANSLATED_WEIGHT if self.ambiguous_translation(q_tokens, q_skel, generic_names)
+                    else TRANSLATED_WEIGHT)
 
         def score(r):
             name, src, typ = info[r]
-            sim = self.similarity(q_tokens, q_latin, q_skel, name, src)
+            sim = self.similarity(q_tokens, q_latin, q_skel, name, src, t_weight)
             is_generic = src == "on" and typ in GENERIC_TYPES
             position = POSITION_WEIGHT * (1 - pos[r] / len(ranked)) if r in pos else 0.0
             group = 0 if (group_generic and is_generic and sim >= GENERIC_FIRST_MIN_SIM) else 1
-            return group, sim + (GENERIC_BONUS if is_generic else 0.0) + position
+            return group, sim + (GENERIC_BONUS if is_generic else 0.0) + position, sim
 
         scored = {r: score(r) for r in cand}
+        # Extra candidates the re-ranker added itself (typo matches, generic foods) must really resemble the query;
+        # otherwise a query with no match would show unrelated guesses ("trikalino" -> "Paprika") instead of nothing.
+        cand = [r for r in cand if r in pos or scored[r][2] >= EXTRA_MIN_SIM]
         return sorted(cand, key=lambda r: (scored[r][0], -scored[r][1], pos.get(r, RR_DEPTH), r))[:k]
 
 
