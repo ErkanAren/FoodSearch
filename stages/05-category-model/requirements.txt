@@ -1,0 +1,3 @@
+# Stage 05 category-model benchmark (on top of tools/search/requirements.txt: sentence-transformers, torch)
+openpyxl==3.1.5
+scikit-learn==1.9.1

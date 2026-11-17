@@ -45,6 +45,11 @@ DB_PATH = ROOT / "work" / "browser.sqlite"
 INDEX_HTML = HERE / "index.html"
 NO_IMAGE_SVG = HERE / "no-image.svg"
 PILOT_HTML = HERE / "photo_pilot.html"
+CATREV_HTML = HERE / "category_review.html"
+CATREV_DIR = ROOT / "stages" / "05-category-model" / "out"  # written by stages/05-category-model/bench.py
+CATS_JSON = ROOT / "tools" / "categories" / "categories.json"
+ICONS_HTML = HERE / "icons.html"
+ICONS_JSON = ROOT / "tools" / "categories" / "icons.json"  # built by tools/categories/build_icons.py
 PILOT_RUNS = {  # photo pilot runs: name -> output folder
     "cutout": ROOT / "work" / "photo_pilot",  # E11 background removal, tools/photos/cleanup_pilot.py
     "crop": ROOT / "work" / "photo_pilot_crop",  # E14 OFF crop model, tools/photos/crop_pilot.py
@@ -484,6 +489,88 @@ def save_review(run, code, verdict):
     return reviews
 
 
+# --- Stage 05: owner's answers for the category-model test (one category per sample product) ----------
+_catrev_lock = threading.Lock()
+
+
+def _choosable():
+    cats = json.loads(CATS_JSON.read_text())["categories"]
+    return [{"code": c["code"], "name": c["name"], "group": c["group"], "definition": c["definition"]}
+            for c in cats if c.get("assignable", True)]
+
+
+def catrev_data():
+    sample_path, preds_path = CATREV_DIR / "sample.json", CATREV_DIR / "predictions.json"
+    if not sample_path.exists() or not preds_path.exists():
+        return {"error": "Test not run yet. Run: .venv/bin/python -I stages/05-category-model/bench.py run"}
+    sample = json.loads(sample_path.read_text())
+    preds = json.loads(preds_path.read_text())
+    cand = {p["id"]: [] for p in sample}
+    for info in preds.values():  # top-1 of every model and method; neutral order, no model names shown
+        for by_pid in info["methods"].values():
+            for pid, codes in by_pid.items():
+                if pid in cand and codes and codes[0] not in cand[pid]:
+                    cand[pid].append(codes[0])
+    first = next(iter(preds.values()), None)
+    if first:  # pad with the runner-ups of one classifier so there are usually 3+ choices
+        for pid, codes in first["methods"].get("lr", {}).items():
+            for c in codes[1:3]:
+                if pid in cand and c not in cand[pid] and len(cand[pid]) < 6:
+                    cand[pid].append(c)
+    thumbs = {}
+    with closing(connect_ro()) as con:
+        ids = [p["id"] for p in sample]
+        for pid, thumb in con.execute(f"SELECT id, thumb FROM on_foods WHERE id IN ({','.join('?' * len(ids))})", ids):
+            thumbs[pid] = thumb
+    for p in sample:
+        p["candidates"] = sorted(cand[p["id"]])
+        p["thumb"] = thumbs.get(p["id"])
+    review = json.loads((CATREV_DIR / "review.json").read_text()) if (CATREV_DIR / "review.json").exists() else {}
+    return {"sample": sample, "categories": _choosable(), "answers": review, "models_done": list(preds)}
+
+
+def save_catrev(pid, code):
+    allowed = {c["code"] for c in _choosable()}
+    if code is not None and code not in allowed:
+        raise ValueError("unknown category")
+    with _catrev_lock:
+        ids = {p["id"] for p in json.loads((CATREV_DIR / "sample.json").read_text())}
+        if pid not in ids:
+            raise ValueError("unknown product")
+        path = CATREV_DIR / "review.json"
+        answers = json.loads(path.read_text()) if path.exists() else {}
+        if code is None:
+            answers.pop(pid, None)
+        else:
+            answers[pid] = code
+        tmp = CATREV_DIR / "review.json.tmp"
+        tmp.write_text(json.dumps(answers, indent=1, sort_keys=True))
+        tmp.replace(path)
+    return answers
+
+
+def icons_data():
+    """Icon plan + categories + the stage-05 products with a category (owner's answer, else a model guess)."""
+    plan = json.loads(ICONS_JSON.read_text())
+    cats = {c["code"]: {"name": c["name"], "group": c["group"], "definition": c["definition"]}
+            for c in json.loads(CATS_JSON.read_text())["categories"]}
+    out = {"plan": plan, "categories": cats, "products": [], "guess_model": None}
+    rev = catrev_data()
+    if "error" in rev:
+        return out
+    preds = json.loads((CATREV_DIR / "predictions.json").read_text())
+    key = "qwen3-0.6b" if "qwen3-0.6b" in preds else next(iter(preds), None)
+    guess = preds[key]["methods"]["lr"] if key else {}
+    out["guess_model"] = f"{key} classifier" if key else None
+    for p in rev["sample"]:
+        code, source = rev["answers"].get(p["id"]), "your answer"
+        if not code and guess.get(p["id"]):
+            code, source = guess[p["id"]][0], "model guess"
+        out["products"].append({"id": p["id"], "name": p["name"], "type": p["type"], "thumb": p["thumb"],
+                                "code": code, "source": source})
+    return out
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, status, body, ctype):
         self.send_response(status)
@@ -506,6 +593,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, NO_IMAGE_SVG.read_bytes(), "image/svg+xml")
             elif url.path == "/photo-pilot":
                 self._send(200, PILOT_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/icons":
+                self._send(200, ICONS_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/icons":
+                self._json(icons_data())
+            elif url.path == "/category-review":
+                self._send(200, CATREV_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/category-review":
+                self._json(catrev_data())
             elif url.path == "/api/photo-pilot":
                 self._json(pilot_data(qs.get("run", "cutout")))
             elif _PILOT_IMG.match(url.path):
@@ -532,7 +627,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": str(e)}, 400)
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/photo-pilot/review":
+        path = urlparse(self.path).path
+        if path not in ("/api/photo-pilot/review", "/api/category-review/answer"):
             return self._json({"error": "not found"}, 404)
         # JSON-only: browsers must preflight this from other sites, and we never answer preflights.
         if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
@@ -542,6 +638,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "too large"}, 413)
         try:
             body = json.loads(self.rfile.read(length) or b"{}")
+            if path == "/api/category-review/answer":
+                code = body.get("code")
+                answers = save_catrev(str(body.get("id", "")), None if code is None else str(code))
+                return self._json({"ok": True, "answered": len(answers)})
             reviews = save_review(str(body.get("run", "cutout")), str(body.get("code", "")), body.get("verdict"))
             self._json({"ok": True, "reviewed": len(reviews)})
         except (ValueError, AttributeError) as e:

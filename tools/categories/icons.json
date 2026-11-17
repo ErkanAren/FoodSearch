@@ -1,0 +1,2443 @@
+{
+ "version": "2026-11-17",
+ "icons": {
+  "milk": {
+   "draw": "glass of milk next to a milk carton",
+   "tier": "core",
+   "categories": [
+    "1002",
+    "1004",
+    "1006",
+    "1008"
+   ],
+   "preview_emoji": "🥛",
+   "existing_emoji_fits": true
+  },
+  "flavoured_milk": {
+   "draw": "brown chocolate-milk carton with a straw",
+   "tier": "core",
+   "categories": [
+    "1202",
+    "1204",
+    "1206",
+    "1208"
+   ],
+   "preview_emoji": "🥛🍫",
+   "existing_emoji_fits": false
+  },
+  "milkshake": {
+   "draw": "tall milkshake glass with whipped cream and a straw",
+   "tier": "core",
+   "categories": [
+    "1402"
+   ],
+   "preview_emoji": "🥛🍦",
+   "existing_emoji_fits": false
+  },
+  "cheese": {
+   "draw": "cheese wedge with holes and a slice",
+   "tier": "core",
+   "categories": [
+    "1602"
+   ],
+   "preview_emoji": "🧀",
+   "existing_emoji_fits": true
+  },
+  "cottage_cheese": {
+   "draw": "bowl of white curd cheese (cottage / ricotta)",
+   "tier": "core",
+   "categories": [
+    "1604"
+   ],
+   "preview_emoji": "🧀🥣",
+   "existing_emoji_fits": false
+  },
+  "yogurt": {
+   "draw": "yogurt pot with a spoon",
+   "tier": "core",
+   "categories": [
+    "1820",
+    "1822",
+    "1904"
+   ],
+   "preview_emoji": "🥛🥄",
+   "existing_emoji_fits": false
+  },
+  "plant_milk": {
+   "draw": "milk carton with a green leaf / oat sprig",
+   "tier": "core",
+   "categories": [
+    "1902"
+   ],
+   "preview_emoji": "🥛🌱",
+   "existing_emoji_fits": false
+  },
+  "beef": {
+   "draw": "raw beef steak",
+   "tier": "core",
+   "categories": [
+    "2002"
+   ],
+   "preview_emoji": "🥩",
+   "existing_emoji_fits": true
+  },
+  "minced_meat": {
+   "draw": "pile of minced meat / raw patty",
+   "tier": "core",
+   "categories": [
+    "2004"
+   ],
+   "preview_emoji": "🥩",
+   "existing_emoji_fits": false
+  },
+  "pork": {
+   "draw": "pork chop",
+   "tier": "core",
+   "categories": [
+    "2006"
+   ],
+   "preview_emoji": "🍖",
+   "existing_emoji_fits": false
+  },
+  "lamb": {
+   "draw": "lamb chops with bone",
+   "tier": "core",
+   "categories": [
+    "2008"
+   ],
+   "preview_emoji": "🍖",
+   "existing_emoji_fits": false
+  },
+  "liver": {
+   "draw": "slice of liver",
+   "tier": "extra",
+   "categories": [
+    "2010"
+   ],
+   "preview_emoji": "🥩",
+   "existing_emoji_fits": false
+  },
+  "chicken": {
+   "draw": "roast chicken drumstick",
+   "tier": "core",
+   "categories": [
+    "2202"
+   ],
+   "preview_emoji": "🍗",
+   "existing_emoji_fits": true
+  },
+  "nuggets": {
+   "draw": "chicken nuggets with a small dip",
+   "tier": "core",
+   "categories": [
+    "2204"
+   ],
+   "preview_emoji": "🍗",
+   "existing_emoji_fits": false
+  },
+  "turkey": {
+   "draw": "roast turkey leg / whole small roast bird",
+   "tier": "core",
+   "categories": [
+    "2206"
+   ],
+   "preview_emoji": "🍗",
+   "existing_emoji_fits": false
+  },
+  "fish": {
+   "draw": "whole fish",
+   "tier": "core",
+   "categories": [
+    "2402"
+   ],
+   "preview_emoji": "🐟",
+   "existing_emoji_fits": true
+  },
+  "shrimp": {
+   "draw": "shrimp / prawn",
+   "tier": "core",
+   "categories": [
+    "2404"
+   ],
+   "preview_emoji": "🦐",
+   "existing_emoji_fits": true
+  },
+  "egg": {
+   "draw": "fried egg and a whole egg",
+   "tier": "core",
+   "categories": [
+    "2502"
+   ],
+   "preview_emoji": "🍳",
+   "existing_emoji_fits": true
+  },
+  "cold_cuts": {
+   "draw": "ham and salami slices on a board",
+   "tier": "core",
+   "categories": [
+    "2602"
+   ],
+   "preview_emoji": "🍖",
+   "existing_emoji_fits": false
+  },
+  "bacon": {
+   "draw": "bacon strips",
+   "tier": "core",
+   "categories": [
+    "2604"
+   ],
+   "preview_emoji": "🥓",
+   "existing_emoji_fits": true
+  },
+  "frankfurter": {
+   "draw": "two hot dog sausages, no bun",
+   "tier": "core",
+   "categories": [
+    "2606"
+   ],
+   "preview_emoji": "🌭",
+   "existing_emoji_fits": false
+  },
+  "sausage": {
+   "draw": "grilled sausage links",
+   "tier": "core",
+   "categories": [
+    "2608"
+   ],
+   "preview_emoji": "🌭",
+   "existing_emoji_fits": false
+  },
+  "legumes": {
+   "draw": "bowl of beans, lentils and chickpeas",
+   "tier": "core",
+   "categories": [
+    "2802"
+   ],
+   "preview_emoji": "🫘",
+   "existing_emoji_fits": true
+  },
+  "nuts": {
+   "draw": "almond, walnut and peanut",
+   "tier": "core",
+   "categories": [
+    "2804"
+   ],
+   "preview_emoji": "🥜",
+   "existing_emoji_fits": true
+  },
+  "tofu": {
+   "draw": "tofu block with a green leaf",
+   "tier": "core",
+   "categories": [
+    "2806"
+   ],
+   "preview_emoji": "⬜🌱",
+   "existing_emoji_fits": false
+  },
+  "nut_butter": {
+   "draw": "jar of nut butter with a knife",
+   "tier": "core",
+   "categories": [
+    "X07"
+   ],
+   "preview_emoji": "🥜🫙",
+   "existing_emoji_fits": false
+  },
+  "meat_stew": {
+   "draw": "bowl of meat stew with chunks",
+   "tier": "core",
+   "categories": [
+    "3002"
+   ],
+   "preview_emoji": "🍲",
+   "existing_emoji_fits": true
+  },
+  "chicken_dish": {
+   "draw": "plate with chicken pieces and vegetables",
+   "tier": "extra",
+   "categories": [
+    "3004"
+   ],
+   "preview_emoji": "🍗🍽️",
+   "existing_emoji_fits": false
+  },
+  "seafood_dish": {
+   "draw": "plate with fish cakes",
+   "tier": "extra",
+   "categories": [
+    "3006"
+   ],
+   "preview_emoji": "🐟🍽️",
+   "existing_emoji_fits": false
+  },
+  "bean_dish": {
+   "draw": "bowl of lentil curry / bean stew with rice",
+   "tier": "extra",
+   "categories": [
+    "3102"
+   ],
+   "preview_emoji": "🫘🍲",
+   "existing_emoji_fits": false
+  },
+  "veg_dish": {
+   "draw": "vegetable bake / stuffed pepper",
+   "tier": "extra",
+   "categories": [
+    "3104"
+   ],
+   "preview_emoji": "🫑🍲",
+   "existing_emoji_fits": false
+  },
+  "rice_dish": {
+   "draw": "pan of mixed rice (paella-style)",
+   "tier": "core",
+   "categories": [
+    "3202"
+   ],
+   "preview_emoji": "🥘",
+   "existing_emoji_fits": true
+  },
+  "pasta_dish": {
+   "draw": "plate of spaghetti with tomato sauce",
+   "tier": "core",
+   "categories": [
+    "3204"
+   ],
+   "preview_emoji": "🍝",
+   "existing_emoji_fits": true
+  },
+  "mac_cheese": {
+   "draw": "bowl of macaroni and cheese",
+   "tier": "core",
+   "categories": [
+    "3206"
+   ],
+   "preview_emoji": "🧀🍝",
+   "existing_emoji_fits": false
+  },
+  "savoury_pastry": {
+   "draw": "savoury turnover / quiche slice",
+   "tier": "core",
+   "categories": [
+    "3208"
+   ],
+   "preview_emoji": "🥟",
+   "existing_emoji_fits": false
+  },
+  "noodle_box": {
+   "draw": "noodle box with chopsticks (fried noodles / fried rice)",
+   "tier": "core",
+   "categories": [
+    "3402"
+   ],
+   "preview_emoji": "🥡",
+   "existing_emoji_fits": true
+  },
+  "stir_fry": {
+   "draw": "wok with chicken and broccoli",
+   "tier": "core",
+   "categories": [
+    "3404"
+   ],
+   "preview_emoji": "🥢🥦",
+   "existing_emoji_fits": false
+  },
+  "sushi": {
+   "draw": "sushi roll and a dumpling",
+   "tier": "core",
+   "categories": [
+    "3406"
+   ],
+   "preview_emoji": "🍣",
+   "existing_emoji_fits": true
+  },
+  "taco": {
+   "draw": "taco and a burrito",
+   "tier": "core",
+   "categories": [
+    "3502"
+   ],
+   "preview_emoji": "🌮",
+   "existing_emoji_fits": true
+  },
+  "nachos": {
+   "draw": "nachos with melted cheese",
+   "tier": "core",
+   "categories": [
+    "3504"
+   ],
+   "preview_emoji": "🧀🌮",
+   "existing_emoji_fits": false
+  },
+  "quesadilla": {
+   "draw": "quesadilla wedges",
+   "tier": "extra",
+   "categories": [
+    "3506"
+   ],
+   "preview_emoji": "🫓",
+   "existing_emoji_fits": false
+  },
+  "pizza": {
+   "draw": "pizza slice",
+   "tier": "core",
+   "categories": [
+    "3602"
+   ],
+   "preview_emoji": "🍕",
+   "existing_emoji_fits": true
+  },
+  "burger": {
+   "draw": "beef burger",
+   "tier": "core",
+   "categories": [
+    "3702"
+   ],
+   "preview_emoji": "🍔",
+   "existing_emoji_fits": true
+  },
+  "hot_dog": {
+   "draw": "hot dog in a bun",
+   "tier": "core",
+   "categories": [
+    "3703"
+   ],
+   "preview_emoji": "🌭",
+   "existing_emoji_fits": true
+  },
+  "chicken_sandwich": {
+   "draw": "crispy chicken fillet sandwich",
+   "tier": "core",
+   "categories": [
+    "3704"
+   ],
+   "preview_emoji": "🍗🍔",
+   "existing_emoji_fits": false
+  },
+  "breakfast_sandwich": {
+   "draw": "muffin sandwich with egg",
+   "tier": "core",
+   "categories": [
+    "3706"
+   ],
+   "preview_emoji": "🍳🥯",
+   "existing_emoji_fits": false
+  },
+  "grilled_cheese": {
+   "draw": "toasted sandwich with melted cheese",
+   "tier": "core",
+   "categories": [
+    "3720"
+   ],
+   "preview_emoji": "🧀🍞",
+   "existing_emoji_fits": false
+  },
+  "pbj_sandwich": {
+   "draw": "sandwich with peanut butter and jam",
+   "tier": "core",
+   "categories": [
+    "3722"
+   ],
+   "preview_emoji": "🥜🍞",
+   "existing_emoji_fits": false
+  },
+  "fish_sandwich": {
+   "draw": "fish fillet sandwich",
+   "tier": "extra",
+   "categories": [
+    "3730"
+   ],
+   "preview_emoji": "🐟🍔",
+   "existing_emoji_fits": false
+  },
+  "deli_sandwich": {
+   "draw": "sub / club sandwich with ham and lettuce",
+   "tier": "core",
+   "categories": [
+    "3740"
+   ],
+   "preview_emoji": "🥪",
+   "existing_emoji_fits": true
+  },
+  "meat_sandwich": {
+   "draw": "pulled meat / gyros-style wrap sandwich",
+   "tier": "extra",
+   "categories": [
+    "3742"
+   ],
+   "preview_emoji": "🥙",
+   "existing_emoji_fits": true
+  },
+  "veggie_burger": {
+   "draw": "burger with a green patty and a leaf",
+   "tier": "core",
+   "categories": [
+    "3744"
+   ],
+   "preview_emoji": "🌱🍔",
+   "existing_emoji_fits": false
+  },
+  "soup": {
+   "draw": "bowl of clear vegetable soup",
+   "tier": "core",
+   "categories": [
+    "3804"
+   ],
+   "preview_emoji": "🥣",
+   "existing_emoji_fits": false
+  },
+  "cream_soup": {
+   "draw": "bowl of creamy soup",
+   "tier": "extra",
+   "categories": [
+    "3806"
+   ],
+   "preview_emoji": "🥣",
+   "existing_emoji_fits": false
+  },
+  "ramen": {
+   "draw": "ramen bowl with chopsticks and half egg",
+   "tier": "core",
+   "categories": [
+    "3808"
+   ],
+   "preview_emoji": "🍜",
+   "existing_emoji_fits": true
+  },
+  "rice": {
+   "draw": "bowl of rice",
+   "tier": "core",
+   "categories": [
+    "4002"
+   ],
+   "preview_emoji": "🍚",
+   "existing_emoji_fits": true
+  },
+  "pasta": {
+   "draw": "dry pasta shapes (penne, spaghetti bundle)",
+   "tier": "core",
+   "categories": [
+    "4004"
+   ],
+   "preview_emoji": "🍝",
+   "existing_emoji_fits": false
+  },
+  "bread": {
+   "draw": "sliced bread loaf",
+   "tier": "core",
+   "categories": [
+    "4202"
+   ],
+   "preview_emoji": "🍞",
+   "existing_emoji_fits": true
+  },
+  "bread_roll": {
+   "draw": "bread rolls / buns",
+   "tier": "core",
+   "categories": [
+    "4204"
+   ],
+   "preview_emoji": "🥖",
+   "existing_emoji_fits": false
+  },
+  "bagel": {
+   "draw": "bagel",
+   "tier": "core",
+   "categories": [
+    "4206"
+   ],
+   "preview_emoji": "🥯",
+   "existing_emoji_fits": true
+  },
+  "tortilla": {
+   "draw": "stack of tortillas / wraps",
+   "tier": "core",
+   "categories": [
+    "4208"
+   ],
+   "preview_emoji": "🫓",
+   "existing_emoji_fits": true
+  },
+  "muffin": {
+   "draw": "muffin",
+   "tier": "core",
+   "categories": [
+    "4402"
+   ],
+   "preview_emoji": "🧁",
+   "existing_emoji_fits": true
+  },
+  "pancakes": {
+   "draw": "stack of pancakes with syrup",
+   "tier": "core",
+   "categories": [
+    "4404"
+   ],
+   "preview_emoji": "🥞",
+   "existing_emoji_fits": true
+  },
+  "cereal": {
+   "draw": "bowl of cereal with milk",
+   "tier": "core",
+   "categories": [
+    "4602",
+    "4604"
+   ],
+   "preview_emoji": "🥣",
+   "existing_emoji_fits": true
+  },
+  "porridge": {
+   "draw": "bowl of porridge / oatmeal",
+   "tier": "core",
+   "categories": [
+    "4802",
+    "4804"
+   ],
+   "preview_emoji": "🌾🥣",
+   "existing_emoji_fits": false
+  },
+  "flour": {
+   "draw": "flour bag with a wheat ear",
+   "tier": "core",
+   "categories": [
+    "X01"
+   ],
+   "preview_emoji": "🌾",
+   "existing_emoji_fits": false
+  },
+  "potato_chips": {
+   "draw": "pile of potato crisps",
+   "tier": "core",
+   "categories": [
+    "5002"
+   ],
+   "preview_emoji": "🥔",
+   "existing_emoji_fits": false
+  },
+  "corn_chips": {
+   "draw": "tortilla chips / corn puffs",
+   "tier": "core",
+   "categories": [
+    "5004"
+   ],
+   "preview_emoji": "🌽",
+   "existing_emoji_fits": false
+  },
+  "popcorn": {
+   "draw": "popcorn box",
+   "tier": "core",
+   "categories": [
+    "5006"
+   ],
+   "preview_emoji": "🍿",
+   "existing_emoji_fits": true
+  },
+  "pretzel": {
+   "draw": "pretzel",
+   "tier": "core",
+   "categories": [
+    "5008"
+   ],
+   "preview_emoji": "🥨",
+   "existing_emoji_fits": true
+  },
+  "crackers": {
+   "draw": "square crackers / crispbread",
+   "tier": "core",
+   "categories": [
+    "5202",
+    "5204"
+   ],
+   "preview_emoji": "🍘",
+   "existing_emoji_fits": false
+  },
+  "granola_bar": {
+   "draw": "granola bar with oats",
+   "tier": "core",
+   "categories": [
+    "5402"
+   ],
+   "preview_emoji": "🌾🍫",
+   "existing_emoji_fits": false
+  },
+  "protein_bar": {
+   "draw": "protein bar in a wrapper",
+   "tier": "core",
+   "categories": [
+    "5404"
+   ],
+   "preview_emoji": "💪🍫",
+   "existing_emoji_fits": false
+  },
+  "cake": {
+   "draw": "slice of layered cake",
+   "tier": "core",
+   "categories": [
+    "5502"
+   ],
+   "preview_emoji": "🍰",
+   "existing_emoji_fits": true
+  },
+  "cookie": {
+   "draw": "cookies / biscuits",
+   "tier": "core",
+   "categories": [
+    "5504"
+   ],
+   "preview_emoji": "🍪",
+   "existing_emoji_fits": true
+  },
+  "pastry": {
+   "draw": "doughnut and a croissant",
+   "tier": "core",
+   "categories": [
+    "5506"
+   ],
+   "preview_emoji": "🍩",
+   "existing_emoji_fits": true
+  },
+  "chocolate": {
+   "draw": "chocolate bar",
+   "tier": "core",
+   "categories": [
+    "5702"
+   ],
+   "preview_emoji": "🍫",
+   "existing_emoji_fits": true
+  },
+  "candy": {
+   "draw": "wrapped candy, gummy bear and lollipop",
+   "tier": "core",
+   "categories": [
+    "5704"
+   ],
+   "preview_emoji": "🍬",
+   "existing_emoji_fits": true
+  },
+  "ice_cream": {
+   "draw": "ice cream cone",
+   "tier": "core",
+   "categories": [
+    "5802"
+   ],
+   "preview_emoji": "🍦",
+   "existing_emoji_fits": true
+  },
+  "pudding": {
+   "draw": "pudding cup / flan",
+   "tier": "core",
+   "categories": [
+    "5804"
+   ],
+   "preview_emoji": "🍮",
+   "existing_emoji_fits": true
+  },
+  "ice_lolly": {
+   "draw": "ice lolly / jelly dessert",
+   "tier": "core",
+   "categories": [
+    "5806"
+   ],
+   "preview_emoji": "🍧",
+   "existing_emoji_fits": false
+  },
+  "apple": {
+   "draw": "apple",
+   "tier": "core",
+   "categories": [
+    "6002"
+   ],
+   "preview_emoji": "🍎",
+   "existing_emoji_fits": true
+  },
+  "banana": {
+   "draw": "banana",
+   "tier": "core",
+   "categories": [
+    "6004"
+   ],
+   "preview_emoji": "🍌",
+   "existing_emoji_fits": true
+  },
+  "grapes": {
+   "draw": "bunch of grapes",
+   "tier": "core",
+   "categories": [
+    "6006"
+   ],
+   "preview_emoji": "🍇",
+   "existing_emoji_fits": true
+  },
+  "peach": {
+   "draw": "peach",
+   "tier": "core",
+   "categories": [
+    "6008"
+   ],
+   "preview_emoji": "🍑",
+   "existing_emoji_fits": true
+  },
+  "strawberry": {
+   "draw": "strawberry",
+   "tier": "core",
+   "categories": [
+    "6009"
+   ],
+   "preview_emoji": "🍓",
+   "existing_emoji_fits": true
+  },
+  "berries": {
+   "draw": "blueberries and raspberries",
+   "tier": "core",
+   "categories": [
+    "6011"
+   ],
+   "preview_emoji": "🫐",
+   "existing_emoji_fits": true
+  },
+  "citrus": {
+   "draw": "orange and lemon",
+   "tier": "core",
+   "categories": [
+    "6012"
+   ],
+   "preview_emoji": "🍊",
+   "existing_emoji_fits": true
+  },
+  "melon": {
+   "draw": "watermelon slice",
+   "tier": "core",
+   "categories": [
+    "6014"
+   ],
+   "preview_emoji": "🍉",
+   "existing_emoji_fits": true
+  },
+  "dried_fruit": {
+   "draw": "raisins, dates and dried apricots",
+   "tier": "core",
+   "categories": [
+    "6016"
+   ],
+   "preview_emoji": "🍑🍇",
+   "existing_emoji_fits": false
+  },
+  "mixed_fruit": {
+   "draw": "bowl of mixed fruit (cherries, kiwi, plum)",
+   "tier": "extra",
+   "categories": [
+    "6018"
+   ],
+   "preview_emoji": "🍒🥝",
+   "existing_emoji_fits": false
+  },
+  "pear": {
+   "draw": "pear",
+   "tier": "core",
+   "categories": [
+    "6020"
+   ],
+   "preview_emoji": "🍐",
+   "existing_emoji_fits": true
+  },
+  "pineapple": {
+   "draw": "pineapple",
+   "tier": "core",
+   "categories": [
+    "6022"
+   ],
+   "preview_emoji": "🍍",
+   "existing_emoji_fits": true
+  },
+  "mango": {
+   "draw": "mango",
+   "tier": "core",
+   "categories": [
+    "6024"
+   ],
+   "preview_emoji": "🥭",
+   "existing_emoji_fits": true
+  },
+  "tomato": {
+   "draw": "tomato",
+   "tier": "core",
+   "categories": [
+    "6402"
+   ],
+   "preview_emoji": "🍅",
+   "existing_emoji_fits": true
+  },
+  "carrot": {
+   "draw": "carrot",
+   "tier": "core",
+   "categories": [
+    "6404"
+   ],
+   "preview_emoji": "🥕",
+   "existing_emoji_fits": true
+  },
+  "pepper": {
+   "draw": "red bell pepper and sweet potato",
+   "tier": "core",
+   "categories": [
+    "6406"
+   ],
+   "preview_emoji": "🫑",
+   "existing_emoji_fits": true
+  },
+  "broccoli": {
+   "draw": "broccoli",
+   "tier": "core",
+   "categories": [
+    "6407"
+   ],
+   "preview_emoji": "🥦",
+   "existing_emoji_fits": true
+  },
+  "spinach": {
+   "draw": "spinach leaves",
+   "tier": "core",
+   "categories": [
+    "6409"
+   ],
+   "preview_emoji": "🥬",
+   "existing_emoji_fits": false
+  },
+  "lettuce": {
+   "draw": "lettuce head / green salad",
+   "tier": "core",
+   "categories": [
+    "6410"
+   ],
+   "preview_emoji": "🥬",
+   "existing_emoji_fits": true
+  },
+  "kale": {
+   "draw": "dark curly kale leaves",
+   "tier": "core",
+   "categories": [
+    "6411"
+   ],
+   "preview_emoji": "🥬",
+   "existing_emoji_fits": false
+  },
+  "green_beans": {
+   "draw": "green beans",
+   "tier": "core",
+   "categories": [
+    "6412"
+   ],
+   "preview_emoji": "🫛",
+   "existing_emoji_fits": false
+  },
+  "cabbage": {
+   "draw": "cabbage",
+   "tier": "core",
+   "categories": [
+    "6413"
+   ],
+   "preview_emoji": "🥬",
+   "existing_emoji_fits": false
+  },
+  "onion": {
+   "draw": "onion and spring onion",
+   "tier": "core",
+   "categories": [
+    "6414"
+   ],
+   "preview_emoji": "🧅",
+   "existing_emoji_fits": true
+  },
+  "corn": {
+   "draw": "corn cob",
+   "tier": "core",
+   "categories": [
+    "6416"
+   ],
+   "preview_emoji": "🌽",
+   "existing_emoji_fits": true
+  },
+  "peas": {
+   "draw": "pea pod",
+   "tier": "core",
+   "categories": [
+    "6418"
+   ],
+   "preview_emoji": "🫛",
+   "existing_emoji_fits": true
+  },
+  "mixed_veg": {
+   "draw": "cucumber, zucchini and mushroom",
+   "tier": "extra",
+   "categories": [
+    "6420"
+   ],
+   "preview_emoji": "🥒🍄",
+   "existing_emoji_fits": false
+  },
+  "onion_rings": {
+   "draw": "onion rings / fried vegetables",
+   "tier": "core",
+   "categories": [
+    "6430"
+   ],
+   "preview_emoji": "🧅🍟",
+   "existing_emoji_fits": false
+  },
+  "coleslaw": {
+   "draw": "bowl of coleslaw / tomato-cucumber salad",
+   "tier": "core",
+   "categories": [
+    "6432"
+   ],
+   "preview_emoji": "🥗",
+   "existing_emoji_fits": false
+  },
+  "potato": {
+   "draw": "potatoes",
+   "tier": "core",
+   "categories": [
+    "6802"
+   ],
+   "preview_emoji": "🥔",
+   "existing_emoji_fits": true
+  },
+  "fries": {
+   "draw": "French fries",
+   "tier": "core",
+   "categories": [
+    "6804"
+   ],
+   "preview_emoji": "🍟",
+   "existing_emoji_fits": true
+  },
+  "mashed_potato": {
+   "draw": "bowl of mashed potatoes",
+   "tier": "core",
+   "categories": [
+    "6806"
+   ],
+   "preview_emoji": "🥔🥣",
+   "existing_emoji_fits": false
+  },
+  "orange_juice": {
+   "draw": "glass of orange juice",
+   "tier": "core",
+   "categories": [
+    "7002"
+   ],
+   "preview_emoji": "🍊🧃",
+   "existing_emoji_fits": false
+  },
+  "apple_juice": {
+   "draw": "glass of apple juice",
+   "tier": "core",
+   "categories": [
+    "7004"
+   ],
+   "preview_emoji": "🍏🧃",
+   "existing_emoji_fits": false
+  },
+  "juice": {
+   "draw": "glass of red / purple fruit juice",
+   "tier": "core",
+   "categories": [
+    "7006"
+   ],
+   "preview_emoji": "🧃",
+   "existing_emoji_fits": true
+  },
+  "veg_juice": {
+   "draw": "glass of tomato juice with celery",
+   "tier": "core",
+   "categories": [
+    "7008"
+   ],
+   "preview_emoji": "🍅🥤",
+   "existing_emoji_fits": false
+  },
+  "soft_drink": {
+   "draw": "soda can and a glass of cola",
+   "tier": "core",
+   "categories": [
+    "7102",
+    "7202"
+   ],
+   "preview_emoji": "🥤",
+   "existing_emoji_fits": true
+  },
+  "fruit_drink": {
+   "draw": "juice box / lemonade",
+   "tier": "core",
+   "categories": [
+    "7106",
+    "7204"
+   ],
+   "preview_emoji": "🍋🥤",
+   "existing_emoji_fits": false
+  },
+  "energy_drink": {
+   "draw": "energy / sports drink can with a lightning bolt",
+   "tier": "core",
+   "categories": [
+    "7104",
+    "7206"
+   ],
+   "preview_emoji": "⚡🥤",
+   "existing_emoji_fits": false
+  },
+  "nutrition_shake": {
+   "draw": "ready-to-drink shake bottle",
+   "tier": "core",
+   "categories": [
+    "7208"
+   ],
+   "preview_emoji": "💪🥤",
+   "existing_emoji_fits": false
+  },
+  "smoothie": {
+   "draw": "smoothie glass",
+   "tier": "core",
+   "categories": [
+    "7220"
+   ],
+   "preview_emoji": "🍓🥤",
+   "existing_emoji_fits": false
+  },
+  "coffee": {
+   "draw": "coffee cup",
+   "tier": "core",
+   "categories": [
+    "7302"
+   ],
+   "preview_emoji": "☕",
+   "existing_emoji_fits": true
+  },
+  "tea": {
+   "draw": "tea cup with a tea bag",
+   "tier": "core",
+   "categories": [
+    "7304"
+   ],
+   "preview_emoji": "🍵",
+   "existing_emoji_fits": true
+  },
+  "iced_tea": {
+   "draw": "glass of iced tea with lemon",
+   "tier": "core",
+   "categories": [
+    "X10"
+   ],
+   "preview_emoji": "🧊🍵",
+   "existing_emoji_fits": false
+  },
+  "hot_chocolate": {
+   "draw": "mug of hot chocolate",
+   "tier": "core",
+   "categories": [
+    "X09"
+   ],
+   "preview_emoji": "🍫☕",
+   "existing_emoji_fits": false
+  },
+  "beer": {
+   "draw": "glass of beer",
+   "tier": "core",
+   "categories": [
+    "7502"
+   ],
+   "preview_emoji": "🍺",
+   "existing_emoji_fits": true
+  },
+  "wine": {
+   "draw": "glass of wine",
+   "tier": "core",
+   "categories": [
+    "7504"
+   ],
+   "preview_emoji": "🍷",
+   "existing_emoji_fits": true
+  },
+  "spirits": {
+   "draw": "spirit bottle and a cocktail glass",
+   "tier": "core",
+   "categories": [
+    "7506"
+   ],
+   "preview_emoji": "🥃",
+   "existing_emoji_fits": true
+  },
+  "water": {
+   "draw": "water bottle",
+   "tier": "core",
+   "categories": [
+    "7704",
+    "7804"
+   ],
+   "preview_emoji": "💧",
+   "existing_emoji_fits": false
+  },
+  "sparkling_water": {
+   "draw": "bottle of sparkling water with bubbles",
+   "tier": "core",
+   "categories": [
+    "7802"
+   ],
+   "preview_emoji": "🫧💧",
+   "existing_emoji_fits": false
+  },
+  "butter": {
+   "draw": "butter block",
+   "tier": "core",
+   "categories": [
+    "8002"
+   ],
+   "preview_emoji": "🧈",
+   "existing_emoji_fits": true
+  },
+  "margarine": {
+   "draw": "tub of spread",
+   "tier": "core",
+   "categories": [
+    "8004"
+   ],
+   "preview_emoji": "🧈🌱",
+   "existing_emoji_fits": false
+  },
+  "sour_cream": {
+   "draw": "tub of sour cream with a dollop",
+   "tier": "core",
+   "categories": [
+    "8006"
+   ],
+   "preview_emoji": "🥛🥄",
+   "existing_emoji_fits": false
+  },
+  "cream": {
+   "draw": "small jug of cream",
+   "tier": "core",
+   "categories": [
+    "8008"
+   ],
+   "preview_emoji": "🥛",
+   "existing_emoji_fits": false
+  },
+  "mayonnaise": {
+   "draw": "mayonnaise jar",
+   "tier": "core",
+   "categories": [
+    "8010"
+   ],
+   "preview_emoji": "🥚🫙",
+   "existing_emoji_fits": false
+  },
+  "dressing": {
+   "draw": "salad dressing bottle",
+   "tier": "core",
+   "categories": [
+    "8012"
+   ],
+   "preview_emoji": "🥗🫗",
+   "existing_emoji_fits": false
+  },
+  "oil": {
+   "draw": "olive oil bottle",
+   "tier": "core",
+   "categories": [
+    "X06"
+   ],
+   "preview_emoji": "🫒",
+   "existing_emoji_fits": false
+  },
+  "ketchup": {
+   "draw": "ketchup bottle",
+   "tier": "core",
+   "categories": [
+    "8402"
+   ],
+   "preview_emoji": "🍅🫙",
+   "existing_emoji_fits": false
+  },
+  "soy_sauce": {
+   "draw": "soy sauce bottle and dish",
+   "tier": "core",
+   "categories": [
+    "8404"
+   ],
+   "preview_emoji": "🍶",
+   "existing_emoji_fits": false
+  },
+  "mustard": {
+   "draw": "mustard jar",
+   "tier": "core",
+   "categories": [
+    "8406"
+   ],
+   "preview_emoji": "🟡🫙",
+   "existing_emoji_fits": false
+  },
+  "olives": {
+   "draw": "olives and a pickle",
+   "tier": "core",
+   "categories": [
+    "8408"
+   ],
+   "preview_emoji": "🫒",
+   "existing_emoji_fits": true
+  },
+  "pasta_sauce": {
+   "draw": "jar of tomato pasta sauce",
+   "tier": "core",
+   "categories": [
+    "8410"
+   ],
+   "preview_emoji": "🍝🫙",
+   "existing_emoji_fits": false
+  },
+  "dip": {
+   "draw": "bowl of hummus / dip",
+   "tier": "extra",
+   "categories": [
+    "8412"
+   ],
+   "preview_emoji": "🫘🥣",
+   "existing_emoji_fits": false
+  },
+  "vinegar": {
+   "draw": "vinegar bottle",
+   "tier": "core",
+   "categories": [
+    "X05"
+   ],
+   "preview_emoji": "🫗",
+   "existing_emoji_fits": false
+  },
+  "honey_sugar": {
+   "draw": "honey jar and sugar cubes",
+   "tier": "core",
+   "categories": [
+    "8802"
+   ],
+   "preview_emoji": "🍯",
+   "existing_emoji_fits": true
+  },
+  "sweetener": {
+   "draw": "sweetener tablets with a stevia leaf",
+   "tier": "core",
+   "categories": [
+    "8804"
+   ],
+   "preview_emoji": "🌿🍬",
+   "existing_emoji_fits": false
+  },
+  "jam": {
+   "draw": "jam jar",
+   "tier": "core",
+   "categories": [
+    "8806"
+   ],
+   "preview_emoji": "🍓🫙",
+   "existing_emoji_fits": false
+  },
+  "choc_spread": {
+   "draw": "jar of chocolate spread",
+   "tier": "core",
+   "categories": [
+    "X08"
+   ],
+   "preview_emoji": "🍫🫙",
+   "existing_emoji_fits": false
+  },
+  "baking": {
+   "draw": "whisk and baking-powder tin",
+   "tier": "core",
+   "categories": [
+    "X02"
+   ],
+   "preview_emoji": "🥄🧁",
+   "existing_emoji_fits": false
+  },
+  "spices": {
+   "draw": "salt and pepper shakers with a spice jar",
+   "tier": "core",
+   "categories": [
+    "X03"
+   ],
+   "preview_emoji": "🧂",
+   "existing_emoji_fits": true
+  },
+  "stock": {
+   "draw": "stock cube",
+   "tier": "core",
+   "categories": [
+    "X04"
+   ],
+   "preview_emoji": "🧊🍲",
+   "existing_emoji_fits": false
+  },
+  "baby_cereal": {
+   "draw": "baby bowl with a baby spoon",
+   "tier": "core",
+   "categories": [
+    "9002"
+   ],
+   "preview_emoji": "🍼🥣",
+   "existing_emoji_fits": false
+  },
+  "baby_food": {
+   "draw": "baby food pouch / jar",
+   "tier": "core",
+   "categories": [
+    "9004",
+    "9006",
+    "9007",
+    "9008",
+    "9010"
+   ],
+   "preview_emoji": "🍼🫙",
+   "existing_emoji_fits": false
+  },
+  "baby_snack": {
+   "draw": "baby puffs / teething biscuit",
+   "tier": "core",
+   "categories": [
+    "9012"
+   ],
+   "preview_emoji": "🍼🍪",
+   "existing_emoji_fits": false
+  },
+  "baby_drink": {
+   "draw": "baby sippy cup",
+   "tier": "core",
+   "categories": [
+    "9202",
+    "9204"
+   ],
+   "preview_emoji": "🍼",
+   "existing_emoji_fits": false
+  },
+  "formula": {
+   "draw": "formula tin with a baby bottle",
+   "tier": "core",
+   "categories": [
+    "9402",
+    "9404"
+   ],
+   "preview_emoji": "🍼",
+   "existing_emoji_fits": true
+  },
+  "protein_powder": {
+   "draw": "protein powder tub with a scoop",
+   "tier": "core",
+   "categories": [
+    "9802"
+   ],
+   "preview_emoji": "💪🥄",
+   "existing_emoji_fits": false
+  },
+  "supplements": {
+   "draw": "pills and capsules",
+   "tier": "core",
+   "categories": [
+    "X11"
+   ],
+   "preview_emoji": "💊",
+   "existing_emoji_fits": true
+  },
+  "generic_food": {
+   "draw": "plate with knife and fork",
+   "tier": "core",
+   "categories": [
+    "6489",
+    "7702",
+    "9602",
+    "9999"
+   ],
+   "preview_emoji": "🍽️",
+   "existing_emoji_fits": true
+  }
+ },
+ "group_icons": {
+  "Milk & dairy": {
+   "draw": "milk bottle and cheese wedge",
+   "preview_emoji": "🥛🧀"
+  },
+  "Protein foods": {
+   "draw": "steak and an egg",
+   "preview_emoji": "🥩🥚"
+  },
+  "Mixed dishes": {
+   "draw": "covered dish / plate of food",
+   "preview_emoji": "🍽️"
+  },
+  "Grains": {
+   "draw": "bread loaf and wheat ear",
+   "preview_emoji": "🍞🌾"
+  },
+  "Snacks & sweets": {
+   "draw": "cookie and candy",
+   "preview_emoji": "🍪🍬"
+  },
+  "Fruit": {
+   "draw": "apple and banana",
+   "preview_emoji": "🍎🍌"
+  },
+  "Vegetables": {
+   "draw": "carrot and broccoli",
+   "preview_emoji": "🥕🥦"
+  },
+  "Beverages": {
+   "draw": "glass with a straw",
+   "preview_emoji": "🥤"
+  },
+  "Alcoholic beverages": {
+   "draw": "beer and wine glass",
+   "preview_emoji": "🍺🍷"
+  },
+  "Water": {
+   "draw": "water bottle",
+   "preview_emoji": "💧"
+  },
+  "Fats & oils": {
+   "draw": "butter and oil bottle",
+   "preview_emoji": "🧈🫒"
+  },
+  "Condiments & sauces": {
+   "draw": "sauce bottle",
+   "preview_emoji": "🫙"
+  },
+  "Sugars": {
+   "draw": "sugar cubes and honey",
+   "preview_emoji": "🍯"
+  },
+  "Cooking & baking": {
+   "draw": "whisk and spice jar",
+   "preview_emoji": "🧂"
+  },
+  "Infant formula & baby food": {
+   "draw": "baby bottle",
+   "preview_emoji": "🍼"
+  },
+  "Other": {
+   "draw": "plate with knife and fork",
+   "preview_emoji": "🍽️"
+  }
+ },
+ "categories": {
+  "1002": {
+   "icon": "milk",
+   "badge": "whole",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1004": {
+   "icon": "milk",
+   "badge": "2%",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1006": {
+   "icon": "milk",
+   "badge": "1%",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1008": {
+   "icon": "milk",
+   "badge": "skim",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1202": {
+   "icon": "flavoured_milk",
+   "badge": "whole",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1204": {
+   "icon": "flavoured_milk",
+   "badge": "2%",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1206": {
+   "icon": "flavoured_milk",
+   "badge": "1%",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1208": {
+   "icon": "flavoured_milk",
+   "badge": "skim",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1402": {
+   "icon": "milkshake",
+   "badge": null,
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1602": {
+   "icon": "cheese",
+   "badge": null,
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1604": {
+   "icon": "cottage_cheese",
+   "badge": null,
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1820": {
+   "icon": "yogurt",
+   "badge": null,
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1822": {
+   "icon": "yogurt",
+   "badge": "Greek",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1902": {
+   "icon": "plant_milk",
+   "badge": null,
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "1904": {
+   "icon": "yogurt",
+   "badge": "plant",
+   "fallback_group_icon": "Milk & dairy"
+  },
+  "2002": {
+   "icon": "beef",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2004": {
+   "icon": "minced_meat",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2006": {
+   "icon": "pork",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2008": {
+   "icon": "lamb",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2010": {
+   "icon": "liver",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2202": {
+   "icon": "chicken",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2204": {
+   "icon": "nuggets",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2206": {
+   "icon": "turkey",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2402": {
+   "icon": "fish",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2404": {
+   "icon": "shrimp",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2502": {
+   "icon": "egg",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2602": {
+   "icon": "cold_cuts",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2604": {
+   "icon": "bacon",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2606": {
+   "icon": "frankfurter",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2608": {
+   "icon": "sausage",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2802": {
+   "icon": "legumes",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2804": {
+   "icon": "nuts",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "2806": {
+   "icon": "tofu",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "3002": {
+   "icon": "meat_stew",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3004": {
+   "icon": "chicken_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3006": {
+   "icon": "seafood_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3102": {
+   "icon": "bean_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3104": {
+   "icon": "veg_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3202": {
+   "icon": "rice_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3204": {
+   "icon": "pasta_dish",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3206": {
+   "icon": "mac_cheese",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3208": {
+   "icon": "savoury_pastry",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3402": {
+   "icon": "noodle_box",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3404": {
+   "icon": "stir_fry",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3406": {
+   "icon": "sushi",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3502": {
+   "icon": "taco",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3504": {
+   "icon": "nachos",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3506": {
+   "icon": "quesadilla",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3602": {
+   "icon": "pizza",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3702": {
+   "icon": "burger",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3703": {
+   "icon": "hot_dog",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3704": {
+   "icon": "chicken_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3706": {
+   "icon": "breakfast_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3720": {
+   "icon": "grilled_cheese",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3722": {
+   "icon": "pbj_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3730": {
+   "icon": "fish_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3740": {
+   "icon": "deli_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3742": {
+   "icon": "meat_sandwich",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3744": {
+   "icon": "veggie_burger",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3804": {
+   "icon": "soup",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3806": {
+   "icon": "cream_soup",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "3808": {
+   "icon": "ramen",
+   "badge": null,
+   "fallback_group_icon": "Mixed dishes"
+  },
+  "4002": {
+   "icon": "rice",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4004": {
+   "icon": "pasta",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4202": {
+   "icon": "bread",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4204": {
+   "icon": "bread_roll",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4206": {
+   "icon": "bagel",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4208": {
+   "icon": "tortilla",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4402": {
+   "icon": "muffin",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4404": {
+   "icon": "pancakes",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4602": {
+   "icon": "cereal",
+   "badge": "sweet",
+   "fallback_group_icon": "Grains"
+  },
+  "4604": {
+   "icon": "cereal",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4802": {
+   "icon": "porridge",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "4804": {
+   "icon": "porridge",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "5002": {
+   "icon": "potato_chips",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5004": {
+   "icon": "corn_chips",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5006": {
+   "icon": "popcorn",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5008": {
+   "icon": "pretzel",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5202": {
+   "icon": "crackers",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5204": {
+   "icon": "crackers",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5402": {
+   "icon": "granola_bar",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5404": {
+   "icon": "protein_bar",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5502": {
+   "icon": "cake",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5504": {
+   "icon": "cookie",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5506": {
+   "icon": "pastry",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5702": {
+   "icon": "chocolate",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5704": {
+   "icon": "candy",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5802": {
+   "icon": "ice_cream",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5804": {
+   "icon": "pudding",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "5806": {
+   "icon": "ice_lolly",
+   "badge": null,
+   "fallback_group_icon": "Snacks & sweets"
+  },
+  "6002": {
+   "icon": "apple",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6004": {
+   "icon": "banana",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6006": {
+   "icon": "grapes",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6008": {
+   "icon": "peach",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6009": {
+   "icon": "strawberry",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6011": {
+   "icon": "berries",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6012": {
+   "icon": "citrus",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6014": {
+   "icon": "melon",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6016": {
+   "icon": "dried_fruit",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6018": {
+   "icon": "mixed_fruit",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6020": {
+   "icon": "pear",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6022": {
+   "icon": "pineapple",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6024": {
+   "icon": "mango",
+   "badge": null,
+   "fallback_group_icon": "Fruit"
+  },
+  "6402": {
+   "icon": "tomato",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6404": {
+   "icon": "carrot",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6406": {
+   "icon": "pepper",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6407": {
+   "icon": "broccoli",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6409": {
+   "icon": "spinach",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6410": {
+   "icon": "lettuce",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6411": {
+   "icon": "kale",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6412": {
+   "icon": "green_beans",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6413": {
+   "icon": "cabbage",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6414": {
+   "icon": "onion",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6416": {
+   "icon": "corn",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6418": {
+   "icon": "peas",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6420": {
+   "icon": "mixed_veg",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6430": {
+   "icon": "onion_rings",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6432": {
+   "icon": "coleslaw",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6489": {
+   "icon": "generic_food",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6802": {
+   "icon": "potato",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6804": {
+   "icon": "fries",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "6806": {
+   "icon": "mashed_potato",
+   "badge": null,
+   "fallback_group_icon": "Vegetables"
+  },
+  "7002": {
+   "icon": "orange_juice",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7004": {
+   "icon": "apple_juice",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7006": {
+   "icon": "juice",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7008": {
+   "icon": "veg_juice",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7102": {
+   "icon": "soft_drink",
+   "badge": "zero",
+   "fallback_group_icon": "Beverages"
+  },
+  "7104": {
+   "icon": "energy_drink",
+   "badge": "zero",
+   "fallback_group_icon": "Beverages"
+  },
+  "7106": {
+   "icon": "fruit_drink",
+   "badge": "zero",
+   "fallback_group_icon": "Beverages"
+  },
+  "7202": {
+   "icon": "soft_drink",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7204": {
+   "icon": "fruit_drink",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7206": {
+   "icon": "energy_drink",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7208": {
+   "icon": "nutrition_shake",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7220": {
+   "icon": "smoothie",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7302": {
+   "icon": "coffee",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7304": {
+   "icon": "tea",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "7502": {
+   "icon": "beer",
+   "badge": null,
+   "fallback_group_icon": "Alcoholic beverages"
+  },
+  "7504": {
+   "icon": "wine",
+   "badge": null,
+   "fallback_group_icon": "Alcoholic beverages"
+  },
+  "7506": {
+   "icon": "spirits",
+   "badge": null,
+   "fallback_group_icon": "Alcoholic beverages"
+  },
+  "7702": {
+   "icon": "generic_food",
+   "badge": null,
+   "fallback_group_icon": "Water"
+  },
+  "7704": {
+   "icon": "water",
+   "badge": null,
+   "fallback_group_icon": "Water"
+  },
+  "7802": {
+   "icon": "sparkling_water",
+   "badge": null,
+   "fallback_group_icon": "Water"
+  },
+  "7804": {
+   "icon": "water",
+   "badge": "+vitamins",
+   "fallback_group_icon": "Water"
+  },
+  "8002": {
+   "icon": "butter",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8004": {
+   "icon": "margarine",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8006": {
+   "icon": "sour_cream",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8008": {
+   "icon": "cream",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8010": {
+   "icon": "mayonnaise",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8012": {
+   "icon": "dressing",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "8402": {
+   "icon": "ketchup",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8404": {
+   "icon": "soy_sauce",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8406": {
+   "icon": "mustard",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8408": {
+   "icon": "olives",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8410": {
+   "icon": "pasta_sauce",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8412": {
+   "icon": "dip",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "8802": {
+   "icon": "honey_sugar",
+   "badge": null,
+   "fallback_group_icon": "Sugars"
+  },
+  "8804": {
+   "icon": "sweetener",
+   "badge": null,
+   "fallback_group_icon": "Sugars"
+  },
+  "8806": {
+   "icon": "jam",
+   "badge": null,
+   "fallback_group_icon": "Sugars"
+  },
+  "9002": {
+   "icon": "baby_cereal",
+   "badge": null,
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9004": {
+   "icon": "baby_food",
+   "badge": "fruit",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9006": {
+   "icon": "baby_food",
+   "badge": "veg",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9007": {
+   "icon": "baby_food",
+   "badge": "mixed",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9008": {
+   "icon": "baby_food",
+   "badge": "meal",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9010": {
+   "icon": "baby_food",
+   "badge": "yogurt",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9012": {
+   "icon": "baby_snack",
+   "badge": null,
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9202": {
+   "icon": "baby_drink",
+   "badge": null,
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9204": {
+   "icon": "baby_drink",
+   "badge": null,
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9402": {
+   "icon": "formula",
+   "badge": "liquid",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9404": {
+   "icon": "formula",
+   "badge": "powder",
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9602": {
+   "icon": "generic_food",
+   "badge": null,
+   "fallback_group_icon": "Infant formula & baby food"
+  },
+  "9802": {
+   "icon": "protein_powder",
+   "badge": null,
+   "fallback_group_icon": "Other"
+  },
+  "9999": {
+   "icon": "generic_food",
+   "badge": null,
+   "fallback_group_icon": "Other"
+  },
+  "X01": {
+   "icon": "flour",
+   "badge": null,
+   "fallback_group_icon": "Grains"
+  },
+  "X02": {
+   "icon": "baking",
+   "badge": null,
+   "fallback_group_icon": "Cooking & baking"
+  },
+  "X03": {
+   "icon": "spices",
+   "badge": null,
+   "fallback_group_icon": "Cooking & baking"
+  },
+  "X04": {
+   "icon": "stock",
+   "badge": null,
+   "fallback_group_icon": "Cooking & baking"
+  },
+  "X05": {
+   "icon": "vinegar",
+   "badge": null,
+   "fallback_group_icon": "Condiments & sauces"
+  },
+  "X06": {
+   "icon": "oil",
+   "badge": null,
+   "fallback_group_icon": "Fats & oils"
+  },
+  "X07": {
+   "icon": "nut_butter",
+   "badge": null,
+   "fallback_group_icon": "Protein foods"
+  },
+  "X08": {
+   "icon": "choc_spread",
+   "badge": null,
+   "fallback_group_icon": "Sugars"
+  },
+  "X09": {
+   "icon": "hot_chocolate",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "X10": {
+   "icon": "iced_tea",
+   "badge": null,
+   "fallback_group_icon": "Beverages"
+  },
+  "X11": {
+   "icon": "supplements",
+   "badge": null,
+   "fallback_group_icon": "Other"
+  }
+ }
+}

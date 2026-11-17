@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon Preview</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
+    --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb; --tile: #f3f1ec;
+    --warn: #9a6700; --warn-soft: #fff8c5; --ok: #1a7f37; --ok-soft: #dafbe1; --badge: #1d1d1b; --badge-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+      --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --tile: #2a2b28;
+      --warn: #e3b341; --warn-soft: #2b2410; --ok: #3fb950; --ok-soft: #12261a; --badge: #ecece8; --badge-text: #151614;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+    --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --tile: #2a2b28;
+    --warn: #e3b341; --warn-soft: #2b2410; --ok: #3fb950; --ok-soft: #12261a; --badge: #ecece8; --badge-text: #151614;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1200px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; font-weight: 650; flex: 1; min-width: 200px; }
+  nav.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 9px; }
+  nav.tabs button { border: 0; background: none; padding: 6px 12px; border-radius: 7px; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
+  nav.tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  label.ctl { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+  select, input { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
+  a { color: var(--accent); }
+  main { max-width: 1200px; margin: 0 auto; padding: 12px 16px 40px; }
+  .note { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+  .stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  /* icon tile (placeholder emoji + optional badge) */
+  .ico { position: relative; flex: none; width: var(--s, 48px); height: var(--s, 48px); border-radius: 22%; background: var(--tile);
+         display: grid; place-items: center; overflow: visible; }
+  .ico .e { font-size: calc(var(--s, 48px) * .62); line-height: 1; letter-spacing: -0.12em; white-space: nowrap;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+  .ico .e.two { font-size: calc(var(--s, 48px) * .42); }
+  .ico .badge { position: absolute; right: -4px; bottom: -4px; background: var(--badge); color: var(--badge-text);
+                font-size: max(9px, calc(var(--s, 48px) * .2)); font-weight: 700; border-radius: 6px; padding: 0 4px; line-height: 1.5; }
+  /* products */
+  .list { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: 0; }
+  .row .photo { width: var(--s, 48px); height: var(--s, 48px); border-radius: 10px; object-fit: contain; background: #fff; border: 1px solid var(--border); flex: none; }
+  .row .txt { min-width: 0; flex: 1; }
+  .row .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .cat { color: var(--muted); font-size: 12.5px; }
+  .src { font-size: 11px; border-radius: 8px; padding: 1px 7px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+  .src.you { background: var(--ok-soft); color: var(--ok); }
+  /* icons grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; gap: 10px; }
+  .card .t { font-weight: 650; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .card .d { font-size: 12.5px; }
+  .card .c { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .tag { font-size: 10.5px; border-radius: 8px; padding: 1px 6px; margin-left: 4px; }
+  .tag.fit { background: var(--ok-soft); color: var(--ok); }
+  .tag.custom { background: var(--warn-soft); color: var(--warn); }
+  .tag.extra { background: var(--surface-2); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; background: var(--surface-2); }
+  h2 { font-size: 14px; margin: 18px 0 8px; color: var(--muted); font-weight: 650; }
+  [hidden] { display: none !important; }
+  button:focus-visible, select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Icon preview · categories → icons</h1>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="products" aria-selected="true">Products</button>
+      <button role="tab" data-tab="icons" aria-selected="false">Icons</button>
+      <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
+    </nav>
+    <label class="ctl">Size
+      <select id="size"><option value="24">24 px</option><option value="40">40 px</option><option value="48" selected>48 px</option><option value="64">64 px</option><option value="96">96 px</option></select>
+    </label>
+    <label class="ctl">Theme
+      <select id="theme"><option value="">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+    </label>
+    <a href="/">← Food browser</a>
+  </div>
+</header>
+<main>
+  <div class="note">Placeholders: these are <b>system emoji</b>, not the final icons. Icons marked <b>“needs custom icon”</b> are a rough combination of two emoji; a designer (or an icon set) has to make them.</div>
+  <div class="stats" id="stats"></div>
+
+  <section id="tab-products">
+    <div class="bar" style="padding:0 0 10px">
+      <label class="ctl">Group <select id="pgroup"><option value="">All</option></select></label>
+      <label class="ctl">Show <select id="psrc"><option value="">All products</option><option value="your answer">Only my answers</option><option value="model guess">Only model guesses</option></select></label>
+      <label class="ctl"><input type="checkbox" id="pphoto"> show product photo next to the icon</label>
+    </div>
+    <div class="list" id="plist"></div>
+  </section>
+
+  <section id="tab-icons" hidden>
+    <div class="bar" style="padding:0 0 10px">
+      <label class="ctl">Show <select id="ifilter"><option value="">All icons</option><option value="fit">Existing emoji fits</option><option value="custom">Needs custom icon</option><option value="extra">Extra (group icon fallback)</option><option value="shared">Shared by several categories</option></select></label>
+      <input id="isearch" placeholder="Search icons or categories…" aria-label="Search icons">
+    </div>
+    <div class="grid" id="igrid"></div>
+    <h2>Group icons (headers and fallback)</h2>
+    <div class="grid" id="ggrid"></div>
+  </section>
+
+  <section id="tab-categories" hidden>
+    <div class="bar" style="padding:0 0 10px"><input id="csearch" placeholder="Search categories…" aria-label="Search categories"></div>
+    <table><thead><tr><th>Icon</th><th>Code</th><th>Category</th><th>Group</th><th>Icon id</th></tr></thead><tbody id="ctable"></tbody></table>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs, ...kids) {  // data is text only, never innerHTML
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) n.append(k instanceof Node ? k : String(k));
+  return n;
+}
+let D = null;
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+function tile(emoji, badge, title) {
+  const chars = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(emoji)].length;
+  const t = el("div", { class: "ico", title: title || "" }, el("span", { class: "e" + (chars > 1 ? " two" : ""), text: emoji }));
+  if (badge) t.append(el("span", { class: "badge", text: badge }));
+  return t;
+}
+function catIcon(code) {
+  const c = D.plan.categories[code];
+  const icon = D.plan.icons[c.icon];
+  return { id: c.icon, icon, badge: c.badge };
+}
+
+function renderStats() {
+  const icons = Object.values(D.plan.icons);
+  const fit = icons.filter((i) => i.existing_emoji_fits).length;
+  const answered = D.products.filter((p) => p.source === "your answer").length;
+  $("stats").replaceChildren(
+    el("div", { class: "stat" }, el("b", { text: Object.keys(D.plan.categories).length }), el("span", { text: "categories" })),
+    el("div", { class: "stat" }, el("b", { text: icons.length }), el("span", { text: `item icons (${icons.filter((i) => i.tier === "extra").length} extra)` })),
+    el("div", { class: "stat" }, el("b", { text: Object.keys(D.plan.group_icons).length }), el("span", { text: "group icons" })),
+    el("div", { class: "stat" }, el("b", { text: fit }), el("span", { text: "existing emoji fits" })),
+    el("div", { class: "stat" }, el("b", { text: icons.length - fit }), el("span", { text: "need a custom icon" })),
+    el("div", { class: "stat" }, el("b", { text: `${answered}/${D.products.length}` }), el("span", { text: "products with your answer" })),
+  );
+}
+
+function renderProducts() {
+  const g = $("pgroup").value, src = $("psrc").value, photo = $("pphoto").checked;
+  const rows = D.products.filter((p) => p.code && (!g || D.categories[p.code].group === g) && (!src || p.source === src));
+  $("plist").replaceChildren(...rows.map((p) => {
+    const { icon, badge } = catIcon(p.code);
+    const cat = D.categories[p.code];
+    const kids = [tile(icon.preview_emoji, badge, icon.draw)];
+    if (photo) {
+      const img = el("img", { class: "photo", alt: "", loading: "lazy", src: p.thumb && /^https:\/\//.test(p.thumb) ? p.thumb : "/no-image.svg" });
+      img.addEventListener("error", () => { img.src = "/no-image.svg"; });
+      kids.push(img);
+    }
+    kids.push(el("div", { class: "txt" }, el("div", { class: "name", text: p.name }),
+      el("div", { class: "cat", text: `${p.code} ${cat.name} · ${cat.group}` })));
+    kids.push(el("span", { class: "src" + (p.source === "your answer" ? " you" : ""), text: p.source }));
+    return el("div", { class: "row" }, ...kids);
+  }));
+  if (!rows.length) $("plist").replaceChildren(el("div", { class: "row", text: D.products.length ? "Nothing for this filter." : "No test products yet (run stage 05)." }));
+}
+
+function renderIcons() {
+  const f = $("ifilter").value, q = $("isearch").value.trim().toLowerCase();
+  const items = Object.entries(D.plan.icons).filter(([id, i]) => {
+    if (f === "fit" && !i.existing_emoji_fits) return false;
+    if (f === "custom" && i.existing_emoji_fits) return false;
+    if (f === "extra" && i.tier !== "extra") return false;
+    if (f === "shared" && i.categories.length < 2) return false;
+    if (!q) return true;
+    return (id + " " + i.draw + " " + i.categories.map((c) => c + " " + D.categories[c].name).join(" ")).toLowerCase().includes(q);
+  });
+  $("igrid").replaceChildren(...items.map(([id, i]) => {
+    const badges = [...new Set(i.categories.map((c) => D.plan.categories[c].badge).filter(Boolean))];
+    return el("div", { class: "card" }, tile(i.preview_emoji, badges[0] || null, i.draw),
+      el("div", null,
+        el("div", null, el("span", { class: "t", text: id }),
+          el("span", { class: "tag " + (i.existing_emoji_fits ? "fit" : "custom"), text: i.existing_emoji_fits ? "emoji fits" : "needs custom icon" }),
+          i.tier === "extra" ? el("span", { class: "tag extra", text: "extra" }) : null),
+        el("div", { class: "d", text: i.draw }),
+        el("div", { class: "c", text: i.categories.map((c) => `${c} ${D.categories[c].name}${D.plan.categories[c].badge ? " [" + D.plan.categories[c].badge + "]" : ""}`).join(" · ") })));
+  }));
+  $("ggrid").replaceChildren(...Object.entries(D.plan.group_icons).map(([g, i]) =>
+    el("div", { class: "card" }, tile(i.preview_emoji, null, i.draw), el("div", null, el("div", { class: "t", text: g }), el("div", { class: "d", text: i.draw })))));
+}
+
+function renderCategories() {
+  const q = $("csearch").value.trim().toLowerCase();
+  const codes = Object.keys(D.plan.categories).filter((c) => !q || (c + " " + D.categories[c].name + " " + D.categories[c].group).toLowerCase().includes(q));
+  $("ctable").replaceChildren(...codes.map((c) => {
+    const { id, icon, badge } = catIcon(c);
+    return el("tr", null, el("td", null, tile(icon.preview_emoji, badge, icon.draw)), el("td", { text: c }),
+      el("td", { text: D.categories[c].name }), el("td", { text: D.categories[c].group }),
+      el("td", null, el("code", { text: id }), icon.tier === "extra" ? el("span", { class: "tag extra", text: "extra" }) : null));
+  }));
+}
+
+function setSize(v) { document.documentElement.style.setProperty("--s", v + "px"); store.set("iconSize", v); }
+function setTheme(v) { if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme"); store.set("iconTheme", v); }
+function showTab(t) {
+  for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === t));
+  for (const s of ["products", "icons", "categories"]) $("tab-" + s).hidden = s !== t;
+  store.set("iconTab", t);
+}
+for (const b of document.querySelectorAll("nav.tabs button")) b.addEventListener("click", () => showTab(b.dataset.tab));
+$("size").addEventListener("change", (e) => setSize(e.target.value));
+$("theme").addEventListener("change", (e) => setTheme(e.target.value));
+for (const id of ["pgroup", "psrc", "pphoto"]) $(id).addEventListener("change", renderProducts);
+$("ifilter").addEventListener("change", renderIcons);
+$("isearch").addEventListener("input", renderIcons);
+$("csearch").addEventListener("input", renderCategories);
+
+(async () => {
+  D = await (await fetch("/api/icons")).json();
+  const groups = [...new Set(Object.values(D.categories).map((c) => c.group))];
+  $("pgroup").append(...groups.map((g) => el("option", { value: g, text: g })));
+  const size = store.get("iconSize") || "48"; $("size").value = size; setSize(size);
+  const theme = store.get("iconTheme") || ""; $("theme").value = theme; setTheme(theme);
+  showTab(store.get("iconTab") || "products");
+  renderStats(); renderProducts(); renderIcons(); renderCategories();
+})();
+</script>
+</body>
+</html>
