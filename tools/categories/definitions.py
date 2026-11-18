@@ -185,7 +185,7 @@ DEFS = {
     "8406": dict(d="Mustard and other condiments (narrowed: vinegar is X05).", inc="mustard, hot sauce, sriracha, horseradish, wasabi, lemon or lime juice used as a condiment, sweet and sour sauce, chutney", exc="vinegar → X05; relish → 8408"),
     "8408": dict(d="Olives, pickles and pickled vegetables.", inc="olives, pickles and gherkins, relish, sauerkraut, kimchi, capers, pickled peppers and beets, marinated vegetables in jars", exc=""),
     "8410": dict(d="Tomato-based pasta sauces.", inc="marinara, arrabbiata, bolognese, tomato and basil, vodka sauce, pizza sauce", exc="pesto, cream and cheese sauces → 8412; plain passata → 6402"),
-    "8412": dict(d="Dips, gravies and other sauces.", inc="hummus, guacamole, tzatziki, taramasalata, cheese dips, salsa con queso, pesto, Alfredo and cheese sauces, curry and other cooking sauces, gravy, white sauce", exc="stock cubes → X04; tomato pasta sauce → 8410"),
+    "8412": dict(d="Dips, gravies and other sauces.", inc="hummus, guacamole, tzatziki, taramasalata, cheese dips, salsa con queso, pesto, Alfredo and cheese sauces, curry and other cooking sauces, gravy, white sauce", exc="stock cubes → X04; tomato pasta sauce → 8410; hot sauce and sriracha → 8406"),
     # ---------------- Sugars
     "8802": dict(d="Sugar and honey.", inc="white, brown, cane and icing sugar, honey, agave syrup, molasses", exc="sweeteners → 8804; maple and pancake syrup → 8806"),
     "8804": dict(d="Sugar substitutes.", inc="stevia, sucralose, aspartame, erythritol, xylitol, sweetener tablets and sugar-sweetener blends", exc=""),

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Category Model Results</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
+    --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb; --accent-soft: #e6efff;
+    --good: #1a7f37; --good-soft: #dafbe1; --warn: #9a6700; --warn-soft: #fff4d4; --bad: #b42318; --bad-soft: #fde8e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+      --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --accent-soft: #1b2a44;
+      --good: #3fb950; --good-soft: #12261a; --warn: #d29922; --warn-soft: #2b2210; --bad: #f47067; --bad-soft: #2d1514;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; font-weight: 650; flex: 1; min-width: 220px; }
+  h2 { font-size: 14px; margin: 0 0 8px; font-weight: 650; }
+  .links { display: flex; gap: 14px; flex-wrap: wrap; }
+  a { color: var(--accent); }
+  label.ctl { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+  select, input { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; max-width: 100%; }
+  select:focus, input:focus, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 14px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+  .help { color: var(--muted); font-size: 13px; margin: 0; }
+  .panels { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; white-space: nowrap; }
+  .sel { background: var(--accent-soft); }
+  small, .small { color: var(--muted); font-size: 12px; }
+  .count { color: var(--muted); font-size: 13px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; }
+  .card img { width: 72px; height: 72px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); }
+  .title { font-weight: 650; }
+  .type { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-left: 6px; }
+  .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .answer { margin-top: 6px; font-size: 13px; }
+  .answer b { color: var(--good); }
+  .badge { display: inline-block; font-size: 11.5px; border-radius: 10px; padding: 1px 8px; border: 1px solid var(--border); color: var(--muted); margin-left: 6px; white-space: nowrap; }
+  .grid { margin-top: 8px; font-size: 12.5px; table-layout: fixed; }
+  .grid th:first-child, .grid td:first-child { width: 128px; color: var(--muted); }
+  .grid td { padding: 3px 6px; border-bottom: 2px solid var(--surface); }
+  .cell { border-radius: 6px; padding: 3px 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r0 { background: var(--good-soft); color: var(--good); }
+  .r1 { background: var(--warn-soft); color: var(--warn); }
+  .rx { background: var(--bad-soft); color: var(--bad); }
+  .rn { background: var(--surface-2); color: var(--muted); }
+  .grid tr.vote td { font-weight: 650; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .legend span { border-radius: 6px; padding: 2px 8px; }
+  details { margin-top: 6px; font-size: 12.5px; }
+  summary { cursor: pointer; color: var(--muted); }
+  details p { margin: 4px 0; }
+  details code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+  .tools { display: flex; gap: 14px; margin-top: 6px; font-size: 12.5px; flex-wrap: wrap; }
+  .more { align-self: center; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+  @media (max-width: 860px) { .panels { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 640px) {
+    .card { grid-template-columns: minmax(0, 1fr); } .card img { width: 56px; height: 56px; }
+    .grid .othervar { display: none; } .grid th:first-child, .grid td:first-child { width: 108px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Category model results · 200 test products</h1>
+    <label class="ctl">Text <select id="variant" aria-label="Product text used for scores and filters"></select></label>
+    <label class="ctl">Products <select id="group" aria-label="Product group">
+      <option value="all">All</option><option value="grocery">Packaged</option><option value="other">Everyday, prepared, restaurant</option>
+    </select></label>
+    <label class="ctl">Show <select id="show" aria-label="Show">
+      <option value="all">All</option>
+      <option value="vote-wrong">Vote wrong</option>
+      <option value="vote-right">Vote right</option>
+      <option value="not-top3">Answer not in the vote's top 3</option>
+      <option value="agree-wrong">All 3 agree but wrong</option>
+      <option value="disagree">Models disagree</option>
+      <option value="text-matters">Text changes the vote's result</option>
+    </select></label>
+    <input id="q" type="search" placeholder="Filter by name…" aria-label="Filter by name">
+    <nav class="links"><a href="/category-test">Live tester →</a><a href="/category-review">Answers</a><a href="/">Food browser</a></nav>
+  </div>
+</header>
+<main>
+  <p class="help">What each model predicted for the 200 test products, compared with the answer key (stage 05, no generative AI). Scores and filters use the text chosen at the top; each product shows all three texts. Same data as <code>stages/05-category-model/REPORT.md</code> Results 4 and 7. <span id="trainset"></span></p>
+  <div class="panels">
+    <section class="panel" aria-labelledby="h-scores"><h2 id="h-scores">Top-1 accuracy <small id="scope"></small></h2><table id="scores"></table></section>
+    <section class="panel" aria-labelledby="h-agree"><h2 id="h-agree">Does agreement mean right? <small id="scope2"></small></h2><table id="agree"></table>
+      <p class="small" id="vote-note"></p></section>
+  </div>
+  <div class="legend" aria-label="Colour legend">
+    <span class="r0">first choice right</span><span class="r1">right answer is 2nd or 3rd</span><span class="rx">right answer not in top 3</span>
+  </div>
+  <div class="count" id="count"></div>
+  <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="more" id="more" hidden>Show more</button>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs, ...kids) {  // product data is untrusted: text only, never innerHTML
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) n.append(k instanceof Node ? k : String(k));
+  return n;
+}
+let D = null, shown = 0;
+const PAGE = 50;
+const SHORT = { "title": "Title", "title+desc": "+ description", "title+desc+ingr": "+ ingredients" };
+const pct = (a, b) => b ? (100 * a / b).toFixed(1) + " %" : "–";
+const cname = (c) => (D.categories[c] || {}).name || "";
+const rank = (p, v, m) => p.answer ? p.preds[v][m].indexOf(p.answer) : null;  // 0 = first choice, -1 = not in top 3
+const cls = (r) => r === null ? "rn" : r === 0 ? "r0" : r > 0 ? "r1" : "rx";
+
+function inGroup(p) {
+  const g = $("group").value;
+  return g === "all" || (g === "grocery" ? p.type === "grocery" : p.type !== "grocery");
+}
+function matches(p) {
+  const v = $("variant").value, s = $("show").value, q = $("q").value.trim().toLowerCase();
+  if (!inGroup(p) || (q && !p.name.toLowerCase().includes(q))) return false;
+  if (s === "all") return true;
+  if (!p.answer) return false;
+  const r = rank(p, v, "vote");
+  if (s === "vote-wrong") return r !== 0;
+  if (s === "vote-right") return r === 0;
+  if (s === "not-top3") return r < 0;
+  if (s === "agree-wrong") return p.agree[v] === "all" && r !== 0;
+  if (s === "disagree") return p.agree[v] !== "all";
+  if (s === "text-matters") { const rs = Object.keys(D.variants).map((x) => rank(p, x, "vote") === 0); return rs.some(Boolean) && !rs.every(Boolean); }
+  return true;
+}
+
+function scores() {
+  const v = $("variant").value, ps = D.products.filter((p) => p.answer && inGroup(p));
+  const gname = $("group").selectedOptions[0].textContent.toLowerCase();
+  $("scope").textContent = `· ${gname}: ${ps.length} products · small = top 3`;
+  const head = el("tr", null, el("th", { text: "Model" }), ...Object.entries(D.variants).map(([k, name]) => el("th", { class: "num" + (k === v ? " sel" : ""), title: name, text: SHORT[k] || name })));
+  const rows = Object.entries(D.members).map(([m, name]) => el("tr", null, el("td", null, m === "vote" ? el("b", { text: name }) : name),
+    ...Object.keys(D.variants).map((k) => {
+      const t1 = ps.filter((p) => rank(p, k, m) === 0).length, t3 = ps.filter((p) => rank(p, k, m) >= 0).length;
+      return el("td", { class: "num" + (k === v ? " sel" : "") }, m === "vote" ? el("b", { text: pct(t1, ps.length) }) : pct(t1, ps.length), " ", el("small", { text: pct(t3, ps.length) }));
+    })));
+  $("scores").replaceChildren(el("thead", null, head), el("tbody", null, ...rows));
+
+  $("scope2").textContent = `· ${D.variants[v].toLowerCase()} · ${gname}`;
+  const ahead = el("tr", null, el("th", { text: "First choices of the 3 vote models" }), el("th", { class: "num", text: "Products" }), el("th", { class: "num", text: "Vote right" }));
+  const arows = Object.entries(D.levels).map(([lv, name]) => {
+    const g = ps.filter((p) => p.agree[v] === lv), right = g.filter((p) => rank(p, v, "vote") === 0).length;
+    return el("tr", null, el("td", { text: name }), el("td", { class: "num", text: `${g.length} (${pct(g.length, ps.length)})` }), el("td", { class: "num", text: pct(right, g.length) }));
+  });
+  $("agree").replaceChildren(el("thead", null, ahead), el("tbody", null, ...arows));
+  $("vote-note").textContent = `The vote combines ${D.vote_members.join(", ")}. It was chosen on these same 200 products, so its score is a little optimistic.`;
+}
+
+function card(p) {
+  const v = $("variant").value;
+  const img = el("img", { src: p.thumb && /^https:\/\//.test(p.thumb) ? p.thumb : "/no-image.svg", alt: "", loading: "lazy" });
+  img.addEventListener("error", () => { img.src = "/no-image.svg"; });
+  const ans = el("div", { class: "answer" }, "Answer: ");
+  if (p.answer) {
+    ans.append(el("b", { text: `${p.answer} ${cname(p.answer)}` }), el("small", { text: `  · by ${p.by}` }));
+  } else ans.append(el("small", { text: "not answered" }));
+  ans.append(el("span", { class: "badge", title: "First choices of the 3 vote models, for the selected text", text: D.levels[p.agree[v]] }));
+  if (p.unsure) ans.append(el("div", { class: "meta", text: "Claude was unsure: " + p.unsure }));
+
+  const vkeys = Object.keys(D.variants);
+  const grid = el("table", { class: "grid" });
+  grid.append(el("thead", null, el("tr", null, el("th", { text: "" }), ...vkeys.map((k) => el("th", { class: k === v ? "" : "othervar", text: SHORT[k] || k })))));
+  const tb = el("tbody");
+  for (const [m, name] of Object.entries(D.members)) {
+    const tr = el("tr", { class: m === "vote" ? "vote" : "" }, el("td", { text: name }));
+    for (const k of vkeys) {
+      const top = p.preds[k][m], r = rank(p, k, m);
+      const first = top[0];
+      const tip = top.map((c, i) => `${i + 1}. ${c} ${cname(c)}`).join("\n");
+      const c = el("div", { class: "cell " + cls(r), title: tip }, `${first} ${cname(first)}`);
+      if (r > 0) c.prepend(el("span", { text: `(#${r + 1}) ` }));
+      tr.append(el("td", { class: k === v ? "" : "othervar" }, c));
+    }
+    tb.append(tr);
+  }
+  grid.append(tb);
+  const texts = el("details", null, el("summary", { text: "Texts sent to the models" }),
+    ...vkeys.map((k) => el("p", null, el("small", { text: (D.variants[k]) + ": " }), el("code", { text: p.texts[k] }))));
+  const tools = el("div", { class: "tools" }, el("a", { href: "/category-test?tab=on&id=" + encodeURIComponent(p.id), text: "Open in the live tester →" }));
+  const body = el("div", { style: "min-width:0" },
+    el("div", null, el("span", { class: "title", text: p.name }), el("span", { class: "type", text: p.type === "grocery" ? "packaged" : p.type })),
+    p.description ? el("div", { class: "meta", text: p.description }) : null, ans, grid, texts, tools);
+  return el("article", { class: "card" }, img, body);
+}
+
+function render(reset = true) {
+  const items = D.products.filter(matches);
+  if (reset) { shown = Math.min(PAGE, items.length); $("list").replaceChildren(...items.slice(0, shown).map(card)); }
+  else { const next = Math.min(shown + PAGE, items.length); $("list").append(...items.slice(shown, next).map(card)); shown = next; }
+  $("count").textContent = `Showing ${shown} of ${items.length} products`;
+  $("more").hidden = shown >= items.length;
+}
+function all() { scores(); render(); }
+for (const id of ["variant", "group", "show"]) $(id).addEventListener("change", all);
+$("q").addEventListener("input", () => render());
+$("more").addEventListener("click", () => render(false));
+(async () => {
+  D = await (await fetch("/api/category-results")).json();
+  if (D.error) { $("list").textContent = D.error; return; }
+  if (D.training && D.training.set) $("trainset").textContent = `Models trained on set ${D.training.set}`
+    + (D.training.label ? ` (${D.training.label}).` : ".");
+  $("variant").replaceChildren(...Object.entries(D.variants).map(([k, name]) => el("option", { value: k, text: name })));
+  $("variant").value = "title+desc";
+  all();
+})();
+</script>
+</body>
+</html>

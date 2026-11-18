@@ -72,6 +72,19 @@
   th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 13px; }
   th { color: var(--muted); font-weight: 600; background: var(--surface-2); }
   h2 { font-size: 14px; margin: 18px 0 8px; color: var(--muted); font-weight: 650; }
+  /* app preview: photo when there is one, else the category icon */
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .appgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .pcard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .media { aspect-ratio: 1; border-radius: 10px; background: var(--tile); display: grid; place-items: center; overflow: hidden; }
+  .media img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .media .ico { --s: 96px; background: none; }
+  .media.sm { width: 56px; height: 56px; aspect-ratio: auto; flex: none; }
+  .media.sm .ico { --s: 44px; }
+  .pcard .name { font-weight: 600; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .pcard .cat, .row .cat2 { font-size: 11.5px; color: var(--muted); }
+  .via { font-size: 10.5px; border-radius: 8px; padding: 1px 6px; background: var(--surface-2); color: var(--muted); white-space: nowrap; align-self: flex-start; }
+  .via.icon { background: var(--warn-soft); color: var(--warn); }
   [hidden] { display: none !important; }
   button:focus-visible, select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 </style>
@@ -81,7 +94,8 @@
   <div class="bar">
     <h1>Icon preview · categories → icons</h1>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="products" aria-selected="true">Products</button>
+      <button role="tab" data-tab="app" aria-selected="true">App preview</button>
+      <button role="tab" data-tab="products" aria-selected="false">Products</button>
       <button role="tab" data-tab="icons" aria-selected="false">Icons</button>
       <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
     </nav>
@@ -98,10 +112,20 @@
   <div class="note">Placeholders: these are <b>system emoji</b>, not the final icons. Icons marked <b>“needs custom icon”</b> are a rough combination of two emoji; a designer (or an icon set) has to make them.</div>
   <div class="stats" id="stats"></div>
 
-  <section id="tab-products">
+  <section id="tab-app">
+    <div class="bar" style="padding:0 0 10px">
+      <label class="ctl">Layout <select id="alayout"><option value="grid">Grid</option><option value="list">List</option></select></label>
+      <label class="ctl">Group <select id="agroup"><option value="">All</option></select></label>
+      <label class="ctl">Show <select id="ashow"><option value="">All products, no photo first</option><option value="nophoto">Only without a photo</option><option value="photo">Only with a photo</option></select></label>
+    </div>
+    <p class="hint" id="asummary"></p>
+    <div id="aview"></div>
+  </section>
+
+  <section id="tab-products" hidden>
     <div class="bar" style="padding:0 0 10px">
       <label class="ctl">Group <select id="pgroup"><option value="">All</option></select></label>
-      <label class="ctl">Show <select id="psrc"><option value="">All products</option><option value="your answer">Only my answers</option><option value="model guess">Only model guesses</option></select></label>
+      <label class="ctl">Show <select id="psrc"><option value="">All products</option><option value="your answer">Only my answers</option><option value="Claude's answer">Only Claude's answers</option><option value="model guess">Only model guesses</option></select></label>
       <label class="ctl"><input type="checkbox" id="pphoto"> show product photo next to the icon</label>
     </div>
     <div class="list" id="plist"></div>
@@ -151,14 +175,14 @@ function catIcon(code) {
 function renderStats() {
   const icons = Object.values(D.plan.icons);
   const fit = icons.filter((i) => i.existing_emoji_fits).length;
-  const answered = D.products.filter((p) => p.source === "your answer").length;
+  const answered = D.products.filter((p) => p.source !== "model guess").length;
   $("stats").replaceChildren(
     el("div", { class: "stat" }, el("b", { text: Object.keys(D.plan.categories).length }), el("span", { text: "categories" })),
     el("div", { class: "stat" }, el("b", { text: icons.length }), el("span", { text: `item icons (${icons.filter((i) => i.tier === "extra").length} extra)` })),
     el("div", { class: "stat" }, el("b", { text: Object.keys(D.plan.group_icons).length }), el("span", { text: "group icons" })),
     el("div", { class: "stat" }, el("b", { text: fit }), el("span", { text: "existing emoji fits" })),
     el("div", { class: "stat" }, el("b", { text: icons.length - fit }), el("span", { text: "need a custom icon" })),
-    el("div", { class: "stat" }, el("b", { text: `${answered}/${D.products.length}` }), el("span", { text: "products with your answer" })),
+    el("div", { class: "stat" }, el("b", { text: `${answered}/${D.products.length}` }), el("span", { text: "products with an answer" })),
   );
 }
 
@@ -180,6 +204,37 @@ function renderProducts() {
     return el("div", { class: "row" }, ...kids);
   }));
   if (!rows.length) $("plist").replaceChildren(el("div", { class: "row", text: D.products.length ? "Nothing for this filter." : "No test products yet (run stage 05)." }));
+}
+
+const hasPhoto = (p) => !!(p.thumb && /^https:\/\//.test(p.thumb));
+function media(p, small) {  // the product photo, or the category icon when there is none (or it fails to load)
+  const box = el("div", { class: "media" + (small ? " sm" : "") });
+  const showIcon = () => { const { icon, badge } = catIcon(p.code); box.replaceChildren(tile(icon.preview_emoji, badge, icon.draw)); };
+  if (hasPhoto(p)) {
+    const img = el("img", { alt: "", loading: "lazy", src: p.thumb });
+    img.addEventListener("error", showIcon);
+    box.append(img);
+  } else showIcon();
+  return box;
+}
+function renderApp() {
+  const g = $("agroup").value, show = $("ashow").value, layout = $("alayout").value;
+  const all = D.products.filter((p) => p.code && (!g || D.categories[p.code].group === g));
+  let rows = show === "nophoto" ? all.filter((p) => !hasPhoto(p)) : show === "photo" ? all.filter(hasPhoto) : all;
+  rows = [...rows].sort((a, b) => hasPhoto(a) - hasPhoto(b));  // no photo first, otherwise the sample order
+  const noPhoto = all.filter((p) => !hasPhoto(p)).length;
+  $("asummary").textContent = `${noPhoto} of ${all.length} products have no photo, so they show their category icon. ` +
+    "Photos are the raw Open Food Facts front photos (not cleaned up).";
+  const via = (p) => el("span", { class: "via" + (hasPhoto(p) ? "" : " icon"), text: hasPhoto(p) ? "photo" : "icon" });
+  const catName = (p) => D.categories[p.code].name;
+  if (layout === "list") {
+    $("aview").replaceChildren(el("div", { class: "list" }, ...rows.map((p) => el("div", { class: "row" }, media(p, true),
+      el("div", { class: "txt" }, el("div", { class: "name", text: p.name }), el("div", { class: "cat2", text: catName(p) })), via(p)))));
+  } else {
+    $("aview").replaceChildren(el("div", { class: "appgrid" }, ...rows.map((p) => el("div", { class: "pcard" }, media(p),
+      el("div", { class: "name", title: p.name, text: p.name }), el("div", { class: "cat", text: catName(p) }), via(p)))));
+  }
+  if (!rows.length) $("aview").replaceChildren(el("p", { class: "hint", text: "Nothing for this filter." }));
 }
 
 function renderIcons() {
@@ -221,13 +276,14 @@ function setSize(v) { document.documentElement.style.setProperty("--s", v + "px"
 function setTheme(v) { if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme"); store.set("iconTheme", v); }
 function showTab(t) {
   for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === t));
-  for (const s of ["products", "icons", "categories"]) $("tab-" + s).hidden = s !== t;
+  for (const s of ["app", "products", "icons", "categories"]) $("tab-" + s).hidden = s !== t;
   store.set("iconTab", t);
 }
 for (const b of document.querySelectorAll("nav.tabs button")) b.addEventListener("click", () => showTab(b.dataset.tab));
 $("size").addEventListener("change", (e) => setSize(e.target.value));
 $("theme").addEventListener("change", (e) => setTheme(e.target.value));
 for (const id of ["pgroup", "psrc", "pphoto"]) $(id).addEventListener("change", renderProducts);
+for (const id of ["alayout", "agroup", "ashow"]) $(id).addEventListener("change", renderApp);
 $("ifilter").addEventListener("change", renderIcons);
 $("isearch").addEventListener("input", renderIcons);
 $("csearch").addEventListener("input", renderCategories);
@@ -236,10 +292,12 @@ $("csearch").addEventListener("input", renderCategories);
   D = await (await fetch("/api/icons")).json();
   const groups = [...new Set(Object.values(D.categories).map((c) => c.group))];
   $("pgroup").append(...groups.map((g) => el("option", { value: g, text: g })));
+  $("agroup").append(...groups.map((g) => el("option", { value: g, text: g })));
   const size = store.get("iconSize") || "48"; $("size").value = size; setSize(size);
   const theme = store.get("iconTheme") || ""; $("theme").value = theme; setTheme(theme);
-  showTab(store.get("iconTab") || "products");
-  renderStats(); renderProducts(); renderIcons(); renderCategories();
+  const tabs = ["app", "products", "icons", "categories"], wanted = location.hash.slice(1);
+  showTab(tabs.includes(wanted) ? wanted : tabs.includes(store.get("iconTab")) ? store.get("iconTab") : "app");
+  renderStats(); renderApp(); renderProducts(); renderIcons(); renderCategories();
 })();
 </script>
 </body>

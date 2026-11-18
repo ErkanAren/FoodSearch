@@ -54,7 +54,12 @@
       <option value="todo">Not answered yet</option>
       <option value="all">All</option>
       <option value="done">Answered</option>
+      <option value="claude">Answered by Claude</option>
+      <option value="unsure">Claude was unsure</option>
+      <option value="mine">Answered by me</option>
     </select>
+    <a href="/category-results">Model results →</a>
+    <a href="/category-test">Live tester →</a>
     <a href="/">← Food browser</a>
   </div>
 </header>
@@ -104,16 +109,20 @@ function card(p) {
   for (const code of codes) {
     const b = el("button", { class: "chip", "aria-pressed": String(chosen === code), title: byCode[code] ? byCode[code].definition : "" },
       code, el("small", { text: byCode[code] ? byCode[code].name : "" }));
-    b.addEventListener("click", async () => { if (await answer(p.id, chosen === code ? null : code)) refresh(p.id); });
+    b.addEventListener("click", async () => { if (await answer(p.id, chosen === code ? null : code)) { if (data.claude) delete data.claude[p.id]; refresh(p.id); } });
     chips.append(b);
   }
   const input = el("input", { list: "allcats", placeholder: "None of these? Search all categories…", "aria-label": "Search all categories" });
   input.addEventListener("change", async () => {
     const code = input.value.split(" ")[0];
-    if (byCode[code] && await answer(p.id, code)) refresh(p.id);
+    if (byCode[code] && await answer(p.id, code)) { if (data.claude) delete data.claude[p.id]; refresh(p.id); }
   });
   body.append(chips, el("div", { class: "other" }, input));
-  if (chosen) body.append(el("div", { class: "chosen", text: "✓ " + label(chosen) }));
+  if (chosen) {
+    const byClaude = data.claude && p.id in data.claude;
+    body.append(el("div", { class: "chosen", text: "✓ " + label(chosen) + (byClaude ? "  · set by Claude, click another to change" : "  · your answer") }));
+    if (byClaude && data.claude[p.id]) body.append(el("div", { class: "meta", text: "Claude was unsure: " + data.claude[p.id] }));
+  }
   c.append(img, body);
   return c;
 }
@@ -126,11 +135,14 @@ function refresh(id) {
 }
 function progress() {
   const n = Object.keys(data.answers).length;
-  $("progress").textContent = `${n} / ${data.sample.length} answered`;
+  const c = Object.keys(data.claude || {}).length;
+  $("progress").textContent = `${n} / ${data.sample.length} answered (${n - c} you · ${c} Claude)`;
 }
 function render() {
   const f = $("filter").value;
-  const items = data.sample.filter((p) => f === "all" ? true : f === "done" ? data.answers[p.id] : !data.answers[p.id]);
+  const cl = data.claude || {};
+  const items = data.sample.filter((p) => f === "all" ? true : f === "done" ? data.answers[p.id]
+    : f === "claude" ? p.id in cl : f === "unsure" ? cl[p.id] : f === "mine" ? data.answers[p.id] && !(p.id in cl) : !data.answers[p.id]);
   $("list").replaceChildren(...items.map(card));
   progress();
 }

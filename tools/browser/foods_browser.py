@@ -8,6 +8,10 @@ Run from anywhere (paths are resolved relative to this file):
     python3 -I tools/browser/foods_browser.py build    # one-time, a few minutes -> work/browser.sqlite
     python3 -I tools/browser/foods_browser.py serve    # http://127.0.0.1:8765
 
+Stage 05 category pages: /category-review (answer key), /category-results (each model vs the answer key on the
+200 test products) and /category-test (live tester; needs the model service in .venv:
+    HF_HUB_OFFLINE=1 .venv/bin/python -I stages/05-category-model/serve_models.py   # http://127.0.0.1:8766 )
+
 Search rules (deterministic: same query -> same rows in the same order):
   * Text: the query is normalized (lower-case, Greek accents/diacritics removed, final sigma = sigma,
     apostrophes removed, other punctuation -> space) and split into words. A row matches when EVERY
@@ -32,6 +36,8 @@ import sys
 import threading
 import time
 import unicodedata
+import urllib.error
+import urllib.request
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -46,6 +52,8 @@ INDEX_HTML = HERE / "index.html"
 NO_IMAGE_SVG = HERE / "no-image.svg"
 PILOT_HTML = HERE / "photo_pilot.html"
 CATREV_HTML = HERE / "category_review.html"
+CATRES_HTML = HERE / "category_results.html"
+CATTEST_HTML = HERE / "category_test.html"
 CATREV_DIR = ROOT / "stages" / "05-category-model" / "out"  # written by stages/05-category-model/bench.py
 CATS_JSON = ROOT / "tools" / "categories" / "categories.json"
 ICONS_HTML = HERE / "icons.html"
@@ -526,7 +534,9 @@ def catrev_data():
         p["candidates"] = sorted(cand[p["id"]])
         p["thumb"] = thumbs.get(p["id"])
     review = json.loads((CATREV_DIR / "review.json").read_text()) if (CATREV_DIR / "review.json").exists() else {}
-    return {"sample": sample, "categories": _choosable(), "answers": review, "models_done": list(preds)}
+    by_claude = json.loads((CATREV_DIR / "answers_by_claude.json").read_text()) if (CATREV_DIR / "answers_by_claude.json").exists() else {}
+    claude = {pid: v.get("unsure") or "" for pid, v in by_claude.items() if review.get(pid) == v["code"]}  # still Claude's
+    return {"sample": sample, "categories": _choosable(), "answers": review, "claude": claude, "models_done": list(preds)}
 
 
 def save_catrev(pid, code):
@@ -563,12 +573,133 @@ def icons_data():
     guess = preds[key]["methods"]["lr"] if key else {}
     out["guess_model"] = f"{key} classifier" if key else None
     for p in rev["sample"]:
-        code, source = rev["answers"].get(p["id"]), "your answer"
+        code = rev["answers"].get(p["id"])
+        source = "Claude's answer" if p["id"] in rev["claude"] else "your answer"
         if not code and guess.get(p["id"]):
             code, source = guess[p["id"]][0], "model guess"
         out["products"].append({"id": p["id"], "name": p["name"], "type": p["type"], "thumb": p["thumb"],
                                 "code": code, "source": source})
     return out
+
+
+# --- Stage 05: model results on the 200 products, and the live tester ----------------------------------------
+# The live tester forwards to stages/05-category-model/serve_models.py (a separate .venv process with the models).
+sys.path.insert(0, str(CATREV_DIR.parent))
+from vote import LEVELS, VOTE, agreement, rank_vote  # noqa: E402  (standard library only)
+
+CATRES_MEMBERS = {"qwen3-0.6b|lr": "Qwen3 classifier", "qwen3-0.6b|knn": "Qwen3 kNN",
+                  "arctic-l-v2|knn": "Arctic kNN", "arctic-l-v2|lr": "Arctic classifier"}
+VARIANTS = {"title": "Title", "title+desc": "Title + description", "title+desc+ingr": "Title + description + ingredients"}
+MODEL_SERVICE = "http://127.0.0.1:8766"
+MODEL_START = "HF_HUB_OFFLINE=1 .venv/bin/python -I stages/05-category-model/serve_models.py"
+_no_proxy = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # always talk to 127.0.0.1 directly
+
+
+def _all_categories():
+    return {c["code"]: {"name": c["name"], "group": c["group"]} for c in json.loads(CATS_JSON.read_text())["categories"]}
+
+
+def catres_data():
+    """Each test product: the answer, and every model's top 3 for each product text (out/text_variants.json)."""
+    tv_path = CATREV_DIR / "text_variants.json"
+    if not tv_path.exists():
+        return {"error": "Not run yet. Run: HF_HUB_OFFLINE=1 .venv/bin/python -I stages/05-category-model/text_variants.py"}
+    tv = json.loads(tv_path.read_text())
+    rev = catrev_data()
+    if "error" in rev:
+        return rev
+    products = []
+    for p in rev["sample"]:
+        pid, preds, agree = p["id"], {}, {}
+        for v in VARIANTS:
+            row = {m: tv["predictions"][f"{m.split('|')[0]}|{v}"][m.split("|")[1]][pid] for m in CATRES_MEMBERS}
+            tops = [row[f"{k}|{m}"] for k, m in VOTE]
+            row["vote"] = [c for c, _ in rank_vote(tops)][:3]
+            preds[v], agree[v] = row, agreement(tops)
+        answer = rev["answers"].get(pid)
+        products.append({"id": pid, "type": p["type"], "name": p["name"], "description": p["description"],
+                         "thumb": p["thumb"], "answer": answer,
+                         "by": ("Claude" if pid in rev["claude"] else "owner") if answer else None,
+                         "unsure": rev["claude"].get(pid) or "",
+                         "texts": {v: tv["texts"][v][pid] for v in VARIANTS}, "preds": preds, "agree": agree})
+    return {"categories": _all_categories(), "variants": VARIANTS,
+            "training": {"set": tv.get("training_set"), "label": tv.get("training_label")},
+            "members": {"vote": "3-model vote", **CATRES_MEMBERS},
+            "vote_members": [CATRES_MEMBERS[f"{k}|{m}"] for k, m in VOTE], "levels": LEVELS, "products": products}
+
+
+def _off_text(entries, main_lang, langs):
+    """OFF multilingual field [{lang, text}] -> (text in the first available of `langs`, its language).
+    "main" entries count as the product's main language. langs may end with None = any language."""
+    found = {}
+    for e in entries or []:
+        text = (e.get("text") or "").strip()
+        lang = main_lang if e.get("lang") == "main" else e.get("lang")
+        if text and lang and lang not in found:
+            found[lang] = text
+    for want in langs:
+        if want is None and found:
+            return next(iter(found.items()))[::-1]
+        if want in found:
+            return found[want], want
+    return "", ""
+
+
+def _round(x):
+    return round(x, 2) if isinstance(x, (int, float)) else x  # OFF stores float32: 5.199999809 -> 5.2
+
+
+def cattest_product(tab, item_id):
+    """The text and nutrients the tester sends to the models, for one catalogue product."""
+    lang_col = "name_lang" if tab == "off" else "''"
+    with closing(connect_ro()) as con:
+        row = con.execute(f"SELECT name, thumb, raw, {lang_col} FROM {TABS[tab]['table']} WHERE id = ?", (item_id,)).fetchone()
+    if not row:
+        return None
+    name, thumb, raw, shown_lang = row[0], row[1], json.loads(row[2]), row[3]
+    if tab == "on":
+        nut = raw.get("nutrition_100g") if isinstance(raw.get("nutrition_100g"), dict) else {}
+        out = {"name": raw.get("name") or name, "description": raw.get("description") or "",
+               "ingredients": raw.get("ingredients") or "", "fat": nut.get("total_fat"), "sugars": nut.get("total_sugars"),
+               "kind": raw.get("type") or "", "note": ""}
+    else:  # English when OFF has it (the models learned from English), else the language of the name shown in the browser
+        main = raw.get("lang") or ""
+        pname, name_lang = _off_text(raw.get("product_name"), main, ["en"])
+        if not pname:  # no English name: the name the browser shows (Greek first)
+            pname, name_lang = name or "", (main if shown_lang == "main" else shown_lang) or ""
+        same = [name_lang] if name_lang else []
+        generic, _ = _off_text(raw.get("generic_name"), main, same)  # never mix languages in name + description
+        ingr, ingr_lang = _off_text(raw.get("ingredients_text"), main, same + ["en", None])
+        nut = {n.get("name"): n.get("100g") for n in (raw.get("nutriments") or []) if isinstance(n, dict)}
+        other = {x for x in (name_lang, ingr_lang) if x and x != "en"}
+        if _GREEK.search(pname + " " + ingr):  # OFF sometimes files Greek text under "en"
+            other.add("el")
+        other = sorted(other)
+        out = {"name": pname, "description": generic, "ingredients": ingr,
+               "fat": _round(nut.get("fat")), "sugars": _round(nut.get("sugars")), "kind": (raw.get("brands") or "").strip(),
+               "note": ("Greek text. The models also learned from about 1,300 Greek product names (since 2026-11-18), "
+                        "far fewer than English, so check the confidence." if other == ["el"] else
+                        f"Not in English ({', '.join(other)}). The models learned from English and Greek names only, "
+                        "so expect weaker results." if other else "")}
+    review = json.loads((CATREV_DIR / "review.json").read_text()) if (CATREV_DIR / "review.json").exists() else {}
+    out.update({"tab": tab, "id": item_id, "thumb": thumb, "answer": review.get(item_id) if tab == "on" else None})
+    return json_safe(out)
+
+
+def model_service(path, body=None):
+    """Forward to the local model service -> (HTTP status, JSON)."""
+    req = urllib.request.Request(MODEL_SERVICE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"} if body is not None else {})
+    try:
+        with _no_proxy.open(req, timeout=120) as r:
+            return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read())
+        except ValueError:
+            return e.code, {"error": f"model service error {e.code}"}
+    except (urllib.error.URLError, OSError):
+        return 503, {"error": "The model service is not running.", "start": MODEL_START}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -601,6 +732,21 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, CATREV_HTML.read_bytes(), "text/html; charset=utf-8")
             elif url.path == "/api/category-review":
                 self._json(catrev_data())
+            elif url.path == "/category-results":
+                self._send(200, CATRES_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/category-results":
+                self._json(catres_data())
+            elif url.path == "/category-test":
+                self._send(200, CATTEST_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/category-test/status":
+                status, out = model_service("/health")
+                self._json(out, status)
+            elif url.path == "/api/category-test/product":
+                tab = qs.get("tab", "on")
+                if tab not in TABS:
+                    return self._json({"error": "unknown tab"}, 400)
+                result = cattest_product(tab, qs.get("id", ""))
+                self._json(result) if result else self._json({"error": "not found"}, 404)
             elif url.path == "/api/photo-pilot":
                 self._json(pilot_data(qs.get("run", "cutout")))
             elif _PILOT_IMG.match(url.path):
@@ -628,16 +774,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in ("/api/photo-pilot/review", "/api/category-review/answer"):
+        if path not in ("/api/photo-pilot/review", "/api/category-review/answer", "/api/category-test/predict"):
             return self._json({"error": "not found"}, 404)
         # JSON-only: browsers must preflight this from other sites, and we never answer preflights.
         if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
             return self._json({"error": "expected application/json"}, 415)
         length = int(self.headers.get("Content-Length") or 0)
-        if length > 10_000:
+        if length > (50_000 if path == "/api/category-test/predict" else 10_000):
             return self._json({"error": "too large"}, 413)
         try:
             body = json.loads(self.rfile.read(length) or b"{}")
+            if path == "/api/category-test/predict":  # the model service checks the fields again
+                if not isinstance(body, dict):
+                    raise ValueError("expected a JSON object")
+                fields = ("name", "description", "ingredients", "fat", "sugars")
+                status, out = model_service("/predict", {k: body.get(k) for k in fields})
+                return self._json(out, status)
             if path == "/api/category-review/answer":
                 code = body.get("code")
                 answers = save_catrev(str(body.get("id", "")), None if code is None else str(code))

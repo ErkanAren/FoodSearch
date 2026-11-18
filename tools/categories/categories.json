@@ -2703,7 +2703,7 @@
    "subgroup": "Condiments & sauces",
    "definition": "Dips, gravies and other sauces.",
    "includes": "hummus, guacamole, tzatziki, taramasalata, cheese dips, salsa con queso, pesto, Alfredo and cheese sauces, curry and other cooking sauces, gravy, white sauce",
-   "excludes": "stock cubes → X04; tomato pasta sauce → 8410",
+   "excludes": "stock cubes → X04; tomato pasta sauce → 8410; hot sauce and sriracha → 8406",
    "usda_examples": [
     "Guacamole, NFS",
     "Ranch dip, regular",

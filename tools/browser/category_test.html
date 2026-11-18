@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Category Model Tester</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #deded8;
+    --text: #1d1d1b; --muted: #6b6b66; --accent: #1f6feb; --accent-soft: #e6efff; --on-accent: #ffffff;
+    --good: #1a7f37; --good-soft: #dafbe1; --warn: #9a6700; --warn-soft: #fff4d4; --bad: #b42318; --bad-soft: #fde8e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151614; --surface: #1d1e1c; --surface-2: #262724; --border: #363733;
+      --text: #ecece8; --muted: #9c9c96; --accent: #6ea8ff; --accent-soft: #1b2a44; --on-accent: #0d1117;
+      --good: #3fb950; --good-soft: #12261a; --warn: #d29922; --warn-soft: #2b2210; --bad: #f47067; --bad-soft: #2d1514;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; font-weight: 650; flex: 1; min-width: 200px; }
+  h2 { font-size: 14px; margin: 0 0 8px; font-weight: 650; }
+  h3 { font-size: 13px; margin: 0 0 6px; font-weight: 650; }
+  .links { display: flex; gap: 14px; flex-wrap: wrap; }
+  a { color: var(--accent); }
+  .status { font-size: 12.5px; border-radius: 12px; padding: 3px 10px; border: 1px solid var(--border); color: var(--muted); }
+  .status.ok { color: var(--good); border-color: var(--good); }
+  .status.down { color: var(--bad); border-color: var(--bad); }
+  main { max-width: 1180px; margin: 0 auto; padding: 14px 16px 48px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 14px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 0; }
+  .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea, select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
+  textarea { resize: vertical; min-height: 64px; }
+  input:focus, textarea:focus, select:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; gap: 8px; align-items: end; }
+  .row > * { flex: 1; min-width: 0; }
+  .row select { flex: 0 0 auto; width: auto; }
+  .btn { padding: 9px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 650; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .help, small, .small { color: var(--muted); font-size: 12.5px; }
+  .help { margin: 0; }
+  .hits { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto; }
+  .hits button { width: 100%; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: center; text-align: left; padding: 5px 6px;
+                 border: 1px solid transparent; border-radius: 8px; background: none; color: var(--text); font: inherit; cursor: pointer; }
+  .hits button:hover { background: var(--surface-2); border-color: var(--border); }
+  .hits img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: #fff; border: 1px solid var(--border); }
+  .hits span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picked { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .picked img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); }
+  .note { font-size: 12.5px; color: var(--warn); }
+  .answer { font-size: 13px; margin-top: 4px; }
+  .answer b { color: var(--good); }
+  code, .mono { font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre.cmd { background: var(--surface-2); padding: 8px 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; margin: 6px 0 0; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { flex: 1; min-width: 150px; text-align: left; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+  .tabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .tabs .t { font-size: 12px; color: var(--muted); display: block; }
+  .tabs .v { font-weight: 650; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sent { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin-top: 10px; white-space: pre-wrap; word-break: break-word; }
+  .vote { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .choice { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; background: var(--surface-2); }
+  .choice.first { font-weight: 650; font-size: 15px; }
+  .choice .n { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .is-answer { background: var(--good-soft); color: var(--good); }
+  .agree { margin-top: 8px; font-size: 13px; }
+  .agree b.all { color: var(--good); } .agree b.two { color: var(--warn); } .agree b.none { color: var(--bad); }
+  .models { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .model { border: 1px solid var(--border); border-radius: 10px; padding: 10px; min-width: 0; }
+  .model .in-vote { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .opt { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 6px; align-items: center; font-size: 13px; padding: 2px 4px; border-radius: 6px; }
+  .opt .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .opt .p { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+  .meter { grid-column: 1 / -1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin-bottom: 3px; }
+  .meter i { display: block; height: 100%; background: var(--accent); }
+  .rule { font-size: 11.5px; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  td, th { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .empty { color: var(--muted); padding: 20px 0; text-align: center; }
+  [hidden] { display: none !important; }
+  @media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 560px) { .models { grid-template-columns: minmax(0, 1fr); } .tabs button { min-width: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Category tester · no generative AI</h1>
+    <span class="status" id="status" role="status">Checking models…</span>
+    <nav class="links"><a href="/category-results">Results on the 200 →</a><a href="/category-review">Answers</a><a href="/">Food browser</a></nav>
+  </div>
+</header>
+<main>
+  <div class="stack">
+    <section class="panel" aria-labelledby="h-find">
+      <h2 id="h-find">1. Pick a product from the catalogue</h2>
+      <div class="row">
+        <select id="tab" aria-label="Catalogue"><option value="on">OpenNutrition</option><option value="off">Open Food Facts · Greece</option></select>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search name, brand or barcode…" aria-label="Search the catalogue">
+      </div>
+      <ul class="hits" id="hits"></ul>
+    </section>
+    <section class="panel" aria-labelledby="h-form">
+      <h2 id="h-form">2. …or type or edit the product</h2>
+      <div class="picked" id="picked" hidden></div>
+      <form id="form" autocomplete="off">
+        <label for="name">Name (required)</label>
+        <input id="name" required maxlength="300" placeholder="e.g. Greek Yogurt 2% by Fage">
+        <label for="desc">Description <small>(only the first sentence is used, as in the test)</small></label>
+        <textarea id="desc" maxlength="3000" rows="2"></textarea>
+        <label for="ingr">Ingredients <small>(cut near 300 characters)</small></label>
+        <textarea id="ingr" maxlength="6000" rows="3"></textarea>
+        <div class="row">
+          <div><label for="fat">Fat, g per 100 g</label><input id="fat" type="number" min="0" max="100" step="any" inputmode="decimal"></div>
+          <div><label for="sugars">Sugars, g per 100 g</label><input id="sugars" type="number" min="0" max="100" step="any" inputmode="decimal"></div>
+        </div>
+        <p class="small" style="margin:6px 0 0">Fat and sugars are used only by the fixed rules for milk (fat level), cereals (over 21.2 g sugar) and drinks (diet when sugar ≤ 1 g).</p>
+        <div class="actions">
+          <button class="btn primary" id="run" type="submit">Test</button>
+          <button class="btn" id="clear" type="button">Clear</button>
+          <span class="small" id="timing"></span>
+        </div>
+      </form>
+    </section>
+  </div>
+  <section class="panel" aria-labelledby="h-res" id="results">
+    <h2 id="h-res">3. What the models say</h2>
+    <div id="out"><p class="empty">Pick or type a product, then press Test. Each product is tested with three texts: the name, name + description, and name + description + ingredients.</p></div>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs, ...kids) {  // product data is untrusted: text only, never innerHTML
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) n.append(k instanceof Node ? k : String(k));
+  return n;
+}
+const VARIANTS = { "title": "Title", "title+desc": "Title + description", "title+desc+ingr": "Title + description + ingredients" };
+const MEMBERS = { "qwen3-0.6b|lr": "Qwen3 classifier", "qwen3-0.6b|knn": "Qwen3 kNN", "arctic-l-v2|knn": "Arctic kNN", "arctic-l-v2|lr": "Arctic classifier" };
+const LEVEL = { all: "all 3 agree", two: "2 of 3 agree", none: "all 3 differ" };
+let cats = {}, answer = null, result = null, variant = "title+desc", voteMembers = [], stats = null;
+const cname = (c) => (cats[c] || {}).name || "";
+const pct = (x) => (100 * x).toFixed(0) + " %";
+
+async function getJSON(url, opts) {
+  const res = await fetch(url, opts);
+  let body = {};
+  try { body = await res.json(); } catch (_) { body = { error: `HTTP ${res.status}` }; }
+  return { ok: res.ok, status: res.status, body };
+}
+
+async function checkStatus() {
+  const s = $("status");
+  const { ok, body } = await getJSON("/api/category-test/status");
+  if (ok && body.ready) {
+    s.className = "status ok";
+    s.textContent = `Models ready · ${body.labelled_foods.toLocaleString()} labelled foods`
+      + (body.training_set ? ` · training set ${body.training_set}` : "");
+    s.title = body.training_label || "";
+    voteMembers = body.vote || [];
+    return true;
+  }
+  s.className = "status down";
+  s.textContent = "Model service not running";
+  return false;
+}
+
+function serviceDown(body) {
+  $("out").replaceChildren(
+    el("p", null, el("b", { text: "The model service is not running." }), " Start it in a terminal from the Foods folder (about 30 s to load):"),
+    el("pre", { class: "cmd mono", text: body.start || "HF_HUB_OFFLINE=1 .venv/bin/python -I stages/05-category-model/serve_models.py" }),
+    el("p", { class: "small", text: "Then press Test again." }));
+}
+
+// --- catalogue search -------------------------------------------------------------
+let searchTimer = null, searchSeq = 0;
+async function search() {
+  const q = $("q").value.trim(), seq = ++searchSeq;
+  if (!q) { $("hits").replaceChildren(); return; }
+  const { body } = await getJSON(`/api/search?tab=${encodeURIComponent($("tab").value)}&q=${encodeURIComponent(q)}&filter=all&page=0`);
+  if (seq !== searchSeq) return;
+  const rows = (body.rows || []).slice(0, 12);
+  if (!rows.length) { $("hits").replaceChildren(el("li", { class: "small", text: body.error || "No products found." })); return; }
+  $("hits").replaceChildren(...rows.map((r) => {
+    const img = el("img", { src: r.thumb && /^https:\/\//.test(r.thumb) ? r.thumb : "/no-image.svg", alt: "", loading: "lazy" });
+    img.addEventListener("error", () => { img.src = "/no-image.svg"; });
+    const b = el("button", { type: "button" }, img, el("span", null, r.name || "(no name)", r.brand ? el("small", { text: "  · " + r.brand }) : null));
+    b.addEventListener("click", () => pick($("tab").value, r.id, true));
+    return el("li", null, b);
+  }));
+  if (body.total > rows.length) $("hits").append(el("li", { class: "small", text: `…and ${body.total - rows.length} more. Type more words to narrow.` }));
+}
+$("q").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(search, 250); });
+$("tab").addEventListener("change", search);
+
+async function pick(tab, id, run) {
+  const { ok, body } = await getJSON(`/api/category-test/product?tab=${encodeURIComponent(tab)}&id=${encodeURIComponent(id)}`);
+  if (!ok) { alert(body.error || "Product not found"); return; }
+  $("name").value = body.name || ""; $("desc").value = body.description || ""; $("ingr").value = body.ingredients || "";
+  $("fat").value = body.fat ?? ""; $("sugars").value = body.sugars ?? "";
+  answer = body.answer || null;
+  const img = el("img", { src: body.thumb && /^https:\/\//.test(body.thumb) ? body.thumb : "/no-image.svg", alt: "" });
+  img.addEventListener("error", () => { img.src = "/no-image.svg"; });
+  const info = el("div", null, el("div", { class: "small", text: [tab === "on" ? "OpenNutrition" : "Open Food Facts", body.kind, id].filter(Boolean).join(" · ") }));
+  if (answer) info.append(el("div", { class: "answer" }, "In the 200-product test. Answer: ", el("b", { text: `${answer} ${cname(answer)}` })));
+  if (body.note) info.append(el("div", { class: "note", text: body.note }));
+  $("picked").replaceChildren(img, info);
+  $("picked").hidden = false;
+  history.replaceState(null, "", `/category-test?tab=${encodeURIComponent(tab)}&id=${encodeURIComponent(id)}`);
+  if (run) test();
+}
+
+function clearForm() {
+  for (const id of ["name", "desc", "ingr", "fat", "sugars"]) $(id).value = "";
+  answer = null; result = null;
+  $("picked").hidden = true; $("timing").textContent = "";
+  history.replaceState(null, "", "/category-test");
+  $("out").replaceChildren(el("p", { class: "empty", text: "Pick or type a product, then press Test." }));
+}
+$("clear").addEventListener("click", clearForm);
+// Typing changes the product: the answer key no longer applies.
+for (const id of ["name", "desc", "ingr"]) $(id).addEventListener("input", () => { if (answer) { answer = null; $("picked").hidden = true; history.replaceState(null, "", "/category-test"); } });
+
+// --- testing ----------------------------------------------------------------------
+const num = (v) => v === "" ? null : Number(v);
+async function test() {
+  if (!$("name").value.trim()) { $("name").focus(); return; }
+  $("run").disabled = true; $("timing").textContent = "Testing…";
+  const payload = { name: $("name").value, description: $("desc").value, ingredients: $("ingr").value, fat: num($("fat").value), sugars: num($("sugars").value) };
+  const t0 = performance.now();
+  const { ok, status, body } = await getJSON("/api/category-test/predict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  $("run").disabled = false;
+  if (!ok) {
+    $("timing").textContent = "";
+    if (status === 503) { checkStatus(); serviceDown(body); } else $("out").replaceChildren(el("p", { class: "note", text: body.error || `Error ${status}` }));
+    return;
+  }
+  if (!voteMembers.length) checkStatus();
+  $("timing").textContent = `${Math.round(performance.now() - t0)} ms`;
+  result = body;
+  render();
+}
+$("form").addEventListener("submit", (e) => { e.preventDefault(); test(); });
+
+function optRow(code, right, extra, share) {
+  const row = el("div", { class: "opt" + (right ? " is-answer" : "") },
+    el("span", { class: "lbl", title: `${code} ${cname(code)}` }, `${code} ${cname(code)}`, right ? " ✓" : ""),
+    el("span", { class: "p", text: extra }));
+  if (share != null) row.append(el("span", { class: "meter", "aria-hidden": "true" }, el("i", { style: `width:${Math.max(2, Math.round(100 * share))}%` })));
+  return row;
+}
+
+function render() {
+  const V = result.variants;
+  const tabs = el("div", { class: "tabs", role: "tablist", "aria-label": "Product text" });
+  for (const [k, name] of Object.entries(VARIANTS)) {
+    const first = (V[k].vote[0] || {}).code;
+    const right = answer ? (first === answer ? "✓ " : "✗ ") : "";
+    const b = el("button", { role: "tab", type: "button", "aria-selected": String(k === variant), title: `${first} ${cname(first)}` },
+      el("span", { class: "t", text: name }), el("span", { class: "v", text: `${right}${first} ${cname(first)}` }));
+    b.addEventListener("click", () => { variant = k; render(); });
+    tabs.append(b);
+  }
+  const R = V[variant];
+  const sent = el("div", { class: "sent mono" }, R.text);
+  const vote = el("div", { class: "vote" });
+  R.vote.forEach((v, i) => vote.append(el("div", { class: "choice" + (i === 0 ? " first" : "") + (answer && v.code === answer ? " is-answer" : "") },
+    el("span", { class: "n", text: `${i + 1}.` }), el("span", null, `${v.code} ${cname(v.code)}`, answer && v.code === answer ? " ✓" : ""),
+    el("span", { class: "n", text: `${v.points} pts` }))));
+  const lv = R.agreement;
+  const agree = el("div", { class: "agree" }, "Confidence: ", el("b", { class: lv, text: LEVEL[lv] }), " on the first choice.");
+  const s = stats && stats[variant] && stats[variant][lv];
+  if (s && s.n) agree.append(el("span", { class: "small", text: ` In the 200-product test, the vote was right ${pct(s.right / s.n)} of the time when ${LEVEL[lv]} (${s.n} products).` }));
+  if (answer && R.vote.every((v) => v.code !== answer)) agree.append(el("div", { class: "note", text: `The answer (${answer} ${cname(answer)}) is not in the vote's top 3.` }));
+
+  const models = el("div", { class: "models" });
+  for (const [m, name] of Object.entries(MEMBERS)) {
+    const top = R.models[m] || [];
+    const box = el("div", { class: "model" }, el("h3", null, name, voteMembers.includes(m) ? el("span", { class: "in-vote", text: "in the vote" }) : null));
+    for (const t of top) {
+      box.append(optRow(t.code, answer && t.code === answer, pct(t.p), t.p));
+      if (t.ruled_from) box.append(el("div", { class: "rule", text: `nutrient rule: model said ${t.ruled_from} ${cname(t.ruled_from)}` }));
+    }
+    models.append(box);
+  }
+  const nb = el("div", { class: "models" });
+  for (const [key, list] of Object.entries(R.neighbours)) {
+    const t = el("table");
+    t.append(el("thead", null, el("tr", null, el("th", { text: "Labelled food" }), el("th", { text: "Category" }), el("th", { class: "num", text: "Sim." }))));
+    t.append(el("tbody", null, ...list.map((n) => el("tr", null, el("td", null, n.text, el("div", { class: "small", text: n.src })),
+      el("td", { class: answer && n.code === answer ? "is-answer" : "" }, `${n.code} ${cname(n.code)}`), el("td", { class: "num", text: n.sim.toFixed(2) })))));
+    nb.append(el("div", { class: "model" }, el("h3", { text: key.startsWith("qwen") ? "Qwen3" : "Arctic" }), t));
+  }
+  const ruleNote = Object.keys(result.nutr_used || {}).length ? null
+    : el("p", { class: "small", text: "No fat or sugar given: milk defaults to 2 %, and cereal and drink rules keep the model's choice." });
+  $("out").replaceChildren(...[tabs, el("p", { class: "small", style: "margin:10px 0 0", text: "Text sent to the models:" }), sent,
+    el("h3", { style: "margin-top:14px" }, "3-model vote"), vote, agree, ruleNote,
+    el("h3", { style: "margin-top:16px" }, "Each model's top 3 ", el("small", { text: "(classifier: probability · kNN: share of the 10 nearest labelled foods)" })), models,
+    el("h3", { style: "margin-top:16px" }, "Nearest labelled foods ", el("small", { text: "(what kNN looks at; USDA foods, phrases from our definitions, and OFF products labelled by their tags)" })), nb].filter(Boolean));
+}
+
+// --- start ------------------------------------------------------------------------
+(async () => {
+  const cr = await getJSON("/api/category-results");  // category names + agreement statistics from the 200-product test
+  if (cr.ok && !cr.body.error) {
+    cats = cr.body.categories;
+    stats = {};
+    for (const v of Object.keys(VARIANTS)) {
+      stats[v] = {};
+      for (const lv of Object.keys(LEVEL)) {
+        const g = cr.body.products.filter((p) => p.answer && p.agree[v] === lv);
+        stats[v][lv] = { n: g.length, right: g.filter((p) => p.preds[v].vote[0] === p.answer).length };
+      }
+    }
+  }
+  const up = await checkStatus();
+  const params = new URLSearchParams(location.search);
+  if (params.get("id")) {
+    const tab = params.get("tab") === "off" ? "off" : "on";
+    $("tab").value = tab;
+    await pick(tab, params.get("id"), up);
+  }
+  if (!up) serviceDown({});
+})();
+</script>
+</body>
+</html>

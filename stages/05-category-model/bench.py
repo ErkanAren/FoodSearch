@@ -14,6 +14,12 @@ lands on a survey-only category.
     .venv/bin/python -I stages/05-category-model/bench.py run      # embeddings + predictions + USDA cross-validation
     .venv/bin/python -I stages/05-category-model/bench.py score    # accuracy vs the owner's answers (review page)
 
+Improvement round (2026-11-17):
+    run --off     also learn from real packaged products labelled through their Open Food Facts tags
+                  (out/off_train.json from build_off_train.py). Results are stored as "<model>+off", plus
+                  "<model>+off+clean" for the same model on product names without "by <Brand>".
+    run --no-cv   skip the USDA cross-validation (keeps the earlier number for that model)
+
 Outputs (git-ignored): stages/05-category-model/out/
 """
 import argparse
@@ -106,6 +112,12 @@ def product_text(p):
     return f"{p['name']}. {p['description']}".strip()
 
 
+def clean_text(p):
+    """Product text without the brand: OpenNutrition names end in "by <Brand>"."""
+    name = re.sub(r"\s+by\s+.*$", "", p["name"])
+    return f"{name}. {p['description']}".strip()
+
+
 def load_reference(cats):
     """Labelled foods: USDA FNDDS descriptions with their WWEIA code + the example phrases of our definitions."""
     ref_text, ref_code, ref_src = [], [], []
@@ -135,7 +147,7 @@ def knn_scores(sim, ref_code, classes, k=10):
     out = np.zeros((sim.shape[0], len(classes)))
     for r in range(sim.shape[0]):
         for j in idx[r]:
-            out[r, cidx[ref_code[j]]] += np.exp(sim[r, j] / 0.05)
+            out[r, cidx[ref_code[j]]] += np.exp((sim[r, j] - sim[r, idx[r, 0]]) / 0.05)  # shifted: no overflow
     return out / out.sum(1, keepdims=True)
 
 
@@ -147,7 +159,6 @@ def top3(scores, classes):
 def run(args):
     from sentence_transformers import SentenceTransformer
     from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import StratifiedKFold
 
     OUT.mkdir(parents=True, exist_ok=True)
     cats = [c for c in json.loads(CATS.read_text())["categories"]]
@@ -156,66 +167,91 @@ def run(args):
     sample = load_sample()
     (OUT / "sample.json").write_text(json.dumps(sample, ensure_ascii=False, indent=1))
     ref_text, ref_code, ref_src = load_reference(cats)
+    if args.off:
+        off = json.loads((OUT / "off_train.json").read_text())["examples"]
+        ref_text = ref_text + [e["text"] for e in off]
+        ref_code = np.concatenate([ref_code, [e["code"] for e in off]])
+        ref_src = np.concatenate([ref_src, ["off"] * len(off)])
     print(f"sample {len(sample)} products · labelled foods {len(ref_text)} (USDA {int((ref_src == 'fndds').sum())}) · {len(classes)} categories", flush=True)
 
     preds_path = OUT / "predictions.json"
     preds = json.loads(preds_path.read_text()) if preds_path.exists() else {}
     for key in args.models.split(","):
         hub, qp, dp = MODELS[key]
-        print(f"\n== {key} ({hub})", flush=True)
+        name = key + ("+off" if args.off else "")
+        print(f"\n== {name} ({hub})", flush=True)
         t0 = time.time()
         local = ROOT / "work" / "models" / "st" / hub.replace("/", "__")  # fetched by fetch_models.sh (curl)
         model = SentenceTransformer(str(local) if (local / "config.json").exists() else hub, cache_folder=str(HF_CACHE), device=args.device)
         t_load = time.time() - t0
         enc = lambda texts, prompt: model.encode(texts, prompt=prompt, batch_size=64, normalize_embeddings=True,  # noqa: E731
-                                                 convert_to_numpy=True, show_progress_bar=False)
+                                                 convert_to_numpy=True, show_progress_bar=False).astype(np.float32)  # some models return float16
         t0 = time.time()
         P = enc([product_text(p) for p in sample], qp)
         t_prod = time.time() - t0
+        P_clean = enc([clean_text(p) for p in sample], qp)
         R = enc(ref_text, qp)
         C = enc([prototype_text(c) for c in usable], dp)
-        print(f"  loaded {t_load:.0f}s · 200 products {t_prod:.1f}s ({len(sample) / t_prod:.0f}/s) · all embeddings {time.time() - t0:.0f}s", flush=True)
-
-        # --- USDA cross-validation (label-free benchmark): train on 4/5 of USDA foods + definition phrases, test on 1/5
-        fn = np.where(ref_src == "fndds")[0]
-        dfn = np.where(ref_src == "definition")[0]
-        y = ref_code[fn]
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
-        hits = {"zs": 0, "knn": 0, "lr": 0}
-        yy = np.array([c if (y == c).sum() >= 5 else "rare" for c in y])  # stratify; rare classes go anywhere
-        for tr, te in skf.split(fn, yy):
-            tr_idx = np.concatenate([fn[tr], dfn])
-            sim = R[fn[te]] @ R[tr_idx].T
-            hits["knn"] += sum(a[0] == b for a, b in zip(top3(knn_scores(sim, ref_code[tr_idx], classes), classes), y[te]))
-            lr = LogisticRegression(C=20, max_iter=3000).fit(R[tr_idx], ref_code[tr_idx])
-            pr = lr.predict(R[fn[te]])
-            hits["lr"] += int((pr == y[te]).sum())
-        zs = top3(R[fn] @ C.T, classes)
-        hits["zs"] = sum(a[0] == b for a, b in zip(zs, y))
-        cv = {m: round(h / len(fn), 3) for m, h in hits.items()}
-        print(f"  USDA foods top-1 accuracy: zero-shot {cv['zs']:.1%} · kNN {cv['knn']:.1%} · classifier {cv['lr']:.1%}", flush=True)
+        print(f"  loaded {t_load:.0f}s · 200 products {t_prod:.1f}s ({len(sample) / t_prod:.0f}/s) · "
+              f"{len(ref_text):,} labelled foods · all embeddings {time.time() - t0:.0f}s", flush=True)
+        if args.no_cv:
+            cv = preds.get(key, {}).get("usda_cv_top1", {"zs": None, "knn": None, "lr": None})
+        else:
+            cv = usda_cv(R, C, ref_code, ref_src, classes)
+            print(f"  USDA foods top-1 accuracy: zero-shot {cv['zs']:.1%} · kNN {cv['knn']:.1%} · classifier {cv['lr']:.1%}", flush=True)
 
         # --- the 200-product sample
+        t1 = time.time()
         lr = LogisticRegression(C=20, max_iter=3000).fit(R, ref_code)
-        lr_classes = list(lr.classes_)
-        lr_p = lr.predict_proba(P)
-        lr_full = np.zeros((len(sample), len(classes)))
-        for j, c in enumerate(lr_classes):
-            lr_full[:, classes.index(c)] = lr_p[:, j]
-        per_method = {
-            "zs": top3(P @ C.T, classes),
-            "knn": top3(knn_scores(P @ R.T, ref_code, classes), classes),
-            "lr": top3(lr_full, classes),
-        }
-        out = {}
-        for m, tops in per_method.items():
-            out[m] = {}
-            for p, t in zip(sample, tops):
-                ruled = [apply_rules(c, p["nutr"]) for c in t]
-                out[m][p["id"]] = list(dict.fromkeys(ruled))  # keep order, drop duplicates created by the rules
-        preds[key] = {"methods": out, "usda_cv_top1": cv, "products_per_s": round(len(sample) / t_prod, 1), "load_s": round(t_load, 1)}
+        print(f"  classifier trained in {time.time() - t1:.0f}s", flush=True)
+        variants = {name: P} if not args.off else {name: P, name + "+clean": P_clean}
+        for vname, PP in variants.items():
+            preds[vname] = {"methods": predict(PP, R, C, ref_code, classes, lr, sample), "usda_cv_top1": cv,
+                            "products_per_s": round(len(sample) / t_prod, 1), "load_s": round(t_load, 1),
+                            "labelled_foods": len(ref_text)}
         preds_path.write_text(json.dumps(preds, indent=1))
         del model
+
+
+def usda_cv(R, C, ref_code, ref_src, classes):
+    """Label-free benchmark: train on 4/5 of USDA foods + everything else labelled, test on the other 1/5."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import StratifiedKFold
+    fn = np.where(ref_src == "fndds")[0]
+    dfn = np.where(ref_src != "fndds")[0]
+    y = ref_code[fn]
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    hits = {"zs": 0, "knn": 0, "lr": 0}
+    yy = np.array([c if (y == c).sum() >= 5 else "rare" for c in y])  # stratify; rare classes go anywhere
+    for tr, te in skf.split(fn, yy):
+        tr_idx = np.concatenate([fn[tr], dfn])
+        sim = R[fn[te]] @ R[tr_idx].T
+        hits["knn"] += sum(a[0] == b for a, b in zip(top3(knn_scores(sim, ref_code[tr_idx], classes), classes), y[te]))
+        lr = LogisticRegression(C=20, max_iter=3000).fit(R[tr_idx], ref_code[tr_idx])
+        pr = lr.predict(R[fn[te]])
+        hits["lr"] += int((pr == y[te]).sum())
+    zs = top3(R[fn] @ C.T, classes)
+    hits["zs"] = sum(a[0] == b for a, b in zip(zs, y))
+    return {m: round(h / len(fn), 3) for m, h in hits.items()}
+
+
+def predict(P, R, C, ref_code, classes, lr, sample):
+    lr_p = lr.predict_proba(P)
+    lr_full = np.zeros((len(sample), len(classes)))
+    for j, c in enumerate(lr.classes_):
+        lr_full[:, classes.index(c)] = lr_p[:, j]
+    per_method = {
+        "zs": top3(P @ C.T, classes),
+        "knn": top3(knn_scores(P @ R.T, ref_code, classes), classes),
+        "lr": top3(lr_full, classes),
+    }
+    out = {}
+    for m, tops in per_method.items():
+        out[m] = {}
+        for p, t in zip(sample, tops):
+            ruled = [apply_rules(c, p["nutr"]) for c in t]
+            out[m][p["id"]] = list(dict.fromkeys(ruled))  # keep order, drop duplicates created by the rules
+    return out
 
 
 def score(_args):
@@ -224,7 +260,17 @@ def score(_args):
     sample = {p["id"]: p for p in json.loads((OUT / "sample.json").read_text())}
     truth = json.loads(rv_path.read_text()) if rv_path.exists() else {}
     truth = {k: v for k, v in truth.items() if v}
-    print(f"{len(truth)}/{len(sample)} products have an answer\n")
+    mine_path = OUT / "answers_by_claude.json"
+    claude = json.loads(mine_path.read_text()) if mine_path.exists() else {}
+    claude_ids = {pid for pid, v in claude.items() if truth.get(pid) == v["code"]}
+    owner_ids = set(truth) - claude_ids
+    print(f"{len(truth)}/{len(sample)} products have an answer: {len(owner_ids)} by the owner, {len(claude_ids)} by Claude\n")
+    for subset, ids in (("owner's answers only", owner_ids), ("Claude's answers only", claude_ids)):
+        if ids:
+            accs = sorted(((sum(info["methods"][m][pid][0] == truth[pid] for pid in ids) / len(ids), k, m)
+                           for k, info in preds.items() for m in info["methods"]), reverse=True)[:5]
+            print(f"best on {subset} (n={len(ids)}): " + " · ".join(f"{k} {m} {a:.0%}" for a, k, m in accs))
+    print()
     rows = []
     for key, info in preds.items():
         for m, by_pid in info["methods"].items():
@@ -234,9 +280,10 @@ def score(_args):
             nk = sum(1 for pid in truth if sample[pid]["type"] == "grocery")
             rows.append((top1 / max(len(truth), 1), key, m, top1, top3, pk, nk, info["usda_cv_top1"][m], info["products_per_s"]))
     rows.sort(reverse=True)
-    print(f"{'model':18} {'method':6} {'top-1':>7} {'top-3':>7} {'packaged top-1':>15} {'USDA CV':>8} {'products/s':>11}")
+    print(f"{'model':24} {'method':6} {'top-1':>7} {'top-3':>7} {'packaged top-1':>15} {'USDA CV':>8} {'products/s':>11}")
     for acc, key, m, t1, t3, pk, nk, cv, sp in rows:
-        print(f"{key:18} {m:6} {acc:7.1%} {t3 / max(len(truth), 1):7.1%} {pk / max(nk, 1):15.1%} {cv:8.1%} {sp:11.0f}")
+        cvs = f"{cv:8.1%}" if cv is not None else f"{'-':>8}"
+        print(f"{key:24} {m:6} {acc:7.1%} {t3 / max(len(truth), 1):7.1%} {pk / max(nk, 1):15.1%} {cvs} {sp:11.0f}")
     (OUT / "scores.json").write_text(json.dumps([dict(zip(["top1", "model", "method", "hits1", "hits3", "packaged_hits1", "packaged_n", "usda_cv", "products_per_s"], r)) for r in rows], indent=1))
 
 
@@ -246,6 +293,8 @@ def main():
     r = sub.add_parser("run")
     r.add_argument("--models", default=",".join(MODELS))
     r.add_argument("--device", default="mps")
+    r.add_argument("--off", action="store_true", help="also learn from OFF-labelled packaged products")
+    r.add_argument("--no-cv", action="store_true", help="skip the USDA cross-validation")
     sub.add_parser("score")
     args = ap.parse_args()
     run(args) if args.cmd == "run" else score(args)
