@@ -294,6 +294,41 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
   2. **Add e5-small hybrid on top only if the server can afford ~26 ms per search** (≈ 38 per second per core): it brings 77 → 83 %.
   3. **Don't translate queries at search time** (worse and slower).
   4. **Next:** review the word translations (fix "ground", "ice", "orange"…, about 1–2 h for the top 3,000 words, which cover 93 % of word occurrences), Greeklish → Greek (E9), and ranking boosts (generic foods first).
+- **Word fixes, round 1 (2026-11-18): suspicious words.**
+  - **What was reviewed:** Greek words that are the machine translation of two or more different English words, each used in ≥ 50 OpenNutrition product names. 120 such Greek words were found. Most were fine:
+    - synonyms: drink/beverage → ποτό, crispy/crunchy → τραγανό;
+    - words that are ambiguous in Greek too: καρύδα/καρύδια, φέτα/φέτες, φιστίκι, πίτα;
+    - words nobody searches in Greek: of/from/by.
+  - **Fixed by hand:** 36 words (24 food words with their plurals and hyphenated forms) and 3 phrases, in `tools/search/word_fixes.json`:
+    - lime: ασβέστης (quicklime) → λάιμ
+    - raspberry: βατόμουρο → σμέουρο; blueberry → μύρτιλο
+    - frozen: παγωμένο → κατεψυγμένο; frosted → γλασαρισμένο
+    - bars: ράβδοι → μπάρες; sticks → μπαστουνάκια
+    - bun → ψωμάκι; bagel → μπέιγκελ; pretzel → πρέτσελ (they all used to be κουλούρι)
+    - swiss: σουηδικό → ελβετικό; chard: σαρδέλλα → σέσκουλο; mayo: Μάγιο → μαγιονέζα; ground: έδαφος → αλεσμένο; and others
+    - phrases: ice cream → παγωτό; ground beef / beef, ground → κιμάς μοσχαρίσιος
+  - **How it's applied:**
+    - The machine output in `mt_words` stays untouched. The fixes are applied when the Greek index is built and by the re-ranker.
+    - Rebuilding takes 8 s, because nothing is retranslated.
+    - A hand-fixed word never counts as a sign of an ambiguous translation (E17). Otherwise pollo → κοτόπουλο next to chicken made `κοτοπουλο` look ambiguous, and generic chicken lost its place at the top.
+  - **Result (`--corpus all`, 123 queries, `rrg:kw_el:words`):**
+    - First result right: 93 %. Top 5: 97 → **98 %**. MRR: 0.94 → 0.95.
+    - Greek → English: 95 → **100 %**.
+    - Only two test queries changed, both for the better: `μοσχαρισιος κιμας` went from not found to Ground Beef at #1, and `παγωτο βανιλια` now shows Vanilla Ice Cream first instead of Vanilla Gelato.
+    - Spot checks:
+      - `λαιμ` → Lime, `μυρτιλα` → Blueberries, `σμεουρα` → Raspberries
+      - `κιμας` → Ground Beef, `μαγιονεζα` → Mayonnaise, `κατεψυγμενα` → frozen foods
+      - `μπειγκελ` → Bagels, `καστανο ρυζι` → Brown Rice, `λιαστη ντοματα` → Sun-Dried Tomatoes
+      - `ελβετικο τυρι` → Swiss Cheese, `σεσκουλο` → Swiss Chard
+  - **Bread fixes (2026-11-18):** `ψωμι` showed Greek products named "Ψωμί" first, and `psomi` showed Multigrain Bread, Raisin Bread and Breaded Cod. Both now show **White Bread** first; no other test query changed.
+    - **Translations:** breaded → πανέ (was ψωμιά, "breads"), breading → πανάρισμα, breadsticks → κριτσίνια.
+    - **Brand detection (E17):** a one-word "brand" that appears in at least 20× more product names than products it is the brand of is a common word, not a brand (`BRAND_WORD_RATIO`). Two breads have "Ψωμί" in their brand field, so `ψωμι` counted as a brand query and "plain food first" was switched off.
+      - This leaves out 21 words, mostly descriptors: homestyle, select, kalamata, bio, best…
+      - Real Greek brands such as Κορπή, Lacta, Μέλισσα and Νίκας stay.
+      - Two rules were tried first and rejected:
+        - "Brand = product name": it also dropped Κορπή, Zaros, 7up and Red Bull.
+        - "Brand made only of Greek food words": it also dropped Χρυσός Μύλος, Χρυσή Ζύμη, Νίκας and Μέλισσα.
+  - **Next round (not done):** the 1,000 most common words. Candidates already seen: frosting → παγωνιά (should be γλάσο), key → κλειδί (in "key lime"), toasted → ψημένο, and other ground meats (turkey, pork, chicken → κιμάς).
 
 ## E17: Re-ranking: the right item first ✅ (decision pending)
 - **Problem (2026-11-17):** the first result is often a variant instead of the food itself.

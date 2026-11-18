@@ -305,6 +305,30 @@ MT_MODELS = {
 _HAS_GREEK = re.compile("[α-ω]")
 _BY_BRAND = re.compile(r"\s+by\s+.*$", re.IGNORECASE)
 _EN_WORD = re.compile(r"[a-z][a-z'-]+")
+WORD_FIXES = Path(__file__).with_name("word_fixes.json")
+
+
+def load_word_fixes():
+    """Hand corrections of the machine word translation (word_fixes.json): ({word: greek}, [(phrase regex, greek)]).
+    Phrases are tried longest first and also match with a final s ("ice creams")."""
+    if not WORD_FIXES.exists():
+        return {}, []
+    data = json.loads(WORD_FIXES.read_text(encoding="utf-8"))
+    phrases = sorted(data.get("phrases", {}).items(), key=lambda kv: -len(kv[0]))
+    return data.get("words", {}), [(re.compile(rf"(?<![a-z]){re.escape(p)}s?(?![a-z])"), el) for p, el in phrases]
+
+
+def english_to_greek(name, words, phrases):
+    """Greek text of an English product name (without brand): phrase fixes first ("ice cream" -> παγωτό instead of
+    πάγος κρέμα), then each remaining word once, from the word table (machine translation + hand fixes)."""
+    text = re.sub(r"[^a-z'-]+", " ", (name or "").lower())
+    out = []
+    for pattern, el in phrases:
+        if pattern.search(text):
+            out.append(el)
+            text = pattern.sub(" ", text)
+    out += [words.get(u, "") for u in dict.fromkeys(_EN_WORD.findall(text))]
+    return " ".join(w for w in out if w)
 # Light Greek stemmer for normalized text (no accents, final ς already σ): strip one common ending,
 # keep at least 3 letters. Used on both sides, so "καρπουζια" (query) meets "καρπουζι" (index).
 _EL_ENDINGS = sorted(["ιεσ", "ιων", "ουσ", "εων", "ων", "ησ", "εσ", "ασ", "οσ", "ου", "οι", "ια", "ιο", "εισ",
@@ -489,9 +513,17 @@ def translate_corpus(mode, mt_name, batch):
     tr = dict(con.execute(f"SELECT src, el FROM mt_{mode}"))
     con.executescript(f"""DROP TABLE IF EXISTS el_{mode}_fts; DROP TABLE IF EXISTS greeklish_fts;
         CREATE VIRTUAL TABLE el_{mode}_fts USING fts5(text, tokenize='unicode61 remove_diacritics 2', prefix='2 3');""")
+    if mode == "words":  # hand fixes on top of the machine translation (word_fixes.json)
+        fix_words, fix_phrases = load_word_fixes()
+        tr.update(fix_words)
+        greek = ((rid, english_to_greek(bases[rid], tr, fix_phrases)) for rid in doc_units)
+    else:
+        fix_words, fix_phrases = {}, []
+        greek = ((rid, " ".join(tr.get(u, "") for u in us)) for rid, us in doc_units.items())
     con.executemany(f"INSERT INTO el_{mode}_fts(rowid, text) VALUES (?, ?)",
-                    ((rid, el_index_text(" ".join(tr.get(u, "") for u in us))) for rid, us in doc_units.items()))
-    meta_rows = [(f"el_{mode}_model", mt_name), (f"el_{mode}_units", str(len(units)))]
+                    ((rid, el_index_text(text)) for rid, text in greek))
+    meta_rows = [(f"el_{mode}_model", mt_name), (f"el_{mode}_units", str(len(units))),
+                 (f"el_{mode}_fixes", f"{len(fix_words)} words, {len(fix_phrases)} phrases")]
     if todo:
         meta_rows.append((f"el_{mode}_seconds", f"{secs:.0f}"))
     con.executemany("INSERT OR REPLACE INTO meta VALUES (?, ?)", meta_rows)
@@ -670,6 +702,7 @@ AMBIGUOUS_TRANSLATED_WEIGHT = 0.5
 GENERIC_FIRST_MIN_SIM = 0.6  # rrg: a generic food goes above all brands only if its name matches this well
 EXTRA_MIN_SIM = 0.5  # typo / generic candidates below this name similarity are dropped (no junk for no-match queries)
 POSITION_WEIGHT = 0.10
+BRAND_WORD_RATIO = 20  # a one-word "brand" found in 20x more product names than products it brands is a common word
 
 
 def ensure_name_trigrams():
@@ -839,13 +872,18 @@ class Reranker:
         with closing(connect()) as con:
             has_mt = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'mt_words'").fetchone()
             self.mt_words = dict(con.execute("SELECT src, el FROM mt_words")) if has_mt else {}
+            fix_words, self.fix_phrases = load_word_fixes() if has_mt else ({}, [])
+            self.mt_words.update(fix_words)
+            self.fixed_words = set(fix_words)  # reviewed by hand: never a sign of an ambiguous translation
             self.brands = self._brand_phrases(con)
 
     @staticmethod
     def _brand_phrases(con):
         """Brand names seen in the data ("... by Brand" in OpenNutrition, the brand field in OFF), used to tell a
         brand query ("coca cola zero") from a food query ("banana"). Left out: brands made only of words that also
-        name generic foods (a brand called "Banana"), and single words that are common in product names ("organic")."""
+        name generic foods (a brand called "Banana"), and single words that are common in product names: in more
+        than 2,000 names ("organic"), or in at least BRAND_WORD_RATIO times more names than products they are the
+        brand of ("kalamata", "bio", and "ψωμι", which two breads have in their brand field)."""
         generic_words, word_freq, counts = set(), defaultdict(int), defaultdict(int)
         for name, src, typ, brand in con.execute("SELECT name, src, type, brand FROM docs"):
             base = norm(base_name(name)).split()
@@ -862,8 +900,8 @@ class Reranker:
             toks = phrase.split()
             if c < 2 or len(phrase) < 3 or len(toks) > 4 or set(toks) <= generic_words:
                 continue
-            if len(toks) == 1 and word_freq[toks[0]] > 2000:  # a descriptor like "organic", not a brand
-                continue
+            if len(toks) == 1 and (word_freq[toks[0]] > 2000 or word_freq[toks[0]] >= BRAND_WORD_RATIO * c):
+                continue  # a common word or descriptor, not a brand
             out.add(phrase)
         return out
 
@@ -884,7 +922,7 @@ class Reranker:
         direct = [[el_stem(t) for t in toks] for toks in (norm(base).split(), norm(name).split()) if toks]
         translated = []
         if src == "on" and self.mt_words:
-            greek = norm(" ".join(self.mt_words.get(w, "") for w in _EN_WORD.findall(base.lower()))).split()
+            greek = norm(english_to_greek(base, self.mt_words, self.fix_phrases)).split()
             if greek:
                 translated.append([el_stem(t) for t in greek])
         return direct, translated
@@ -909,7 +947,8 @@ class Reranker:
         or more unrelated English words, each behind at least 2 of the names: κουλούρι <- bagel (Bagels, Plain
         Bagel…) and bun (Hamburger Bun, Potato Bun…) is ambiguous. Not ambiguous: γάλα <- milk; μήλο <- apple,
         applesauce; one odd translation; or different Greek words that only look alike in Greeklish (rizi: ρύζι <-
-        rice, ρίζα <- root). A word the query matches as it is doesn't count ('gala' in "Gala Apples")."""
+        rice, ρίζα <- root). A word the query matches as it is doesn't count ('gala' in "Gala Apples"), and neither
+        does a hand-fixed word (word_fixes.json): it was reviewed, so pollo -> κοτόπουλο next to chicken is a synonym."""
         if not self.mt_words:
             return False
         wanted, key = (set(q_skel), skeleton) if q_skel else (set(q_tokens), lambda s: s)
@@ -917,7 +956,7 @@ class Reranker:
         for name in names:
             seen = set()
             for w in _EN_WORD.findall(base_name(name).lower()):
-                if w in q_tokens:
+                if w in q_tokens or w in self.fixed_words:
                     continue
                 lemma = en_lemma(w)
                 for stem in {el_stem(t) for t in norm(self.mt_words.get(w, "")).split()}:

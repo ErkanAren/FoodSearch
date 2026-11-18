@@ -93,7 +93,8 @@ python3 -I tools/search/search_lab.py eval $C     # keyword methods → work/sea
 - **Product sets (`--corpus`):**
   - `library` (default, ≈ 40 k): OFF Greek market + OpenNutrition everyday/prepared/restaurant.
   - `opennutrition` (326,759): all OpenNutrition products, grocery included.
-  - `all` (353,413): both. **Best results so far** (E17): `rrg:kw_el:words` gets 93 % first result right, 97 % top 5, no model.
+  - `all` (353,413): both. **Best results so far** (E17): `rrg:kw_el:words` gets 93 % first result right, 98 % top 5, no model.
+- **Word fixes:** `tools/search/word_fixes.json` corrects the machine English → Greek word translation, by word (lime → λάιμ, not ασβέστης) or by phrase (ice cream → παγωτό). After editing it, rerun `translate $C --mode words --mt en-el-big`: it takes seconds because nothing is retranslated.
 - **Test set:** `tools/search/queries.json`. Each query describes a correct result with patterns on the product name, so new products count automatically. It's a **draft**: review it and add real user queries.
 - **Methods:**
   - `like` is the old browser search; `bm25` and `bm25_or` are keyword search.
