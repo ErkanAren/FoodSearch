@@ -3,7 +3,11 @@
 Shared by text_variants.py, serve_models.py and the local browser pages (tools/browser/foods_browser.py),
 so every place combines the models the same way.
 """
-VOTE = [("qwen3-0.6b", "lr"), ("qwen3-0.6b", "knn"), ("arctic-l-v2", "knn")]  # best vote in REPORT.md Result 3
+# The vote in use: Qwen3 fine-tuned on our labelled foods (classifier + kNN) and Arctic kNN, since 2026-11-19
+# (REPORT.md Result 10). VOTE_ORIGINAL: the same line-up with the original Qwen3 (Results 3-9); the comparison
+# scripts (retrain.py, big_test.py, ...) still use it, so their results stay comparable.
+VOTE = [("qwen3-ft", "lr"), ("qwen3-ft", "knn"), ("arctic-l-v2", "knn")]
+VOTE_ORIGINAL = [("qwen3-0.6b", "lr"), ("qwen3-0.6b", "knn"), ("arctic-l-v2", "knn")]  # best vote in Result 3
 LEVELS = {"all": "all 3 agree", "two": "2 of 3 agree", "none": "all 3 differ"}
 
 

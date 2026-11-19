@@ -585,9 +585,10 @@ def icons_data():
 # --- Stage 05: model results on the 200 products, and the live tester ----------------------------------------
 # The live tester forwards to stages/05-category-model/serve_models.py (a separate .venv process with the models).
 sys.path.insert(0, str(CATREV_DIR.parent))
-from vote import LEVELS, VOTE, agreement, rank_vote  # noqa: E402  (standard library only)
+from vote import LEVELS, VOTE, VOTE_ORIGINAL, agreement, rank_vote  # noqa: E402  (standard library only)
 
-CATRES_MEMBERS = {"qwen3-0.6b|lr": "Qwen3 classifier", "qwen3-0.6b|knn": "Qwen3 kNN",
+CATRES_MEMBERS = {"qwen3-ft|lr": "Qwen3 fine-tuned classifier", "qwen3-ft|knn": "Qwen3 fine-tuned kNN",
+                  "qwen3-0.6b|lr": "Qwen3 classifier", "qwen3-0.6b|knn": "Qwen3 kNN",
                   "arctic-l-v2|knn": "Arctic kNN", "arctic-l-v2|lr": "Arctic classifier"}
 VARIANTS = {"title": "Title", "title+desc": "Title + description", "title+desc+ingr": "Title + description + ingredients"}
 MODEL_SERVICE = "http://127.0.0.1:8766"
@@ -608,12 +609,14 @@ def catres_data():
     rev = catrev_data()
     if "error" in rev:
         return rev
+    members = {m: n for m, n in CATRES_MEMBERS.items() if f"{m.split('|')[0]}|title" in tv["predictions"]}
+    vote = VOTE if all(f"{k}|{m}" in members for k, m in VOTE) else VOTE_ORIGINAL  # older results: original models
     products = []
     for p in rev["sample"]:
         pid, preds, agree = p["id"], {}, {}
         for v in VARIANTS:
-            row = {m: tv["predictions"][f"{m.split('|')[0]}|{v}"][m.split("|")[1]][pid] for m in CATRES_MEMBERS}
-            tops = [row[f"{k}|{m}"] for k, m in VOTE]
+            row = {m: tv["predictions"][f"{m.split('|')[0]}|{v}"][m.split("|")[1]][pid] for m in members}
+            tops = [row[f"{k}|{m}"] for k, m in vote]
             row["vote"] = [c for c, _ in rank_vote(tops)][:3]
             preds[v], agree[v] = row, agreement(tops)
         answer = rev["answers"].get(pid)
@@ -624,8 +627,8 @@ def catres_data():
                          "texts": {v: tv["texts"][v][pid] for v in VARIANTS}, "preds": preds, "agree": agree})
     return {"categories": _all_categories(), "variants": VARIANTS,
             "training": {"set": tv.get("training_set"), "label": tv.get("training_label")},
-            "members": {"vote": "3-model vote", **CATRES_MEMBERS},
-            "vote_members": [CATRES_MEMBERS[f"{k}|{m}"] for k, m in VOTE], "levels": LEVELS, "products": products}
+            "members": {"vote": "3-model vote", **members},
+            "vote_members": [CATRES_MEMBERS[f"{k}|{m}"] for k, m in vote], "levels": LEVELS, "products": products}
 
 
 def _off_text(entries, main_lang, langs):

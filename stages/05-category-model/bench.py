@@ -50,6 +50,8 @@ MODELS = {  # key: (hub id, prompt for products and labelled foods, prompt for c
     "bge-m3": ("BAAI/bge-m3", "", ""),
     "arctic-l-v2": ("Snowflake/snowflake-arctic-embed-l-v2.0", "query: ", ""),
     "qwen3-0.6b": ("Qwen/Qwen3-Embedding-0.6B", f"Instruct: {TASK}\nQuery:", ""),
+    # Qwen3 fine-tuned on training set E (finetune.py, 2026-11-19), in work/models/st/local__qwen3-0.6b-ft
+    "qwen3-ft": ("local/qwen3-0.6b-ft", f"Instruct: {TASK}\nQuery:", ""),
 }
 FAMILIES = {  # nutrient rules: (codes in the family, function of nutrients -> code)
     "milk": ({"1002", "1004", "1006", "1008"}, lambda n: _by_fat(n, ["1002", "1004", "1006", "1008"])),
@@ -291,7 +293,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--models", default=",".join(MODELS))
+    r.add_argument("--models", default=",".join(k for k, v in MODELS.items() if not v[0].startswith("local/")))
     r.add_argument("--device", default="mps")
     r.add_argument("--off", action="store_true", help="also learn from OFF-labelled packaged products")
     r.add_argument("--no-cv", action="store_true", help="skip the USDA cross-validation")

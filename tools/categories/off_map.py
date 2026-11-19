@@ -19,7 +19,12 @@ Rules (see label()):
     the normal label (fruit -> 9004, vegetables -> 9006, ...); otherwise skipped.
   - Families decided by nutrients (milk fat, cereal sugar, diet drinks) are finished by the same rules as the
     model's predictions (stage 05 bench.py: apply_rules).
+  - Name rules (NAME_RULES, by_name()): OFF tags often stop at the general category (yogurts, beef, creams,
+    pasta-dishes...). When the product's name says the specific thing, the name decides. Applied by the caller after
+    label() and before the nutrient rules.
 """
+import re
+import unicodedata
 
 MAP = """
 1002 whole-milks whole-milk-uht evaporated-milks buttermilks
@@ -372,6 +377,28 @@ NON_FOOD = {
 }
 BLOCK = {"fresh-cheeses", "fermented-milk-drinks", "dairy-drinks", "soured-milks", "milk-powders"}
 
+# Name rules: (label from the tags, new label, pattern on name_key(): no case, no accents, what it fixes).
+# Write a Greek final sigma as σ: casefold() turns ς into σ.
+# First match wins. 1820 -> 1822 since 2026-11-18; the others since 2026-11-19, found with the 4,129-product test
+# (stage 05 REPORT.md Result 8). Labels follow docs/CATEGORY-DEFINITIONS.md (e.g. lima beans -> 6418, root beer -> 7202).
+NAME_RULES = [
+    ("1820", "1822", r"\b(greek|strained|skyr|labneh)\b|στραγγιστ|ελληνικ", "strained / Greek yogurt"),
+    ("2002", "2004", r"\bground (beef|chuck|sirloin|round|veal)\b|\bminced (beef|veal)\b|\b(beef|veal) mince\b"
+                     r"|\bhamburger (meat|patt)|\bbeef (burgers?|patt(y|ies))\b|\bκιμα", "ground beef"),
+    ("8008", "8006", r"\bsour(ed)? cream|\bcreme fraiche|\bwhipped (cream|topping)|\bsmetana\b|ξινη κρεμα",
+     "sour cream, crème fraîche, whipped cream"),
+    ("3204", "3206", r"\b(mac(aroni)?|shells|spirals|elbows|rotini)\s*(&|and|n|'n'?)\s*(white\s+)?(chees|chedd)|\bcheesy mac\b",
+     "macaroni and cheese"),
+    ("7502", "7202", r"\broot ?beers?\b|\bbirch beer|\bginger (beer|ale)|\bcream soda|\bsarsaparilla|\bsodas?\b",
+     "root beer and other sodas"),
+    ("6416", "5006", r"\bkettle ?corn\b|\bpop ?corn\b", "popcorn"),
+    ("6420", "6418", r"\blima beans?\b|\bblack[- ]?eyed? peas?\b", "lima beans, black-eyed peas"),
+    ("6420", "2802", r"\blentils?\b|\bchick ?peas?\b|\bgarbanzos?\b|\bsplit peas?\b|\b(black|pinto|kidney|navy|red|"
+                     r"white|cannellini|great northern|canary|cranberry|heritage|mayocoba|adzuki|azuki|mung|turtle|pink) "
+                     r"beans?\b|φακεσ|ρεβυθια|φασολια\b", "dry beans, lentils, chickpeas"),
+]
+_NAME_RULES = [(a, b, re.compile(rx), why) for a, b, rx, why in NAME_RULES]
+
 
 def parse():
     """-> {tag: (code, strong: bool)}; raises on a tag listed twice."""
@@ -392,6 +419,23 @@ def parse():
 
 
 TAGS = parse()
+
+
+def name_key(t):
+    """Case- and accent-free key: "ΚΟΥΛΟΥΡΙ" and "Κουλούρι" are the same name."""
+    t = unicodedata.normalize("NFD", t.casefold())
+    return "".join(ch for ch in t if not unicodedata.combining(ch))
+
+
+def by_name(code, names):
+    """code: from label(); names: the product's names (any language). -> (code, what the rule fixed, or None)."""
+    keys = None
+    for a, b, rx, why in _NAME_RULES:
+        if code == a:
+            keys = [name_key(n) for n in names if n] if keys is None else keys
+            if any(rx.search(k) for k in keys):
+                return b, why
+    return code, None
 
 
 def _baby(code, tags, kcal):

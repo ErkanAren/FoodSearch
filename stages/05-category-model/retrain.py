@@ -7,6 +7,8 @@ Training sets (trainset.VARIANTS; each adds one change):
     C  1,000, names + ingredients             products with ingredients also appear as "<name>. Ingredients of this product: …"
     D  1,000, names + ingredients, cleaned    OFF examples dropped when, for both models, at most 1 of their 10 nearest
                                               labelled foods shares their category and at least 6 agree on one other category
+    E  D + name rules (2026-11-19)            labels from the current off_train.json (off_map.NAME_RULES); A-D use the
+                                              frozen labels of 2026-11-18
 Models: Qwen3-Embedding-0.6B (classifier + kNN) and Arctic-embed-l-v2 (kNN, classifier), the 3-model vote as before.
 Tests: the 200 products (answer key; three product texts, as in text_variants.py) and the 98 Greek-only products
 (out/greek_test.json, answers from OFF tags).
@@ -33,7 +35,7 @@ from bench import CATS, HF_CACHE, MODELS, NEVER, ON_TSV, OUT, ROOT, apply_rules,
 from embstore import Store  # noqa: E402
 from text_variants import KEYS, texts as product_texts  # noqa: E402
 import trainset  # noqa: E402
-from vote import VOTE, rank_vote  # noqa: E402
+from vote import VOTE_ORIGINAL as VOTE, rank_vote  # noqa: E402  (the original models, vote.py)
 
 METHODS = ("lr", "knn")
 
@@ -141,7 +143,7 @@ def main():
     tests["greek"] = ([p["text"] for p in greek], [p["nutr"] or {} for p in greek])
 
     all_texts = [t for xs, _ in tests.values() for t in xs]
-    for v in ("A", "B", "C"):  # D is a subset of C
+    for v in trainset.VARIANTS:
         all_texts += trainset.build(cats, v)[0]
     print(f"{len(set(all_texts)):,} distinct texts ({time.time() - t0:.0f}s)", flush=True)
     stores = embed_all(all_texts)

@@ -223,22 +223,177 @@ Each training set adds one change to the set before it:
 
 **Adopted: set D** (`trainset.CURRENT`). It ties A on names and is the best with ingredients, which almost the whole catalogue has. It also has the most products where all 3 models agree, and it has cleaner labels. The live tester and the results page now use it. The predictions are in `out/retrain.json` and, for the results page, `out/text_variants.json`.
 
+## Result 8: a bigger test set (2026-11-19, owner's request)
+
+**Why:** on the 200 answer-key products, a gain smaller than about 5 points can't be told from noise.
+
+**What it is:** `big_test.py` (4.6 min) → `out/big_test.json`, `out/big_test_results.json`.
+- **4,129 OpenNutrition packaged products in 140 categories**, at most 40 per category.
+- Each one's OFF entry, found by barcode, has a **strong** category tag (Result 6: right on 18 of 20). The answer is that tag's category, with the nutrient rules applied to the OpenNutrition nutrients, as for the models.
+- **Left out:** the 20 answer-key products, and the 7,033 whose barcode is a training example.
+- **Caveats:**
+  - The answers come from the same tag mapping as the training labels. This favours sets with more OFF examples.
+  - Strong-tag products are the clear cases, and all are packaged.
+  - So the level (≈ 90 %) can't be compared with the 200 (72 %). **Use this test to compare changes**, not as the true accuracy.
+
+**Top-1 (top-3):**
+
+| Set | Vote, title + description | **Vote, + ingredients** | Qwen3 classifier, + ingredients | Arctic kNN, + ingredients |
+|---|---|---|---|---|
+| A: 200 per category | 86.2 % (94.3 %) | 84.5 % (94.1 %) | 79.0 % | 83.3 % |
+| B: 1,000 per category | 89.5 % (96.9 %) | 87.6 % (96.6 %) | 82.5 % | 86.5 % |
+| C: + ingredients | 89.6 % (96.8 %) | **90.5 % (98.0 %)** | 88.9 % | 88.3 % |
+| **D: + cleaning (in use)** | 89.6 % (96.5 %) | **90.4 % (97.9 %)** | 88.9 % | 88.6 % |
+
+**What each change contributed** (vote, against the set before; sign test on the products that changed):
+- **1,000 per category (B): +3.1 points** with ingredients (259 fixed, 131 broken) and +3.2 on names. p < 0.001 for both.
+  - The 200 didn't show this.
+  - Part of it may be the caveat: more examples labelled the same way as the answers.
+- **Ingredients in training (C): +3.0 points with ingredients** (187 fixed, 65 broken, p < 0.001). No change on names (+0.1, p = 0.59). This **confirms the 200.**
+- **Cleaning (D): no change** (−0.1, p = 0.57). This **confirms the 200.**
+
+**Agreement as confidence** (D, + ingredients):
+
+| | Share of products | Right |
+|---|---|---|
+| All 3 agree | 85 % | 96 % |
+| 2 of 3 agree | 13 % | 66 % |
+| All 3 differ | 2 % | 33 % |
+
+The pattern is the same as on the 200, where all 3 agreeing was right 89 % of the time.
+
+**Categories:** of the 115 categories with at least 10 test products, 83 are at least 90 % right. The weakest:
+
+| Category | Right | Models say instead | Who is wrong |
+|---|---|---|---|
+| 3204 Pasta mixed dishes | 12 / 40 | Macaroni and cheese (26) | **tags:** mac & cheese dinners carry only "pasta-dishes" |
+| 6420 Other vegetables | 12 / 40 | Beans, peas, legumes (20) | **tags:** dried lentils and beans tagged "mixed-vegetables" |
+| 7502 Beer | 11 / 26 | Soft drinks (13) | **tags:** OFF files root beers under "non-alcoholic-beers" |
+| X02 Baking ingredients | 17 / 40 | Cakes, cookies, pizza | mixed: sprinkles, pie dough, cake mixes |
+| 6416 Corn | 12 / 21 | Popcorn (9) | **tags:** kettle corn tagged "corn" |
+| 1820 Yogurt, regular | 25 / 40 | Greek (9), plant-based (4) | **models:** drinkable yogurts |
+| 8006 Cream cheese, sour cream, whipped cream | 29 / 40 | Cream (11) | **models:** sour cream and whipped cream |
+| 2004 Ground beef | 15 / 21 | Beef, excludes ground (6) | **models:** "Ground Beef" |
+
+- **The tag errors also mislabel training examples**, as the strained yogurts did before Result 7. Among the training names:
+  - "ground beef": 72 labelled *Beef, excludes ground* vs 53 *Ground beef*;
+  - "sour cream": 43 labelled *Cream*;
+  - "whipped cream": 28 labelled *Cream*;
+  - "mac & cheese": 34 labelled *Pasta mixed dishes*;
+  - "root beer": 9 labelled *Beer*.
+- So the model errors in the table come from the training labels. A name rule like the strained-yogurt one would fix both the training examples and the tag shortcut.
+
+## Result 9: name rules for the training labels (2026-11-19, owner's request)
+
+**What changed:** name rules now live in one place, `tools/categories/off_map.py` (`NAME_RULES`, `by_name()`).
+- When the OFF tags give the general category and the product's name says the specific thing, the name decides.
+- The rules follow `docs/CATEGORY-DEFINITIONS.md`. They are applied to the training labels (`build_off_train.py`) and to the tag shortcut and big test (`tag_shortcut.py`). The strained-yogurt rule of Result 7 moved there unchanged (it still relabels 2,033 products).
+
+| From (tags) | To | Name says | OFF products relabelled |
+|---|---|---|---|
+| 3204 Pasta mixed dishes | 3206 Macaroni and cheese | mac / macaroni / shells & cheese | 655 |
+| 8008 Cream | 8006 Sour cream, whipped cream | sour cream, crème fraîche, whipped cream | 502 |
+| 6420 Other vegetables | 2802 Beans, peas, legumes | lentils, chickpeas, black / pinto / kidney … beans | 452 |
+| 2002 Beef, excludes ground | 2004 Ground beef | ground / minced beef, beef burgers, κιμάς | 165 |
+| 7502 Beer | 7202 Soft drinks (then the diet rule) | root beer, ginger ale, soda | 121 |
+| 6416 Corn | 5006 Popcorn | kettle corn, popcorn | 83 |
+| 6420 Other vegetables | 6418 Other starchy vegetables | lima beans, black-eyed peas | 70 |
+
+**New set E** = D + these labels. Sets A–D keep the labels of 2026-11-18 (`out/off_train_2026-11-18.json`, a frozen copy), so Result 7 stays reproducible. The big test was rebuilt with the same rules: 4,112 products, because a few more barcodes are now training examples.
+
+| | 200, vote, title + desc | **200, vote, + ingredients** | Greek-only, vote | Big test, title + desc | **Big test, + ingredients** |
+|---|---|---|---|---|---|
+| D | 69.0 % (85.5 %) | 72.0 % (88.5 %) | 63.3 % (82.7 %) | 90.1 % | 91.0 % |
+| **E (adopted)** | 69.5 % (85.5 %) | **72.5 % (88.5 %)** | 63.3 % (81.6 %) | 90.8 % | **91.7 %** |
+
+- **Big test: E vs D +0.7 points** with ingredients (47 fixed, 18 broken, p < 0.001), and the same on names alone.
+  - Where it came from:
+
+    | Category | Right with D | Right with E |
+    |---|---|---|
+    | Lima beans / black-eyed peas (6418) | 23 / 40 | 40 / 40 |
+    | Sour cream (8006) | 29 / 40 | 36 / 40 |
+    | Ground beef (2004) | 15 / 21 | 21 / 21 |
+    | Soft drinks (7202) | 32 / 40 | 37 / 40 |
+
+  - The losses are scattered, 1–2 per category.
+  - Caveat: the big test's answers use the same rules, so this shows the models learned the rules. That the rules are right rests on our definitions.
+- **The 200 (independent answer key): +1 product.** That is within noise, but not worse. Greek-only: unchanged top-1.
+- **Tag shortcut:** with the name rules, weak tags are right on 19 of the 27 test products that have them (was 16), mostly Greek yogurts.
+- **Still weak:** 3204 *Pasta mixed dishes*, 16 / 40, where the models say mac & cheese for 16.
+  - Most of those really are mac & cheese ("Macaroni N' Cheese Dinner", "Shells N' Cheese"). The rule doesn't match them because it reads the OFF name, which differs, and doesn't allow "N'".
+  - A wider pattern would relabel only 9 of the 1,008 pasta-dish training examples, so it was left for later.
+
+**Adopted: set E** (`trainset.CURRENT`), in the live tester and on the results page.
+
+## Result 10: training the embedding model itself (2026-11-19, owner's request)
+
+**Why:** until now the embedding models were used as downloaded. Only the classifier and the kNN memory on top learned from our labelled foods.
+
+**Quick check first: one classifier on both models' embeddings side by side** (`combined.py`, 5 min). **No gain:**
+- the vote with it scored 91.5 % on the big test (with ingredients), vs 91.7 %;
+- alone, it scored below the Qwen3 classifier on names (85.7 % vs 88.8 %).
+
+Dropped.
+
+**Fine-tuning Qwen3-Embedding-0.6B** (`finetune.py`, 77 min on this Mac, M2 Max, 9.8 GB GPU memory):
+- **What learns:** the top 8 of its 28 layers (126M weights) and a cosine classifier head, on set E's 175k texts. One pass, label smoothing 0.1, because the OFF labels are noisy.
+- **Held out:** 2 % of the OFF products, to watch progress. Their accuracy went **49 % → 78 %** with the classifier head.
+- **Use:** the fine-tuned model replaces the original Qwen3 in the same set-up: classifier + kNN on its embeddings, in the vote with Arctic kNN (`eval_finetune.py`, 50 min the first time, mostly re-embedding). The model is saved in `work/models/st/local__qwen3-0.6b-ft` (bfloat16, like the original).
+
+**Top-1 (top-3)** (sign test on the products that changed):
+
+| | 200, name + description | **200, + ingredients** | **Greek-only** | Big test, name + description | **Big test, + ingredients** |
+|---|---|---|---|---|---|
+| Vote before (original Qwen3) | 69.5 % (85.5 %) | 72.5 % (88.5 %) | 63.3 % (81.6 %) | 90.8 % (96.3 %) | 91.7 % (97.7 %) |
+| **Vote with fine-tuned Qwen3** | 70.0 % (86.5 %) | **74.0 % (89.5 %)** | **75.5 % (82.7 %)** | 91.5 % (96.5 %) | **92.9 % (97.6 %)** |
+| Fixed / broken | +12 / −11 (p = 1) | +13 / −10 (p = 0.68) | **+14 / −2 (p = 0.004)** | +101 / −73 (p = 0.04) | **+129 / −77 (p < 0.001)** |
+| Fine-tuned classifier alone | 69.5 % | **75.0 %** | 67.3 % | 90.3 % | 92.0 % |
+| Original classifier alone | 67.5 % | 71.5 % | 56.1 % | 88.8 % | 90.3 % |
+
+- **Better on every test:** clearly on the big test (+1.2 points with ingredients) and on Greek-only products (+12 points). On the 200 it is +1.5 points, which is within noise for 200 products.
+- **The Greek regression of Result 7 is gone** (63 → 75 %). Fine-tuning taught the model the Greek names the classifiers alone couldn't use well.
+- **The confident group grew:**
+
+  | Test, with ingredients | All 3 agree, before | All 3 agree, after |
+  |---|---|---|
+  | 200 | 62 % of products at 89 % | **67 %** at 87 % |
+  | Big test | 85 % at 97 % | **89 %** at 97 % |
+
+- **Caveat:** the fine-tuning labels and the big test's answers come from the same tag mapping. The 200 (independent answer key) and Greek-only results point the same way, but the 200 can't confirm 1–2 points.
+- **Not fixed:** "Organic Creamy Tomato Soup" still → broth-based (all 3 agree). Koulouri still → cookies.
+
+**Adopted: the vote with the fine-tuned Qwen3** (`vote.VOTE`: fine-tuned classifier, fine-tuned kNN, Arctic kNN), in the live tester and on the results page. The comparison scripts (`retrain.py`, `big_test.py`…) keep the original line-up (`vote.VOTE_ORIGINAL`), so Results 3–9 stay reproducible.
+- **Important for later retrains:** the fine-tuned model has learned set E's labels. After a label change, it should be fine-tuned again: 77 min + 50 min.
+
 ## Conclusion so far
 
-- **Best free set-up:** Qwen3-Embedding-0.6B (classifier) as the main model, with Arctic-embed-l-v2 as a second opinion.
-  - Since 2026-11-18 (set D), trained on: USDA foods, our definitions, and up to 1,000 OFF-labelled products per category (108k with English names, 1.3k with Greek names), each also with its ingredients when it has them.
-  - **≈ 71 % alone and 72 % as a vote, with name + description + ingredients.** 88.5 % of the time, the right answer is in the vote's top 3.
-  - **≈ 89 % right where all 3 models agree**, which is ≈ 60 % of products.
+- **Best free set-up (since 2026-11-19):** Qwen3-Embedding-0.6B **fine-tuned on our labelled foods** (classifier + kNN) as the main model, with Arctic-embed-l-v2 (kNN) as a second opinion.
+  - Training set E: USDA foods, our definitions, and up to 1,000 OFF-labelled products per category (109k with English names, 1.3k with Greek names), each also with its ingredients when it has them. Labels come from the tag mapping plus name rules.
+  - **74 % as a vote on the 200, with name + description + ingredients** (75 % for the fine-tuned classifier alone). 89.5 % of the time, the right answer is in the vote's top 3.
+  - **≈ 87 % right where all 3 models agree**, which is ≈ 67 % of the 200.
+  - On the big test (clear packaged products): 92.9 % overall, and 97 % where all 3 agree (89 % of products). Greek-only: 75.5 %.
 - **Not good enough to run unattended on everything.** It may be good enough for "accept when the models agree, look again at the rest".
-- **More training data no longer moves the vote.** The remaining errors are mostly neighbouring categories and names that say little. And the 200-product test can't show gains smaller than ≈ 5 points.
+- **On the 200, more training data no longer moves the vote.** The remaining errors are mostly neighbouring categories and names that say little.
+- **The big test (Results 8–9, ≈ 4,100 products) can show gains under 1 point.** It shows what helped:
+  - 1,000 examples per category: +3 points;
+  - ingredients: +3 points;
+  - the name rules: +0.7 points;
+  - cleaning: no effect;
+  - fine-tuning Qwen3 itself: +1.2 points (Result 10).
 
 **Possible next steps (no LLM, free), owner to choose:**
-1. **A bigger test set.** Use a few thousand OpenNutrition products whose OFF tags are strong (≈ 90 % right, 57k available) and that are not in the training data. That would show 1–2 point differences, which the 200 can't. It's needed before any more tuning.
-2. **Decide the workflow:** auto-accept when all 3 models agree (≈ 60 % of products, ≈ 89 % right), and send the rest to review or a second pass.
-3. **Strong OFF tags first:** for the products that have one (18 % of OpenNutrition, ≈ 90 % right), as measured in Result 6. Weak tags are no better than the models.
-4. **Broad OFF tags as a filter** on the models' choices, e.g. "confectioneries" → candy categories only. This covers the 153k products with only broad tags. No retraining needed; measurable on the 84 such test products.
-5. **More nutrient rules for neighbouring categories**, e.g. cream- vs broth-based soups by fat.
-6. **Rebalance the Greek examples** (give the 1.3k Greek names more weight in the classifiers), if the Greek drop in Result 7 is confirmed.
+1. **Decide the workflow:** auto-accept when all 3 models agree (≈ 67–89 % of products, ≈ 87–97 % right), and send the rest to review or a second pass, e.g. show the food group's icon (Result 10 set-up; see the owner discussion of 2026-11-19).
+2. **Strong OFF tags first:** for the products that have one (18 % of OpenNutrition, ≈ 90 % right), as measured in Result 6. Weak tags are no better than the models.
+3. **Broad OFF tags as a filter** on the models' choices, e.g. "confectioneries" → candy categories only. This covers the 153k products with only broad tags. No retraining needed; measurable on the 84 such test products.
+4. **More nutrient rules for neighbouring categories**, e.g. cream- vs broth-based soups by fat.
+5. **More label fixes from the big test's weakest categories.** Done: Result 9. Open:
+   - mac & cheese named "N' Cheese";
+   - potatoes tagged "mixed-vegetables";
+   - drinkable yogurts (1820);
+   - baking mixes and pie dough (X02);
+   - cakes vs turnovers (5502).
+   - After label fixes, fine-tune Qwen3 again (≈ 2 h unattended), since it learned set E's labels.
 
 **Live pages:**
 - results on the 200 products: http://127.0.0.1:8765/category-results

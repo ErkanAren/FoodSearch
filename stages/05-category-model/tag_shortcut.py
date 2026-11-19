@@ -4,8 +4,8 @@
 For every catalogue product we look for category tags in Open Food Facts (OFF):
   * OpenNutrition products (≈ 327k): by barcode (only packaged products have one);
   * Greek-market OFF products (26.7k, the food browser's OFF tab): their own tags.
-Tags are turned into a category with the hand-written mapping (tools/categories/off_map.py) plus the same nutrient
-rules as the models. Products whose tags conflict or don't map are left to the models.
+Tags are turned into a category with the hand-written mapping (tools/categories/off_map.py), its name rules
+(off_map.NAME_RULES, the same as for the training labels) and the same nutrient rules as the models. Products whose tags conflict or don't map are left to the models.
 
 Measures:
   1. accuracy against the answer key on the 200 test products, next to the 3-model vote;
@@ -32,7 +32,7 @@ sys.path.insert(0, str(HERE))
 import off_map  # noqa: E402
 from bench import NEVER, ON_TSV, OUT, apply_rules  # noqa: E402
 from build_off_train import FAMILY_CODES, PARQUET, nutrients  # noqa: E402
-from vote import VOTE, rank_vote  # noqa: E402
+from vote import VOTE, VOTE_ORIGINAL, rank_vote  # noqa: E402
 
 BROWSER_DB = ROOT / "work" / "browser.sqlite"
 
@@ -61,9 +61,10 @@ def main():
     pf = pq.ParquetFile(PARQUET)
     anc, _ = off_map.ancestors(pf.read(columns=["categories_tags"]).column("categories_tags").to_pylist())
     found = {}  # barcode -> (code or None, reason); "no-tags" when OFF has the product but no category tags
-    for batch in pf.iter_batches(batch_size=200_000, columns=["code", "categories_tags", "nutriments"]):
+    for batch in pf.iter_batches(batch_size=200_000, columns=["code", "product_name", "categories_tags", "nutriments"]):
         codes = batch.column("code").to_pylist()
         tags = batch.column("categories_tags").to_pylist()
+        names = batch.column("product_name").to_pylist()
         nutr_col = batch.column("nutriments")
         for i, c in enumerate(codes):
             bc = code_norm(c)
@@ -74,6 +75,7 @@ def main():
                 continue
             nutr = nutrients(nutr_col[i])
             code, why = off_map.label(tags[i], anc, nutr.get("calories"))
+            code, _ = off_map.by_name(code, [n["text"] for n in names[i] or ()])  # same name rules as the training labels
             if code in FAMILY_CODES:
                 code = apply_rules(code, nutr)
             if code in NEVER:
@@ -89,7 +91,8 @@ def main():
     sample = json.loads((OUT / "sample.json").read_text())
     truth = json.loads((OUT / "review.json").read_text())
     tv = json.loads((OUT / "text_variants.json").read_text())["predictions"]
-    vote = {p["id"]: [c for c, _ in rank_vote([tv[f"{k}|title+desc"][m][p["id"]] for k, m in VOTE])][0] for p in sample}
+    VOTE_USED = VOTE if all(f"{k}|title+desc" in tv for k, _ in VOTE) else VOTE_ORIGINAL
+    vote = {p["id"]: [c for c, _ in rank_vote([tv[f"{k}|title+desc"][m][p["id"]] for k, m in VOTE_USED])][0] for p in sample}
     rows = collections.Counter()
     by_reason = collections.defaultdict(lambda: [0, 0, 0])  # reason -> [n, tags right, vote right]
     wrong = []

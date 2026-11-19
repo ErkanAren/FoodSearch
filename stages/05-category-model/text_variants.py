@@ -25,7 +25,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from bench import CATS, MODELS, NEVER, ON_TSV, OUT, ROOT, HF_CACHE, predict, prototype_text  # noqa: E402
-from vote import VOTE, rank_vote  # noqa: E402
+from vote import VOTE_ORIGINAL as VOTE, rank_vote  # noqa: E402  (the original models, vote.py)
 
 KEYS = ["qwen3-0.6b", "arctic-l-v2"]
 

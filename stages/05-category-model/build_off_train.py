@@ -11,8 +11,11 @@ training: products with only a Greek name from that tenth form the Greek test se
 
 Retrain (owner, 2026-11-18): each example also carries its ingredients ("ingr", English for English names, Greek or
 English for Greek names, cut near 300 characters) and its "rank" within its category, so smaller sets (rank < 200) can be
-compared with the same file. Yogurts tagged only "yogurts" whose name says Greek / strained / στραγγιστό / skyr go to
-1822 *Yogurt, Greek* instead of 1820 (OFF tags miss this for most Greek strained yogurts).
+compared with the same file.
+
+Name rules (off_map.NAME_RULES, since 2026-11-18): when the tags stop at the general category, the product name decides,
+e.g. yogurts named Greek / strained / στραγγιστό -> 1822, "ground beef" tagged only "beef" -> 2004, "sour cream" tagged
+only "creams" -> 8006, mac & cheese tagged only "pasta-dishes" -> 3206, root beer under "non-alcoholic-beers" -> 7202.
 
     .venv/bin/python -I stages/05-category-model/build_off_train.py [--per-category 1000]
       -> stages/05-category-model/out/off_train.json   training examples, "lang": "en" or "el" (git-ignored)
@@ -26,7 +29,6 @@ import json
 import re
 import sys
 import time
-import unicodedata
 from pathlib import Path
 
 import pyarrow.parquet as pq
@@ -47,7 +49,6 @@ DOC = ROOT / "docs" / "OFF-CATEGORY-MAPPING.md"
 NUTR = {"fat": "total_fat", "sugars": "total_sugars", "energy-kcal": "calories"}
 FAMILY_CODES = {c for codes, _ in FAMILIES.values() for c in codes}
 GREEK = re.compile("[\u0370-\u03ff\u1f00-\u1fff]")
-STRAINED = re.compile(r"\b(greek|strained|skyr|labneh)\b|στραγγιστ|ελληνικ")  # matched on name_key(): no case, no accents
 
 
 def english_name(names):
@@ -69,10 +70,7 @@ def greek_name(names):
     return None
 
 
-def name_key(t):
-    """Case- and accent-free key: "ΚΟΥΛΟΥΡΙ" and "Κουλούρι" are the same name."""
-    t = unicodedata.normalize("NFD", t.casefold())
-    return "".join(ch for ch in t if not unicodedata.combining(ch))
+name_key = off_map.name_key  # case- and accent-free: "ΚΟΥΛΟΥΡΙ" and "Κουλούρι" are the same name
 
 
 def ingredients(entries, main_lang, langs):
@@ -116,7 +114,7 @@ def main():
     cands = collections.defaultdict(dict)  # code -> {lowercase name: (hash, barcode, name, ingredients)}
     cands_el = collections.defaultdict(dict)  # the same for Greek names
     test_el = {}  # name key -> (hash, barcode, name, code, nutrients): Greek-only products held out for testing
-    strained = 0
+    moved = collections.Counter()  # name rule -> products relabelled
     for batch in f.iter_batches(batch_size=100_000, columns=["code", "product_name", "categories_tags", "nutriments",
                                                               "unique_scans_n", "ingredients_text", "lang"]):
         codes = batch.column("code").to_pylist()
@@ -136,12 +134,12 @@ def main():
             reasons[why] += 1
             if not code:
                 continue
+            code, rule = off_map.by_name(code, [n["text"] for n in names[i] or ()])
+            if rule:
+                moved[rule] += 1
             if code in FAMILY_CODES:
                 nutr = nutr if nutr is not None else nutrients(nutr_col[i])
                 code = apply_rules(code, nutr)
-            if code == "1820" and any(STRAINED.search(name_key(n["text"] or "")) for n in names[i] or ()):
-                code = "1822"
-                strained += 1
             labelled[code] += 1
             bc = (codes[i] or "").lstrip("0")
             if bc in test_codes or code in NEVER:
@@ -160,8 +158,8 @@ def main():
                         cands_el[code][key] = (h, bc, gname, ingredients(ingr_col[i].as_py(), main_lang[i], ["el", "en"]))
                 elif not name and (key not in test_el or h < test_el[key][0]):  # realistic case: only a Greek name
                     test_el[key] = (h, bc, gname, code, nutr if nutr is not None else nutrients(nutr_col[i]))
-    print(f"labelled {sum(labelled.values()):,} products, {strained:,} strained/Greek yogurts moved 1820 -> 1822 "
-          f"({time.time() - t0:.0f}s)", flush=True)
+    print(f"labelled {sum(labelled.values()):,} products ({time.time() - t0:.0f}s); relabelled by name rules: "
+          + ", ".join(f"{k} {v:,}" for k, v in moved.most_common()), flush=True)
 
     examples = []
     for code, by_name in cands.items():
@@ -176,9 +174,9 @@ def main():
     used = collections.Counter(e["code"] for e in examples if e["lang"] == "en")
     used_el = collections.Counter(e["code"] for e in examples if e["lang"] == "el")
     english = {c: len(v) for c, v in cands.items()}
-    OUT.write_text(json.dumps({"version": "2026-11-18", "per_category": args.per_category,
+    OUT.write_text(json.dumps({"version": "2026-11-19", "name_rules": moved, "per_category": args.per_category,
                                "examples": examples}, ensure_ascii=False, indent=0))
-    GREEK_TEST.write_text(json.dumps({"version": "2026-11-18", "products": [
+    GREEK_TEST.write_text(json.dumps({"version": "2026-11-19", "products": [
         {"text": name, "code": code, "barcode": bc, "nutr": nutr} for _, bc, name, code, nutr in sorted(test_el.values())]},
         ensure_ascii=False, indent=0))
 
@@ -200,6 +198,8 @@ def main():
          f"- **Products with category tags:** {total:,}.",
          f"- **Labelled:** {sum(labelled.values()):,} ({sum(labelled.values()) / total:.0%}): "
          f"strong tag {reasons['strong']:,} · weak tag only {reasons['weak']:,} · baby {reasons['baby']:,}.",
+         f"- **Name rules** (`off_map.NAME_RULES`): when the tags stop at the general category, the product name decides. "
+         "Products relabelled: " + "; ".join(f"{k} {v:,}" for k, v in moved.most_common()) + ".",
          f"- **Skipped:** no mapped tag {reasons['unmapped']:,} · conflicting tags {reasons['conflict']:,} · "
          f"non-food {reasons['non-food']:,} · unclear (blocked) {reasons['blocked']:,} · baby, unclear {reasons['baby-unclear']:,}.",
          f"- **Training examples:** up to {args.per_category} per category, English name, de-duplicated, never a "

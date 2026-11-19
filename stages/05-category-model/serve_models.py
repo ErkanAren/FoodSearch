@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stage 05: live category tester, model side (no generative AI).
 
-Loads Qwen3-Embedding-0.6B and Arctic-embed-l-v2 once, with the training set trainset.CURRENT (USDA foods +
+Loads the vote's models once (vote.VOTE: Qwen3-Embedding-0.6B fine-tuned on our labelled foods, and Arctic-embed-l-v2), with the training set trainset.CURRENT (USDA foods +
 definition phrases + OFF products from out/off_train.json; see REPORT.md), and answers one product at a time over local HTTP.
 The page is http://127.0.0.1:8765/category-test (tools/browser/foods_browser.py forwards to this service).
 
@@ -28,7 +28,7 @@ sys.path.insert(0, str(HERE))
 from bench import CATS, HF_CACHE, MODELS, NEVER, OUT, ROOT, apply_rules, first_sentence, knn_scores  # noqa: E402
 from embstore import Store  # noqa: E402
 import trainset  # noqa: E402
-from text_variants import KEYS, compose, ingredients_text  # noqa: E402
+from text_variants import compose, ingredients_text  # noqa: E402
 from vote import VOTE, agreement, rank_vote  # noqa: E402
 
 PORT = 8766
@@ -38,9 +38,10 @@ SRC = {"fndds": "USDA food", "definition": "our definition", "off": "OFF product
 
 
 class Models:
-    def __init__(self, langs=("en", "el"), variant=None):
+    def __init__(self, langs=("en", "el"), variant=None, vote=None):
         """langs: which OFF examples to use ("en" English names, "el" Greek names); variant: a training set from
-        trainset.VARIANTS (default trainset.CURRENT). Embeddings come from the per-text cache (embstore.py)."""
+        trainset.VARIANTS (default trainset.CURRENT); vote: the vote's members (default vote.VOTE), which decide the
+        models loaded. Embeddings come from the per-text cache (embstore.py)."""
         from sentence_transformers import SentenceTransformer
 
         t0 = time.time()
@@ -48,8 +49,10 @@ class Models:
         self.classes = [c["code"] for c in cats if c["code"] not in NEVER]
         self.variant = variant or trainset.CURRENT
         self.ref_text, self.ref_code, self.ref_src, _ = trainset.build(cats, self.variant, langs)
+        self.vote = vote or VOTE
+        self.keys = list(dict.fromkeys(k for k, _ in self.vote))
         self.m, self.R, self.lr = {}, {}, {}
-        for key in KEYS:
+        for key in self.keys:
             hub, qp, _ = MODELS[key]
             local = ROOT / "work" / "models" / "st" / hub.replace("/", "__")
             model = SentenceTransformer(str(local) if (local / "config.json").exists() else hub,
@@ -95,7 +98,7 @@ class Models:
         texts = compose(name, first_sentence(description), ingredients_text(ingredients))
         names = list(texts)
         out = {v: {"text": texts[v], "models": {}, "neighbours": {}} for v in names}
-        for key in KEYS:
+        for key in self.keys:
             sim, per_method = self.scores(key, [texts[v] for v in names])
             for i, v in enumerate(names):
                 for method, scores in per_method.items():
@@ -104,7 +107,7 @@ class Models:
                     {"text": self.ref_text[j], "code": str(self.ref_code[j]), "src": SRC.get(str(self.ref_src[j]), ""),
                      "sim": round(float(sim[i, j]), 3)} for j in np.argsort(-sim[i])[:5]]
         for v in names:
-            tops = [[t["code"] for t in out[v]["models"][f"{k}|{m}"]] for k, m in VOTE]
+            tops = [[t["code"] for t in out[v]["models"][f"{k}|{m}"]] for k, m in self.vote]
             out[v]["vote"] = [{"code": c, "points": round(p, 1)} for c, p in rank_vote(tops)][:3]
             out[v]["agreement"] = agreement(tops)
         return out
@@ -161,7 +164,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok():
             return
         if self.path == "/health":
-            return self._json({"ready": True, "models": KEYS, "vote": [f"{k}|{m}" for k, m in VOTE],
+            return self._json({"ready": True, "models": MODELS_READY.keys,
+                               "vote": [f"{k}|{m}" for k, m in MODELS_READY.vote],
                                "labelled_foods": MODELS_READY.labelled, "training_set": MODELS_READY.variant,
                                "training_label": trainset.VARIANTS[MODELS_READY.variant]["label"]})
         self._json({"error": "not found"}, 404)

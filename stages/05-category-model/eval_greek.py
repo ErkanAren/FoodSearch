@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE))
 from bench import CATS, OUT  # noqa: E402
 from serve_models import Models  # noqa: E402
 from text_variants import KEYS  # noqa: E402
-from vote import LEVELS, VOTE, agreement, rank_vote  # noqa: E402
+from vote import LEVELS, VOTE_ORIGINAL as VOTE, agreement, rank_vote  # noqa: E402  (the original models, vote.py)
 
 CHECKS = ["Κουλούρι κανέλας", "Κουλούρι Θεσσαλονίκης"]  # the owner's example (no OFF tags, so not in the test set)
 RUNS = {"English names only": ("en",), "+ Greek names": ("en", "el")}
@@ -48,7 +48,7 @@ def main():
     res = {}
     for name, langs in RUNS.items():
         print(f"== {name}", flush=True)
-        models = Models(langs)
+        models = Models(langs, vote=VOTE)
         res[name] = run(models, texts, nutrs)
         del models
         gc.collect()
