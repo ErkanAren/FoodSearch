@@ -1,0 +1,2368 @@
+[
+ {
+  "q": "feta",
+  "correct": [
+   {
+    "id": "5200369610031",
+    "src": "off",
+    "name": "φέτα",
+    "brand": ""
+   },
+   {
+    "id": "5201415201609",
+    "src": "off",
+    "name": "Φέτα",
+    "brand": "epiros"
+   },
+   {
+    "id": "fd_990gGEOMxIFI",
+    "src": "on",
+    "name": "Greek Feta Cheese",
+    "brand": ""
+   },
+   {
+    "id": "5201301120304",
+    "src": "off",
+    "name": "Feta",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:20",
+  "corpus": "all",
+  "recommended_rank": 5
+ },
+ {
+  "q": "karpuzi",
+  "correct": [
+   {
+    "id": "fd_mIiGa2r9ygZ7",
+    "src": "on",
+    "name": "Watermelon",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:20",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "karpuz",
+  "correct": [
+   {
+    "id": "fd_mIiGa2r9ygZ7",
+    "src": "on",
+    "name": "Watermelon",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "orange",
+  "correct": [
+   {
+    "id": "5201005001824",
+    "src": "off",
+    "name": "Orange",
+    "brand": ""
+   },
+   {
+    "id": "5206542009692",
+    "src": "off",
+    "name": "Orange",
+    "brand": ""
+   },
+   {
+    "id": "fd_3X4K3gg7PjRB",
+    "src": "on",
+    "name": "Orange",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "orange juice",
+  "correct": [
+   {
+    "id": "fd_DqQV9mle01Ky",
+    "src": "on",
+    "name": "Fresh Orange Juice",
+    "brand": ""
+   },
+   {
+    "id": "5202908700029",
+    "src": "off",
+    "name": "Orange juice",
+    "brand": ""
+   },
+   {
+    "id": "5205941032096",
+    "src": "off",
+    "name": "Orange juice",
+    "brand": ""
+   },
+   {
+    "id": "5201083341454",
+    "src": "off",
+    "name": "Orange juice",
+    "brand": ""
+   },
+   {
+    "id": "5201171331121",
+    "src": "off",
+    "name": "Orange juice",
+    "brand": "Epsa"
+   },
+   {
+    "id": "5201469000029",
+    "src": "off",
+    "name": "Orange Juice",
+    "brand": "Lakonia"
+   },
+   {
+    "id": "fd_e1AeGq5ccEUu",
+    "src": "on",
+    "name": "Orange Juice",
+    "brand": ""
+   },
+   {
+    "id": "5206769333044",
+    "src": "off",
+    "name": "orange juice",
+    "brand": "ΧΡΙΣΤΟΔΟΥΛΟΥ"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "mantarini",
+  "correct": [
+   {
+    "id": "fd_BxPKDoA6QzNC",
+    "src": "on",
+    "name": "Tangerine",
+    "brand": ""
+   },
+   {
+    "id": "5202178085673",
+    "src": "off",
+    "name": "Mantarini",
+    "brand": "Olympos"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:23",
+  "corpus": "all",
+  "recommended_rank": 3
+ },
+ {
+  "q": "trikalino",
+  "correct": [
+   {
+    "id": "5202576302495",
+    "src": "off",
+    "name": "Trikalino Cheese",
+    "brand": "Marata"
+   },
+   {
+    "id": "5201054073421",
+    "src": "off",
+    "name": "Trikalinó",
+    "brand": "Fage"
+   },
+   {
+    "id": "5201054073483",
+    "src": "off",
+    "name": "Trikalino Semi Hard Cheese",
+    "brand": "Fage"
+   },
+   {
+    "id": "5201054004524",
+    "src": "off",
+    "name": "Τρικαλινό",
+    "brand": "ΦΆΓΕ"
+   },
+   {
+    "id": "5201054004531",
+    "src": "off",
+    "name": "τρικαλινό",
+    "brand": "ΦΑΓΕ"
+   },
+   {
+    "id": "5201054170694",
+    "src": "off",
+    "name": "Τρικαλινό Sliced semi-hard cheese",
+    "brand": "ΦΑΓΕ"
+   },
+   {
+    "id": "5201054073490",
+    "src": "off",
+    "name": "Τρικαλινό Ελαφρύ",
+    "brand": "ΦΑΓΕ"
+   },
+   {
+    "id": "5201054073445",
+    "src": "off",
+    "name": "Τρικαλινό Καπνιστό",
+    "brand": "ΦΑΓΕ"
+   },
+   {
+    "id": "5201054170700",
+    "src": "off",
+    "name": "Τρικαλινό Σε Φέτες 10%",
+    "brand": "Φάγε"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:22",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "nero",
+  "correct": [
+   {
+    "id": "fd_vTBGBPTOfgW6",
+    "src": "on",
+    "name": "Bottled Water",
+    "brand": ""
+   },
+   {
+    "id": "5203278045635",
+    "src": "off",
+    "name": "Nero",
+    "brand": ""
+   },
+   {
+    "id": "fd_yzZS3DLsLtHG",
+    "src": "on",
+    "name": "Water",
+    "brand": ""
+   },
+   {
+    "id": "5202382210335",
+    "src": "off",
+    "name": "Νερό",
+    "brand": ""
+   },
+   {
+    "id": "5202402000762",
+    "src": "off",
+    "name": "Νερο",
+    "brand": ""
+   },
+   {
+    "id": "3179732358516",
+    "src": "off",
+    "name": "Νερό",
+    "brand": "Contrex"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:23",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "bikos",
+  "correct": [
+   {
+    "id": "5201946010039",
+    "src": "off",
+    "name": "Bikos",
+    "brand": ""
+   },
+   {
+    "id": "5201946900330",
+    "src": "off",
+    "name": "Bikos cola",
+    "brand": "Βίκος"
+   },
+   {
+    "id": "5201946000023",
+    "src": "off",
+    "name": "Vikos",
+    "brand": ""
+   },
+   {
+    "id": "5201946010015",
+    "src": "off",
+    "name": "Vikos",
+    "brand": "Vikos"
+   },
+   {
+    "id": "5201946900613",
+    "src": "off",
+    "name": "Vikos cola",
+    "brand": "Βίκος"
+   },
+   {
+    "id": "5201946900095",
+    "src": "off",
+    "name": "VIKOS ORANGEADE",
+    "brand": "VIKOS"
+   },
+   {
+    "id": "5201946900798",
+    "src": "off",
+    "name": "vikos pink",
+    "brand": "ΒΙΚΟΣ"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:24",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "psomi",
+  "correct": [
+   {
+    "id": "06162894",
+    "src": "off",
+    "name": "ψωμι",
+    "brand": ""
+   },
+   {
+    "id": "5214001119042",
+    "src": "off",
+    "name": "Ψωμί",
+    "brand": "Ψωμί"
+   },
+   {
+    "id": "5206966092003",
+    "src": "off",
+    "name": "Ψωμί",
+    "brand": "Ψωμί"
+   },
+   {
+    "id": "fd_GsCTwE6gwIBy",
+    "src": "on",
+    "name": "White Bread",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:25",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "ψωμί",
+  "correct": [
+   {
+    "id": "06162894",
+    "src": "off",
+    "name": "ψωμι",
+    "brand": ""
+   },
+   {
+    "id": "5200252470063",
+    "src": "off",
+    "name": "Ψωμί",
+    "brand": "ΠΕΡΕΚ"
+   },
+   {
+    "id": "5214001119042",
+    "src": "off",
+    "name": "Ψωμί",
+    "brand": "Ψωμί"
+   },
+   {
+    "id": "5206966092003",
+    "src": "off",
+    "name": "Ψωμί",
+    "brand": "Ψωμί"
+   },
+   {
+    "id": "5214000334644",
+    "src": "off",
+    "name": "Ψωμί Μπριος",
+    "brand": "Κ"
+   },
+   {
+    "id": "4335619099579",
+    "src": "off",
+    "name": "Ψωμί Πολυσπορο",
+    "brand": "Deluxe"
+   },
+   {
+    "id": "20176815",
+    "src": "off",
+    "name": "Ψωμι Τοστ",
+    "brand": ""
+   },
+   {
+    "id": "5202336160211",
+    "src": "off",
+    "name": "Ψωμί Τοστ",
+    "brand": "ΑΒ"
+   },
+   {
+    "id": "5202576303157",
+    "src": "off",
+    "name": "Ψωμί Τοστ Σταρένιο",
+    "brand": ""
+   },
+   {
+    "id": "5201485008184",
+    "src": "off",
+    "name": "Ψωμί του τοστ",
+    "brand": ""
+   },
+   {
+    "id": "fd_GsCTwE6gwIBy",
+    "src": "on",
+    "name": "White Bread",
+    "brand": ""
+   },
+   {
+    "id": "5202336109876",
+    "src": "off",
+    "name": "Psomi Sitou AB",
+    "brand": "AB"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:26",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "spanaki",
+  "correct": [
+   {
+    "id": "fd_XwjLybfAIH0l",
+    "src": "on",
+    "name": "Spinach",
+    "brand": ""
+   },
+   {
+    "id": "fd_N9Jxrwv7yOP0",
+    "src": "on",
+    "name": "Spinach, Cooked",
+    "brand": ""
+   },
+   {
+    "id": "5202336036424",
+    "src": "off",
+    "name": "Σπανάκι",
+    "brand": ""
+   },
+   {
+    "id": "3083680836371",
+    "src": "off",
+    "name": "Σπανάκι φύλλο-φύλλο",
+    "brand": "Bonduelle"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:30",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "fasolada",
+  "correct": [
+   {
+    "id": "5205941079275",
+    "src": "off",
+    "name": "Φασολάδα",
+    "brand": "Μικρές Φάρμες Του Βουνού"
+   },
+   {
+    "id": "5200368700481",
+    "src": "off",
+    "name": "Fasolia Gigantes",
+    "brand": ""
+   },
+   {
+    "id": "5201119009150",
+    "src": "off",
+    "name": "Greek Originals Fasolada",
+    "brand": "Paliria"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:30",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "mprizola",
+  "correct": [
+   {
+    "id": "2101247007406",
+    "src": "off",
+    "name": "Μοσχαριασια μπριζολα",
+    "brand": ""
+   },
+   {
+    "id": "5201390008446",
+    "src": "off",
+    "name": "Μπριζόλα",
+    "brand": "ΝΙΚΑΣ"
+   },
+   {
+    "id": "20576813",
+    "src": "off",
+    "name": "Καπνιστή Μπριζόλα",
+    "brand": "Agroikia"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:31",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "gyro",
+  "correct": [
+   {
+    "id": "fd_7oYxcQYm9gvV",
+    "src": "on",
+    "name": "Gyro Sandwich",
+    "brand": ""
+   },
+   {
+    "id": "fd_nhWqjt9tRDvA",
+    "src": "on",
+    "name": "Lamb Gyro",
+    "brand": ""
+   },
+   {
+    "id": "5202575011312",
+    "src": "off",
+    "name": "Pork Gyros",
+    "brand": "Creta Farms"
+   },
+   {
+    "id": "5205862521556",
+    "src": "off",
+    "name": "Γύρο κοτόπουλο",
+    "brand": ""
+   },
+   {
+    "id": "5202575011329",
+    "src": "off",
+    "name": "Γύρος Κοτόπουλο",
+    "brand": "Creta Farm Foods S.A."
+   },
+   {
+    "id": "5200111405151",
+    "src": "off",
+    "name": "Γύρος Κοτόπουλο",
+    "brand": "Μέγας Γύρος"
+   },
+   {
+    "id": "5205862521020",
+    "src": "off",
+    "name": "Γύρος",
+    "brand": "Του Μπαμπα"
+   },
+   {
+    "id": "5213004644490",
+    "src": "off",
+    "name": "Chicken Gyros",
+    "brand": "BIKPE"
+   },
+   {
+    "id": "5213004642748",
+    "src": "off",
+    "name": "Chicken Gyros",
+    "brand": "Bikre"
+   },
+   {
+    "id": "5205862521037",
+    "src": "off",
+    "name": "Chicken Gyros",
+    "brand": "Του Μπαμπά"
+   },
+   {
+    "id": "5201632000542",
+    "src": "off",
+    "name": "Gyro Pita",
+    "brand": "Select"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:31",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "musaka",
+  "correct": [
+   {
+    "id": "5202336118229",
+    "src": "off",
+    "name": "Mousakas",
+    "brand": "AB"
+   },
+   {
+    "id": "5201119009174",
+    "src": "off",
+    "name": "Mousakas",
+    "brand": "Paliria"
+   },
+   {
+    "id": "fd_ujhU7CGtCfaV",
+    "src": "on",
+    "name": "Moussaka",
+    "brand": ""
+   },
+   {
+    "id": "5202576377264",
+    "src": "off",
+    "name": "Μουσακάς",
+    "brand": "Σκλαβενίτης"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:57",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "παστισιο",
+  "correct": [
+   {
+    "id": "5201911103025",
+    "src": "off",
+    "name": "Pastitsio",
+    "brand": ""
+   },
+   {
+    "id": "4056489703730",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "Chef Select"
+   },
+   {
+    "id": "5202576377271",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "ΣΚΛΑΒΕΝΙΤΗΣ"
+   },
+   {
+    "id": "5201119009181",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "Σπιτικά Παλιρια"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:57",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "kinder bueno",
+  "correct": [
+   {
+    "id": "80052760",
+    "src": "off",
+    "name": "Kinder bueno",
+    "brand": "Kinder"
+   },
+   {
+    "id": "fd_ahVTLD7dc1hl",
+    "src": "on",
+    "name": "Mini Bueno by Kinder",
+    "brand": "Kinder"
+   },
+   {
+    "id": "fd_AaWEbpWTLxtx",
+    "src": "on",
+    "name": "Bueno Chocolate Bar by Kinder",
+    "brand": "Kinder"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:42",
+  "corpus": "all",
+  "recommended_rank": 2
+ },
+ {
+  "q": "serenata",
+  "correct": [
+   {
+    "id": "5201008001104",
+    "src": "off",
+    "name": "σερενάτα γκοφρετα",
+    "brand": "μαρινοπουλος"
+   },
+   {
+    "id": "5201008994000",
+    "src": "off",
+    "name": "Serenata",
+    "brand": ""
+   },
+   {
+    "id": "5201008416366",
+    "src": "off",
+    "name": "Serenata",
+    "brand": ""
+   },
+   {
+    "id": "0049396417773",
+    "src": "off",
+    "name": "Serenata",
+    "brand": "Tottis"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:58",
+  "corpus": "all",
+  "recommended_rank": 2
+ },
+ {
+  "q": "ariani",
+  "correct": [
+   {
+    "id": "5208120000053",
+    "src": "off",
+    "name": "Αριανι",
+    "brand": ""
+   },
+   {
+    "id": "5203176200372",
+    "src": "off",
+    "name": "Ariani",
+    "brand": "Evrofarma"
+   },
+   {
+    "id": "5202082001097",
+    "src": "off",
+    "name": "Ariani",
+    "brand": "Neogal, Νεογαλ"
+   },
+   {
+    "id": "5200106870063",
+    "src": "off",
+    "name": "ariani.500ml",
+    "brand": "Farm Koukakis"
+   },
+   {
+    "id": "5202082001080",
+    "src": "off",
+    "name": "Ariani (lait battu)",
+    "brand": "Neogal, Νεογαλ"
+   },
+   {
+    "id": "5203149005027",
+    "src": "off",
+    "name": "podoph ariani",
+    "brand": ""
+   },
+   {
+    "id": "5200385103159",
+    "src": "off",
+    "name": "Ariani",
+    "brand": "Οι Φάρμες Μας"
+   },
+   {
+    "id": "5203176020352",
+    "src": "off",
+    "name": "Αριάνι",
+    "brand": "Evrofarma, Εβροφάρμα"
+   },
+   {
+    "id": "5201083321111",
+    "src": "off",
+    "name": "Αριάνι",
+    "brand": "Μευγαλ"
+   },
+   {
+    "id": "5203149005058",
+    "src": "off",
+    "name": "Αριάνι",
+    "brand": "ΡΟΔΟΠΗ"
+   },
+   {
+    "id": "0114522817807",
+    "src": "off",
+    "name": "Αριάνι",
+    "brand": "Όλυμπος"
+   },
+   {
+    "id": "5202178001154",
+    "src": "off",
+    "name": "αριάνι",
+    "brand": "Όλυμπος"
+   },
+   {
+    "id": "4056489603788",
+    "src": "off",
+    "name": "Αριάνι θράκης",
+    "brand": "Lidl"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 12:58",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "olympus juice",
+  "correct": [
+   {
+    "id": "5202178012662",
+    "src": "off",
+    "name": "Aple Orange Fruit Juice",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178012648",
+    "src": "off",
+    "name": "Apple orange 100% Fruit juice",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178004872",
+    "src": "off",
+    "name": "Apple / Orange Carrot 100% Fruit Juice",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178084362",
+    "src": "off",
+    "name": "Olympos Juice",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178003462",
+    "src": "off",
+    "name": "olympus",
+    "brand": ""
+   },
+   {
+    "id": "5202178004858",
+    "src": "off",
+    "name": "Olympus",
+    "brand": ""
+   },
+   {
+    "id": "5202178011689",
+    "src": "off",
+    "name": "olympus ice tea",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178006029",
+    "src": "off",
+    "name": "Orange 100% Natural Juice",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178080098",
+    "src": "off",
+    "name": "Orange Juice from Home",
+    "brand": "Olympus"
+   },
+   {
+    "id": "5202178300004",
+    "src": "off",
+    "name": "Χυμός Πορτοκάλι Όλυμπος",
+    "brand": "Olympus"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:00",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "burger",
+  "correct": [
+   {
+    "id": "fd_9qbnXsp0GDHu",
+    "src": "on",
+    "name": "Classic Hamburger",
+    "brand": ""
+   },
+   {
+    "id": "fd_tGaoq2iuFCt3",
+    "src": "on",
+    "name": "BBQ Burger",
+    "brand": ""
+   },
+   {
+    "id": "fd_eYe83cjkirCB",
+    "src": "on",
+    "name": "Barbecue Burger",
+    "brand": ""
+   },
+   {
+    "id": "fd_DWCmU7fvfqcb",
+    "src": "on",
+    "name": "Veggie Burger",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:03",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "yogurt",
+  "correct": [
+   {
+    "id": "5200326103309",
+    "src": "off",
+    "name": "Yogurt",
+    "brand": ""
+   },
+   {
+    "id": "5213002480359",
+    "src": "off",
+    "name": "Yogurt",
+    "brand": ""
+   },
+   {
+    "id": "fd_wmbJYzw9d44I",
+    "src": "on",
+    "name": "Nonfat Yogurt",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:03",
+  "corpus": "all",
+  "recommended_rank": 2
+ },
+ {
+  "q": "yoghurt",
+  "correct": [
+   {
+    "id": "5201704065271",
+    "src": "off",
+    "name": "Greek Yoghurt",
+    "brand": ""
+   },
+   {
+    "id": "fd_h3FvlJGiuJWK",
+    "src": "on",
+    "name": "Greek Yogurt",
+    "brand": ""
+   },
+   {
+    "id": "5201704064878",
+    "src": "off",
+    "name": "Greek yoghurt",
+    "brand": ""
+   },
+   {
+    "id": "5201054024539",
+    "src": "off",
+    "name": "Fage yoghurt",
+    "brand": "Fage"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:04",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "giaourto",
+  "correct": [
+   {
+    "id": "4056489125532",
+    "src": "off",
+    "name": "Bio γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "fd_h3FvlJGiuJWK",
+    "src": "on",
+    "name": "Greek Yogurt",
+    "brand": ""
+   },
+   {
+    "id": "5202576043985",
+    "src": "off",
+    "name": "Γιαουρτι",
+    "brand": ""
+   },
+   {
+    "id": "5201037713207",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5201054016855",
+    "src": "off",
+    "name": "Γιαουρτι",
+    "brand": ""
+   },
+   {
+    "id": "5200115770118",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5214001500376",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5203176013729",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5204139001630",
+    "src": "off",
+    "name": "Γιαουρτι 2%",
+    "brand": ""
+   },
+   {
+    "id": "5201054001240",
+    "src": "off",
+    "name": "Γιαούρτι 2%",
+    "brand": "Fage Total"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:04",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "γιαοουρτι",
+  "correct": [
+   {
+    "id": "5202576043985",
+    "src": "off",
+    "name": "Γιαουρτι",
+    "brand": ""
+   },
+   {
+    "id": "5201054016855",
+    "src": "off",
+    "name": "Γιαουρτι",
+    "brand": ""
+   },
+   {
+    "id": "5201037713207",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5214001500376",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5200106870124",
+    "src": "off",
+    "name": "Γιαουρτι",
+    "brand": ""
+   },
+   {
+    "id": "5200143060168",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": "Γιανοωτικο"
+   },
+   {
+    "id": "5200119180036",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": "ΙΜΜ"
+   },
+   {
+    "id": "5201037712651",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5203176013729",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5200115770118",
+    "src": "off",
+    "name": "Γιαούρτι",
+    "brand": ""
+   },
+   {
+    "id": "5200119180531",
+    "src": "off",
+    "name": "γιαούρτι",
+    "brand": "ΜΟΝΗ"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:04",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "ψωμι τοστ",
+  "correct": [
+   {
+    "id": "20176815",
+    "src": "off",
+    "name": "Ψωμι Τοστ",
+    "brand": ""
+   },
+   {
+    "id": "5202336160211",
+    "src": "off",
+    "name": "Ψωμί Τοστ",
+    "brand": "ΑΒ"
+   },
+   {
+    "id": "5202576303157",
+    "src": "off",
+    "name": "Ψωμί Τοστ Σταρένιο",
+    "brand": ""
+   },
+   {
+    "id": "5201673001645",
+    "src": "off",
+    "name": "Ψωμί για τοστ ψίχα",
+    "brand": "ΚΑΡΑΜΟΛΕΓΚΟΣ"
+   },
+   {
+    "id": "4056489908043",
+    "src": "off",
+    "name": "Ψωμί Για Τοστ",
+    "brand": "Σίκαλης"
+   },
+   {
+    "id": "20176808",
+    "src": "off",
+    "name": "Σταρένιο ψωμί για τοστ",
+    "brand": "Χρυσός μύλος"
+   },
+   {
+    "id": "5200385112717",
+    "src": "off",
+    "name": "Ολικής άλεσης ψωμί τόστ",
+    "brand": "Πέτρινος Φούρνος"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:05",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "ελια",
+  "correct": [
+   {
+    "id": "fd_SY7kjiwbN0XL",
+    "src": "on",
+    "name": "Black Olives",
+    "brand": ""
+   },
+   {
+    "id": "fd_LsfUIcf5ur0D",
+    "src": "on",
+    "name": "Dried Olives",
+    "brand": ""
+   },
+   {
+    "id": "fd_g7PRQWi3djBE",
+    "src": "on",
+    "name": "Green Olives",
+    "brand": ""
+   },
+   {
+    "id": "fd_7L50UxHIvWDo",
+    "src": "on",
+    "name": "Olive Oil",
+    "brand": ""
+   },
+   {
+    "id": "fd_iKBWuLAlKQFI",
+    "src": "on",
+    "name": "Light Olive Oil",
+    "brand": ""
+   },
+   {
+    "id": "fd_odrc4pkAqHvM",
+    "src": "on",
+    "name": "Olives",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:06",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "ελιες",
+  "correct": [
+   {
+    "id": "fd_SY7kjiwbN0XL",
+    "src": "on",
+    "name": "Black Olives",
+    "brand": ""
+   },
+   {
+    "id": "fd_LsfUIcf5ur0D",
+    "src": "on",
+    "name": "Dried Olives",
+    "brand": ""
+   },
+   {
+    "id": "fd_g7PRQWi3djBE",
+    "src": "on",
+    "name": "Green Olives",
+    "brand": ""
+   },
+   {
+    "id": "5201216133499",
+    "src": "off",
+    "name": "Ελιές",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:08",
+  "corpus": "all",
+  "recommended_rank": 3
+ },
+ {
+  "q": "χωριάτικη σαλάτα",
+  "correct": [
+   {
+    "id": "5200121084698",
+    "src": "off",
+    "name": "Greek salad",
+    "brand": ""
+   },
+   {
+    "id": "fd_FXJ1UnmRFwj9",
+    "src": "on",
+    "name": "Greek Salad",
+    "brand": ""
+   },
+   {
+    "id": "5200132685686",
+    "src": "off",
+    "name": "Greek salad",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:10",
+  "corpus": "all",
+  "recommended_rank": null
+ },
+ {
+  "q": "greek salad",
+  "correct": [
+   {
+    "id": "5200132685686",
+    "src": "off",
+    "name": "Greek salad",
+    "brand": ""
+   },
+   {
+    "id": "5200121084698",
+    "src": "off",
+    "name": "Greek salad",
+    "brand": ""
+   },
+   {
+    "id": "fd_FXJ1UnmRFwj9",
+    "src": "on",
+    "name": "Greek Salad",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:11",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "tiropita",
+  "correct": [
+   {
+    "id": "5202373104308",
+    "src": "off",
+    "name": "Choriatiki Tyropita",
+    "brand": ""
+   },
+   {
+    "id": "5201231002763",
+    "src": "off",
+    "name": "Spitiki Titopita",
+    "brand": ""
+   },
+   {
+    "id": "5201231100728",
+    "src": "off",
+    "name": "Tyropita",
+    "brand": ""
+   },
+   {
+    "id": "5200385100011",
+    "src": "off",
+    "name": "Τυροπιτάκια",
+    "brand": "Φουρνιστό"
+   },
+   {
+    "id": "5202678000305",
+    "src": "off",
+    "name": "Τυρόπιτα χωριάτικη με φύλλο",
+    "brand": "ΓΙΑΝΝΙΩΤΗ"
+   },
+   {
+    "id": "5201231004330",
+    "src": "off",
+    "name": "Κουρού τυροπιτάκια",
+    "brand": "Χρυσή Ζύμη"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:18",
+  "corpus": "all",
+  "recommended_rank": 3
+ },
+ {
+  "q": "merenda",
+  "correct": [
+   {
+    "id": "20416836",
+    "src": "off",
+    "name": "Merenda",
+    "brand": ""
+   },
+   {
+    "id": "5201127097323",
+    "src": "off",
+    "name": "Merenda",
+    "brand": "Ion"
+   },
+   {
+    "id": "7622201125608",
+    "src": "off",
+    "name": "Merenda",
+    "brand": "Mereda"
+   },
+   {
+    "id": "7622201126131",
+    "src": "off",
+    "name": "Merenda",
+    "brand": "Merenda"
+   },
+   {
+    "id": "57027920",
+    "src": "off",
+    "name": "Μερέντα",
+    "brand": "μαρινοπουλος"
+   },
+   {
+    "id": "7622201126032",
+    "src": "off",
+    "name": "Merenda",
+    "brand": "Pavlidis"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:18",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "gala elafry",
+  "correct": [
+   {
+    "id": "5200107080362",
+    "src": "off",
+    "name": "fresko gala elafri",
+    "brand": ""
+   },
+   {
+    "id": "5200119180098",
+    "src": "off",
+    "name": "ΓΑΛΑ ΕΛΑΦΡΥ",
+    "brand": "ΙΕΡΑ ΜΟΝΗ ΜΑΚΑΡΙΩΤΙΣΣΗΣ"
+   },
+   {
+    "id": "5201037508483",
+    "src": "off",
+    "name": "Γάλα Ελαφρύ",
+    "brand": "DELTA"
+   },
+   {
+    "id": "5202336110315",
+    "src": "off",
+    "name": "Γάλα Ελαφρύ 1.5%",
+    "brand": "AB"
+   },
+   {
+    "id": "5202178000034",
+    "src": "off",
+    "name": "Γάλα Ελαφρύ 1,5%",
+    "brand": "ΌΛΥΜΠΟΣ"
+   },
+   {
+    "id": "5206851036884",
+    "src": "off",
+    "name": "NOYNOY Family Γάλα ελαφρύ",
+    "brand": "NOYNOY"
+   },
+   {
+    "id": "5201037508902",
+    "src": "off",
+    "name": "ΔΈΛΤΑ ΦΡΈΣΚΟ ΓΆΛΑ ΕΛΑΦΡΎ",
+    "brand": "Delta"
+   },
+   {
+    "id": "5203190210043",
+    "src": "off",
+    "name": "Φρέσκο Γάλα 1% Ελαφρύ Τρίκκη",
+    "brand": "ΤΡΙΚΚΗ"
+   },
+   {
+    "id": "5201168115130",
+    "src": "off",
+    "name": "Φρέσκο γάλα Ελαφρύ 1,5%",
+    "brand": "ΔΩΔΩΝΗ"
+   },
+   {
+    "id": "5212002253635",
+    "src": "off",
+    "name": "φρέσκο γάλα ελαφρύ 1% λιπαρά",
+    "brand": "My fresco"
+   },
+   {
+    "id": "5202178050084",
+    "src": "off",
+    "name": "Φρέσκο Γάλα Επιλεγμένο Ελαφρύ 1,7%",
+    "brand": "Olympos"
+   },
+   {
+    "id": "5202178000713",
+    "src": "off",
+    "name": "Γάλα Ζωής Ελαφρυ 1.5%",
+    "brand": "Όλυμπος"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:20",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "soutzoukakia",
+  "correct": [
+   {
+    "id": "5201310003261",
+    "src": "off",
+    "name": "Soutzoukakia",
+    "brand": "Ifantis"
+   },
+   {
+    "id": "5202575004222",
+    "src": "off",
+    "name": "Σουτζουκάκια",
+    "brand": "Εν Ελλαδι"
+   },
+   {
+    "id": "5201119008429",
+    "src": "off",
+    "name": "Σουτζουκάκια Με Κριθαράκι",
+    "brand": "Paliria"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:20",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "keftedakia",
+  "correct": [
+   {
+    "id": "5213015170223",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Fitness Meals"
+   },
+   {
+    "id": "5202575004192",
+    "src": "off",
+    "name": "Κεφτεδάκια",
+    "brand": "Εν Ελλάδι"
+   },
+   {
+    "id": "5201310723589",
+    "src": "off",
+    "name": "Κεφτεδάκια Κοτόπουλο",
+    "brand": "Ifantis"
+   },
+   {
+    "id": "5201051003186",
+    "src": "off",
+    "name": "Κεφτεδάκια Με Σάλτσα Ντομάτας",
+    "brand": "ZANAE"
+   },
+   {
+    "id": "5213002030202",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Sklavenitis"
+   },
+   {
+    "id": "5201310003858",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Ifantis"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "κεφτεδάκια",
+  "correct": [
+   {
+    "id": "5202884001714",
+    "src": "off",
+    "name": "Κεφτεδάκια κοτοπουλου",
+    "brand": ""
+   },
+   {
+    "id": "5200111405823",
+    "src": "off",
+    "name": "Mega Meatless keftedakia",
+    "brand": ""
+   },
+   {
+    "id": "5202575004192",
+    "src": "off",
+    "name": "Κεφτεδάκια",
+    "brand": "Εν Ελλάδι"
+   },
+   {
+    "id": "5213002030202",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Sklavenitis"
+   },
+   {
+    "id": "5201310003858",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Ifantis"
+   },
+   {
+    "id": "5213015170223",
+    "src": "off",
+    "name": "Keftedakia",
+    "brand": "Fitness Meals"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "λιαστη ντοματα",
+  "correct": [
+   {
+    "id": "fd_vRQltwtqGHdl",
+    "src": "on",
+    "name": "Sun-Dried Tomatoes",
+    "brand": ""
+   },
+   {
+    "id": "fd_6PHgu93UK2t1",
+    "src": "on",
+    "name": "Sun-dried Tomatoes by Good & Gather",
+    "brand": "Good & Gather"
+   },
+   {
+    "id": "5204011003424",
+    "src": "off",
+    "name": "Λιαστες ντοματες",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:21",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "παστισιπ",
+  "correct": [
+   {
+    "id": "5201911103025",
+    "src": "off",
+    "name": "Pastitsio",
+    "brand": ""
+   },
+   {
+    "id": "4056489703730",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "Chef Select"
+   },
+   {
+    "id": "5202576377271",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "ΣΚΛΑΒΕΝΙΤΗΣ"
+   },
+   {
+    "id": "5201119009181",
+    "src": "off",
+    "name": "Παστίτσιο",
+    "brand": "Σπιτικά Παλιρια"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:22",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "χαλουμι",
+  "correct": [
+   {
+    "id": "5208086434374",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "5202877000649",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "5202877000700",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "5202877000687",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "5202877000724",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "5202877000717",
+    "src": "off",
+    "name": "Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "fd_DkqGFx1j24H3",
+    "src": "on",
+    "name": "Grilled Halloumi",
+    "brand": ""
+   },
+   {
+    "id": "fd_jZbJ7FbAewdD",
+    "src": "on",
+    "name": "Halloumi Cheese",
+    "brand": ""
+   },
+   {
+    "id": "4056489435174",
+    "src": "off",
+    "name": "Χαλουμι",
+    "brand": "Νωμα"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:22",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "shawarma",
+  "correct": [
+   {
+    "id": "fd_yg1mSw4td2k0",
+    "src": "on",
+    "name": "Beef Shawarma",
+    "brand": ""
+   },
+   {
+    "id": "fd_cgYO4jLv2FHs",
+    "src": "on",
+    "name": "Chicken Shawarma",
+    "brand": ""
+   },
+   {
+    "id": "fd_oMIBLS8HUcqI",
+    "src": "on",
+    "name": "Chicken Shawarma Wrap",
+    "brand": ""
+   },
+   {
+    "id": "fd_hks7IH2c9E73",
+    "src": "on",
+    "name": "Chicken Shawarma Sandwich",
+    "brand": ""
+   },
+   {
+    "id": "fd_Lp0Npw9Ao50k",
+    "src": "on",
+    "name": "Chicken Shawarma Plate",
+    "brand": ""
+   },
+   {
+    "id": "fd_Wpfo5Owlouql",
+    "src": "on",
+    "name": "Lamb Shawarma",
+    "brand": ""
+   },
+   {
+    "id": "fd_QilVC80a3wzr",
+    "src": "on",
+    "name": "Shawarma",
+    "brand": ""
+   },
+   {
+    "id": "fd_ojKeBKpelr2m",
+    "src": "on",
+    "name": "Lamb Shawarma Wrap",
+    "brand": ""
+   },
+   {
+    "id": "fd_oV937ANPNamv",
+    "src": "on",
+    "name": "Mixed Shawarma Plate",
+    "brand": ""
+   },
+   {
+    "id": "fd_Ll0QOJYf305q",
+    "src": "on",
+    "name": "Lamb Shawarma Plate",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:23",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "mpougatsa",
+  "correct": [
+   {
+    "id": "5201231003494",
+    "src": "off",
+    "name": "Bougatsa",
+    "brand": "Golden dough"
+   },
+   {
+    "id": "2381681000014",
+    "src": "off",
+    "name": "Bougatsa",
+    "brand": "Sclavenitis"
+   },
+   {
+    "id": "5213000480634",
+    "src": "off",
+    "name": "Bougatsa with cheese",
+    "brand": "Baker Master"
+   },
+   {
+    "id": "5202535477011",
+    "src": "off",
+    "name": "Bougatsa with cream vanilla",
+    "brand": "Alfa"
+   },
+   {
+    "id": "5200101172230",
+    "src": "off",
+    "name": "Greek bougatsa",
+    "brand": ""
+   },
+   {
+    "id": "4056489124603",
+    "src": "off",
+    "name": "Bougatsa with Cheese",
+    "brand": "Kardis"
+   },
+   {
+    "id": "5202576633469",
+    "src": "off",
+    "name": "Μπουγάτσα",
+    "brand": "Mapata"
+   },
+   {
+    "id": "5202535077013",
+    "src": "off",
+    "name": "Μπουγάτσα Θεσσαλονίκης",
+    "brand": "αλφα"
+   },
+   {
+    "id": "5201231003913",
+    "src": "off",
+    "name": "Μπουγάτσα Θεσσαλονίκης",
+    "brand": "Χρυσή Ζύμη"
+   },
+   {
+    "id": "5201231003517",
+    "src": "off",
+    "name": "Μπουγατσα Πραλινα",
+    "brand": "Χρυση ζυμη"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:24",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "μπουγάτσα",
+  "correct": [
+   {
+    "id": "20775780",
+    "src": "off",
+    "name": "Μπουγάτσα με κρεμα",
+    "brand": "Deep"
+   },
+   {
+    "id": "5201231003913",
+    "src": "off",
+    "name": "Μπουγάτσα Θεσσαλονίκης",
+    "brand": "Χρυσή Ζύμη"
+   },
+   {
+    "id": "5202535077013",
+    "src": "off",
+    "name": "Μπουγάτσα Θεσσαλονίκης",
+    "brand": "αλφα"
+   },
+   {
+    "id": "5203278054170",
+    "src": "off",
+    "name": "Μίνι στριφτά μπουγατσακια",
+    "brand": ""
+   },
+   {
+    "id": "5202576633469",
+    "src": "off",
+    "name": "Μπουγάτσα",
+    "brand": "Mapata"
+   },
+   {
+    "id": "5203278056273",
+    "src": "off",
+    "name": "Μπουγατσα με Μυζηθρα Και Φετα",
+    "brand": "Μπουγατσα Θεσσαλονικης"
+   },
+   {
+    "id": "5201231003517",
+    "src": "off",
+    "name": "Μπουγατσα Πραλινα",
+    "brand": "Χρυση ζυμη"
+   },
+   {
+    "id": "5202535077051",
+    "src": "off",
+    "name": "Μπουγάτσα Με Κρέμα Και Σοκολατα",
+    "brand": "Alfa"
+   },
+   {
+    "id": "5201063056750",
+    "src": "off",
+    "name": "νηστίσιμη μπουγάτσα με κρέμα",
+    "brand": "κανάκι"
+   },
+   {
+    "id": "5201231003494",
+    "src": "off",
+    "name": "Bougatsa",
+    "brand": "Golden dough"
+   },
+   {
+    "id": "2381681000014",
+    "src": "off",
+    "name": "Bougatsa",
+    "brand": "Sclavenitis"
+   },
+   {
+    "id": "4056489124603",
+    "src": "off",
+    "name": "Bougatsa with Cheese",
+    "brand": "Kardis"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:24",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "μεβγαλ",
+  "correct": [
+   {
+    "id": "5201083346367",
+    "src": "off",
+    "name": "Mevgal Caffè",
+    "brand": "Mevgal"
+   },
+   {
+    "id": "5201083349177",
+    "src": "off",
+    "name": "Mevgal Greek Yogurt",
+    "brand": "Mevgal"
+   },
+   {
+    "id": "5201083350418",
+    "src": "off",
+    "name": "Mevgal Greek Yogurt Lemon",
+    "brand": "Mevgal"
+   },
+   {
+    "id": "5201083352962",
+    "src": "off",
+    "name": "Mevgal maniacs banana",
+    "brand": ""
+   },
+   {
+    "id": "0005354334313",
+    "src": "off",
+    "name": "Mevgal mozzarella σε φετες",
+    "brand": ""
+   },
+   {
+    "id": "5201083351682",
+    "src": "off",
+    "name": "Mevgal maniacs bluey banana",
+    "brand": "Mevgal"
+   },
+   {
+    "id": "5201083352979",
+    "src": "off",
+    "name": "Mevgal maniacs fraoula",
+    "brand": ""
+   },
+   {
+    "id": "0267084335231",
+    "src": "off",
+    "name": "Γαλα ΜΕΒΓΑΛ",
+    "brand": "Μεβγαλ"
+   },
+   {
+    "id": "5201083347111",
+    "src": "off",
+    "name": "ΜΕΒΓΑΛ Créme Σοκολάτα",
+    "brand": "ΜΕΒΓΑΛ"
+   },
+   {
+    "id": "5201083349603",
+    "src": "off",
+    "name": "Μεβγαλ frutomaniacs μπανανα",
+    "brand": ""
+   },
+   {
+    "id": "5201083348330",
+    "src": "off",
+    "name": "ΜΕΒΓΑΛ Harmony Λεμονι",
+    "brand": ""
+   },
+   {
+    "id": "5201083348293",
+    "src": "off",
+    "name": "ΜΕΒΓΑΛ Harmony Φραουλα",
+    "brand": ""
+   },
+   {
+    "id": "5201083348378",
+    "src": "off",
+    "name": "ΜΕΒΓΑΛ Harmony φρουτα δασους",
+    "brand": ""
+   },
+   {
+    "id": "5201083347135",
+    "src": "off",
+    "name": "ΜΕΒΓΑΛ ΓΑΛΑ LOVE MILK",
+    "brand": ""
+   },
+   {
+    "id": "5201083347371",
+    "src": "off",
+    "name": "μεβγαλ γάλα βρώμης",
+    "brand": "μεβγαλ"
+   },
+   {
+    "id": "5201083338638",
+    "src": "off",
+    "name": "Ξινόγαλο",
+    "brand": "ΜΕΒΓΑΛ"
+   },
+   {
+    "id": "5201083352382",
+    "src": "off",
+    "name": "Στρατσιατελα",
+    "brand": "Μεβγαλ"
+   },
+   {
+    "id": "5201083349474",
+    "src": "off",
+    "name": "Μεβγαλ μοτσαρέλα τριμμένη 150γρ",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:25",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "cheescake",
+  "correct": [
+   {
+    "id": "fd_iZ3t0NGdmIfD",
+    "src": "on",
+    "name": "Cheesecake",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:27",
+  "corpus": "all",
+  "recommended_rank": null
+ },
+ {
+  "q": "lacta",
+  "correct": [
+   {
+    "id": "5201057011437",
+    "src": "off",
+    "name": "lacta",
+    "brand": ""
+   },
+   {
+    "id": "5201057011383",
+    "src": "off",
+    "name": "Lacta",
+    "brand": "Lacta"
+   },
+   {
+    "id": "7622210683021",
+    "src": "off",
+    "name": "lacta",
+    "brand": "Lacta"
+   },
+   {
+    "id": "7622210995261",
+    "src": "off",
+    "name": "lacta brownie",
+    "brand": ""
+   },
+   {
+    "id": "7622201462130",
+    "src": "off",
+    "name": "Lacta cream",
+    "brand": ""
+   },
+   {
+    "id": "7622210337276",
+    "src": "off",
+    "name": "Lacta gofreta",
+    "brand": "Lacta"
+   },
+   {
+    "id": "7104657071437",
+    "src": "off",
+    "name": "Lacta fountoki",
+    "brand": ""
+   },
+   {
+    "id": "7622210834034",
+    "src": "off",
+    "name": "Lacta Sandwich",
+    "brand": "Lacta"
+   },
+   {
+    "id": "7622210660084",
+    "src": "off",
+    "name": "Lacta mini",
+    "brand": "Lacta"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:28",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "ion",
+  "correct": [
+   {
+    "id": "5201127012135",
+    "src": "off",
+    "name": "Ion Amygdalou",
+    "brand": "Ion"
+   },
+   {
+    "id": "5201127019523",
+    "src": "off",
+    "name": "Ion break",
+    "brand": ""
+   },
+   {
+    "id": "5201127013873",
+    "src": "off",
+    "name": "ION Break",
+    "brand": "ION"
+   },
+   {
+    "id": "5201127022080",
+    "src": "off",
+    "name": "ion karamelomena",
+    "brand": ""
+   },
+   {
+    "id": "5201127080233",
+    "src": "off",
+    "name": "ION PROTEIN",
+    "brand": "ION"
+   },
+   {
+    "id": "5201127013729",
+    "src": "off",
+    "name": "Ion Milk",
+    "brand": ""
+   },
+   {
+    "id": "5201127085306",
+    "src": "off",
+    "name": "ION Wafer Cocoa Stevia",
+    "brand": "ION"
+   },
+   {
+    "id": "5012501012029",
+    "src": "off",
+    "name": "Ion Αμυγδάλου Γάλακτος",
+    "brand": "ION"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:28",
+  "corpus": "all",
+  "recommended_rank": 2
+ },
+ {
+  "q": "banana",
+  "correct": [
+   {
+    "id": "fd_AjQa9nlOUTns",
+    "src": "on",
+    "name": "Banana",
+    "brand": ""
+   },
+   {
+    "id": "2000000135533",
+    "src": "off",
+    "name": "Μπανάνα",
+    "brand": ""
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:30",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "melomakarona",
+  "correct": [
+   {
+    "id": "5200100954592",
+    "src": "off",
+    "name": "Μελομακάρονα",
+    "brand": "Βιολάντα"
+   },
+   {
+    "id": "5200338228441",
+    "src": "off",
+    "name": "μελομακάρονα",
+    "brand": ""
+   },
+   {
+    "id": "5201383506201",
+    "src": "off",
+    "name": "MELOMAKARONA",
+    "brand": ""
+   },
+   {
+    "id": "5200338228496",
+    "src": "off",
+    "name": "μελομακάρονα με λευκη σοκολατα",
+    "brand": ""
+   },
+   {
+    "id": "5200338228489",
+    "src": "off",
+    "name": "μελομακάρονα με μαύρη σοκολάτα",
+    "brand": ""
+   },
+   {
+    "id": "5201383505181",
+    "src": "off",
+    "name": "Μελομακάρονα Με Σοκολάτα",
+    "brand": "Φαίδων"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:33",
+  "corpus": "all",
+  "recommended_rank": 1
+ },
+ {
+  "q": "μελομακάρονα",
+  "correct": [
+   {
+    "id": "5200100954592",
+    "src": "off",
+    "name": "Μελομακάρονα",
+    "brand": "Βιολάντα"
+   },
+   {
+    "id": "5200338228441",
+    "src": "off",
+    "name": "μελομακάρονα",
+    "brand": ""
+   },
+   {
+    "id": "5200338228496",
+    "src": "off",
+    "name": "μελομακάρονα με λευκη σοκολατα",
+    "brand": ""
+   },
+   {
+    "id": "5200338228489",
+    "src": "off",
+    "name": "μελομακάρονα με μαύρη σοκολάτα",
+    "brand": ""
+   },
+   {
+    "id": "5201383505181",
+    "src": "off",
+    "name": "Μελομακάρονα Με Σοκολάτα",
+    "brand": "Φαίδων"
+   },
+   {
+    "id": "5201383506201",
+    "src": "off",
+    "name": "MELOMAKARONA",
+    "brand": ""
+   },
+   {
+    "id": "5201383505761",
+    "src": "off",
+    "name": "melomakarona",
+    "brand": "FAIDON"
+   },
+   {
+    "id": "5201383500261",
+    "src": "off",
+    "name": "MELOMAKARONA",
+    "brand": "FEDON"
+   },
+   {
+    "id": "5214000505167",
+    "src": "off",
+    "name": "Melomakarona",
+    "brand": "Θεανώ"
+   }
+  ],
+  "note": "",
+  "reviewer": "",
+  "date": "2026-11-19 13:41",
+  "corpus": "all",
+  "recommended_rank": 1
+ }
+]

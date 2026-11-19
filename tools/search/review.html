@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Review</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --line: #e3e3de;
+    --accent: #2f6fdb; --accent-text: #ffffff; --ok: #1f8a4c; --ok-bg: #e6f4ec; --bad: #b3261e; --bad-bg: #fbeae9;
+    --chip: #efefea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161615; --panel: #1f1f1d; --text: #ecece8; --muted: #9a9a93; --line: #33332f;
+      --accent: #7aa7ff; --accent-text: #0d1a33; --ok: #5cc98a; --ok-bg: #173324; --bad: #f08a83; --bad-bg: #3a1b19;
+      --chip: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 22px 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=search], input[type=text] { font-size: 16px; padding: 9px 11px; border: 1px solid var(--line);
+         border-radius: 8px; background: var(--panel); color: var(--text); min-width: 0; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #q { flex: 1 1 320px; font-size: 17px; }
+  #who { flex: 0 1 200px; }
+  #note, #findq { flex: 1 1 260px; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--text);
+           padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .list { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .item { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line);
+          cursor: pointer; align-items: start; }
+  .item:last-child { border-bottom: 0; }
+  .item.on { background: var(--ok-bg); }
+  .item input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ok); }
+  .name { overflow-wrap: anywhere; }
+  .small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .empty { padding: 12px; color: var(--muted); font-size: 14px; }
+  .actions { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0 4px; display: flex; gap: 8px;
+             flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); margin-top: 12px; }
+  #msg { font-size: 14px; color: var(--muted); }
+  .badge { padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  .feedback { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+              margin-top: 12px; font-size: 14px; }
+  .feedback ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line);
+          border-radius: 10px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.q { overflow-wrap: anywhere; }
+  .link { border: 0; background: none; color: var(--accent); padding: 0 4px; cursor: pointer; font-size: 13px; }
+  .stats { font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+  .stats b { color: var(--text); }
+  .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Search review</h1>
+  <p class="sub">Type a search the way a user would. Tick <b>every</b> product that is a right answer, then press
+    <b>Save</b>. If none is right, find the right product below, or press <b>None is right</b>. The list mixes the results
+    of every search method and is sorted A→Z, so you judge the products, not the ranking. Each saved search becomes a
+    test case.</p>
+  <div class="row">
+    <input id="who" type="text" placeholder="Your name (optional)" autocomplete="name">
+    <a href="/" class="small">Compare page →</a>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <input id="q" type="search" placeholder="e.g. ψωμι, koulouri, γαλα ελαφρυ" autocomplete="off" autofocus>
+  </div>
+  <p id="state" class="stats"></p>
+
+  <div id="pool" class="list"><div class="empty">Type a search.</div></div>
+
+  <h2>Not in the list? Find the right product</h2>
+  <div class="row">
+    <input id="findq" type="search" placeholder="Search by its name or brand" autocomplete="off">
+  </div>
+  <div id="found" class="list" style="margin-top:8px"><div class="empty">Results appear here.</div></div>
+
+  <div class="actions">
+    <input id="note" type="text" placeholder="What did you mean? (optional, e.g. plain white bread)">
+    <button id="save" class="primary" type="button" disabled>Save</button>
+    <button id="none" type="button" disabled>None is right</button>
+    <span id="msg"></span>
+  </div>
+  <div id="feedback"></div>
+
+  <h2>Reviewed searches</h2>
+  <p id="stats" class="stats"></p>
+  <div class="scroll"><table id="reviews"><tbody><tr><td class="empty">None yet.</td></tr></tbody></table></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  for (const k of kids) n.append(k);
+  return n;
+};
+const picked = new Map();   // id -> item
+let current = "", seq = 0, timer = null, findTimer = null;
+
+try { $("who").value = localStorage.getItem("review_who") || ""; } catch (e) {}
+$("who").addEventListener("change", () => { try { localStorage.setItem("review_who", $("who").value); } catch (e) {} });
+
+function srcLabel(r) { return r.src === "off" ? "Open Food Facts" : `OpenNutrition · ${r.type}`; }
+
+function itemRow(r) {
+  const box = el("input", { type: "checkbox", "aria-label": "Right answer" });
+  box.checked = picked.has(r.id);
+  const row = el("label", { class: "item" + (box.checked ? " on" : "") }, box,
+    el("div", {}, el("div", { class: "name" }, r.name || "(no name)"),
+                  el("div", { class: "small" }, [r.brand, srcLabel(r)].filter(Boolean).join(" · "))));
+  box.addEventListener("change", () => {
+    if (box.checked) picked.set(r.id, r); else picked.delete(r.id);
+    syncRows(); updateButtons();
+  });
+  row.dataset.id = r.id;
+  return row;
+}
+
+function syncRows() {
+  for (const row of document.querySelectorAll(".item")) {
+    const on = picked.has(row.dataset.id);
+    row.classList.toggle("on", on);
+    row.querySelector("input").checked = on;
+  }
+}
+
+function fill(list, items, emptyText) {
+  list.replaceChildren(...(items.length ? items.map(itemRow) : [el("div", { class: "empty" }, emptyText)]));
+}
+
+function updateButtons() {
+  const has = !!current.trim();
+  $("save").disabled = !has || picked.size === 0;
+  $("none").disabled = !has;
+  $("save").textContent = picked.size ? `Save (${picked.size} right)` : "Save";
+}
+
+async function loadPool(q) {
+  const my = ++seq;
+  current = q;
+  try { history.replaceState(null, "", q ? "#q=" + encodeURIComponent(q) : "#"); } catch (e) {}
+  picked.clear();
+  $("feedback").replaceChildren(); $("msg").textContent = "";
+  if (!q.trim()) { fill($("pool"), [], "Type a search."); $("state").textContent = ""; updateButtons(); return; }
+  $("pool").replaceChildren(el("div", { class: "empty" }, "Searching…"));
+  const res = await (await fetch("/api/pool?q=" + encodeURIComponent(q))).json();
+  if (my !== seq) return;
+  if (res.saved) {
+    for (const c of res.saved.correct) picked.set(c.id, c);
+    $("note").value = res.saved.note || "";
+    $("state").replaceChildren("Already reviewed", res.saved.reviewer ? ` by ${res.saved.reviewer}` : "",
+      ` on ${res.saved.date}: `, el("b", {}, res.saved.correct.length ? `${res.saved.correct.length} right` : "none is right"),
+      ". Saving again replaces it.");
+  } else {
+    $("note").value = "";
+    $("state").textContent = `${res.items.length} products from all methods, A→Z.`;
+  }
+  fill($("pool"), res.items, "No results from any method. Find the right product below, or press None is right.");
+  // picked products that came from "find" earlier are not in the pool: show them in the find list
+  const extra = [...picked.values()].filter((p) => !res.items.some((i) => i.id === p.id));
+  if (extra.length) fill($("found"), extra, "");
+  updateButtons();
+}
+
+async function find(q) {
+  if (!q.trim()) { fill($("found"), [], "Results appear here."); return; }
+  const res = await (await fetch("/api/find?q=" + encodeURIComponent(q))).json();
+  fill($("found"), res.items, "Nothing found.");
+}
+
+async function save(none) {
+  if (!current.trim()) return;
+  const body = { q: current, correct: none ? [] : [...picked.keys()], note: $("note").value, reviewer: $("who").value };
+  $("save").disabled = $("none").disabled = true;
+  $("msg").textContent = "Saving…";
+  const res = await (await fetch("/api/review", { method: "POST", headers: { "Content-Type": "application/json" },
+                                                  body: JSON.stringify(body) })).json();
+  if (res.error) { $("msg").textContent = res.error; updateButtons(); return; }
+  $("msg").textContent = `Saved (${res.count} reviewed).`;
+  const fb = el("div", { class: "feedback" });
+  if (!res.saved.correct.length) {
+    fb.append("Saved as ", el("b", {}, "none is right"), ": a gap in the data, not counted in the scores.");
+  } else {
+    const rec = res.ranks.find((x) => x.recommended);
+    if (rec) fb.append("Recommended search: ", rec.rank ? el("span", { class: "badge " + (rec.rank <= 5 ? "ok" : "bad") },
+      `right product at #${rec.rank}`) : el("span", { class: "badge bad" }, "not in its top 10"));
+    fb.append(el("ul", {}, ...res.ranks.map((x) => el("li", {}, `${x.label}: ${x.rank ? "#" + x.rank : "not in top 10"}`))));
+  }
+  $("feedback").replaceChildren(fb);
+  updateButtons();
+  loadReviews();
+}
+
+async function loadReviews() {
+  const { reviews } = await (await fetch("/api/reviews")).json();
+  const judged = reviews.filter((r) => r.correct.length);
+  const top1 = judged.filter((r) => r.recommended_rank === 1).length;
+  const top5 = judged.filter((r) => r.recommended_rank && r.recommended_rank <= 5).length;
+  $("stats").replaceChildren(el("b", {}, String(reviews.length)), " reviewed · ");
+  if (judged.length) {
+    $("stats").append("recommended search, when reviewed: first right ", el("b", {}, `${Math.round(100 * top1 / judged.length)}%`),
+      ", in top 5 ", el("b", {}, `${Math.round(100 * top5 / judged.length)}%`), ` (of ${judged.length})`);
+  }
+  if (reviews.length - judged.length) $("stats").append(` · ${reviews.length - judged.length} with none right`);
+  const head = el("tr", {}, el("th", {}, "#"), el("th", {}, "Search"), el("th", {}, "Right products"),
+                  el("th", {}, "Recommended"), el("th", {}, "By"), el("th", {}, ""));
+  const rows = reviews.map((r, i) => {
+    const edit = el("button", { class: "link", type: "button" }, "Edit");
+    edit.onclick = () => { $("q").value = r.q; loadPool(r.q); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    const del = el("button", { class: "link", type: "button" }, "Delete");
+    del.onclick = async () => {
+      if (!confirm(`Delete the review of "${r.q}"?`)) return;
+      await fetch("/api/review/delete", { method: "POST", headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ q: r.q }) });
+      loadReviews();
+    };
+    const rank = !r.correct.length ? el("span", { class: "small" }, "none right")
+      : r.recommended_rank ? el("span", { class: "badge " + (r.recommended_rank <= 5 ? "ok" : "bad") }, `#${r.recommended_rank}`)
+      : el("span", { class: "badge bad" }, "missed");
+    const names = r.correct.map((c) => c.name).slice(0, 3).join(" · ") + (r.correct.length > 3 ? ` +${r.correct.length - 3}` : "");
+    return el("tr", {}, el("td", { class: "small" }, `r${String(i + 1).padStart(3, "0")}`), el("td", { class: "q" }, r.q),
+              el("td", { class: "small" }, names || "—"), el("td", {}, rank), el("td", { class: "small" }, r.reviewer || ""),
+              el("td", {}, edit, del));
+  });
+  $("reviews").replaceChildren(el("thead", {}, head), el("tbody", {}, ...(rows.length ? rows.reverse() :
+    [el("tr", {}, el("td", { class: "empty", colspan: "6" }, "None yet."))])));
+}
+
+$("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => loadPool($("q").value), 350); });
+$("findq").addEventListener("input", () => { clearTimeout(findTimer); findTimer = setTimeout(() => find($("findq").value), 300); });
+$("save").onclick = () => save(false);
+$("none").onclick = () => save(true);
+
+const fromHash = new URLSearchParams(location.hash.slice(1)).get("q");
+if (fromHash) { $("q").value = fromHash; loadPool(fromHash); }
+loadReviews();
+updateButtons();
+</script>
+</body>
+</html>

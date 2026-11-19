@@ -24,6 +24,7 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
 | E15 | Hybrid search: BM25 + semantic (embeddings) | KR3.5, KR4.1 | 🔄 (results in: +3 points, gate not met; decision pending) |
 | E16 | Greek queries on English-only products: offline Greek index vs query translation | KR3.5, KR4.1 | ✅ results in (offline word index wins); decision pending |
 | E17 | Re-ranking: the right item first (closest name, generic before branded, typo-tolerant) | KR3.5, KR4.1 | ✅ results in; decision pending |
+| E18 | Honest search testing: review page for real searches + automatic known-item test | KR3.5 | 🟡 tools built; reviews needed |
 
 ---
 
@@ -434,6 +435,67 @@ One card per experiment. Write the **hypothesis before running**, then fill in t
     - `καρυδια`: the Greek product "Καρύδια" instead of generic "Walnuts", because walnut and coconut share the Greek stem καρυδ-.
   - The 97 % top-5 is lower than the earlier 98 % only because of q123.
 - **Decision (proposed):** use `rrg:kw_el:words` as the no-model search: 80 % first result right, 88 % top 5, ~6 ms per search on one core. The app could also show two sections, "Foods" (generic) and "Brands", using the same generic flag.
+
+## E18: Honest search testing 🟡 (tools built, reviews needed)
+- **Problem (2026-11-19):** the 123-query test set was written by the same person who tuned the search, so its 93 % / 98 % is optimistic.
+- **Method:** two new tests in the search lab.
+  1. **Review page** (`serve`, then http://127.0.0.1:8767/review).
+     - A reviewer types a search the way a user would and ticks **every** right product. The list mixes all served methods' top 10, sorted A→Z, so they judge the products, not one method's ranking.
+     - "Find the right product" covers products the search missed. "None is right" records a data gap.
+     - Saved to `tools/search/reviews.json`. `eval` counts each saved search as a test query of kind `reviewed`.
+     - `--host 0.0.0.0` lets other people on the same network review. There's no login, so use it only on a trusted network.
+  2. **Known-item test** (`knownitem`).
+     - It samples 1,000 products with 1–4-word names: 250 each from OFF Greek names, OFF Latin names, OpenNutrition plain foods and OpenNutrition branded.
+     - Each product is searched as typed (lower case, no accents), in Greeklish (Greek names, two common styles) and with one typo.
+     - Right = the product, or another with the same name, in the top 5. The seed is fixed, so runs can be compared.
+- **First known-item run (`--corpus all`, seed 1, 2,212 searches):**
+
+  | Method | hit@1 | hit@5 | hit@10 | mean ms | p95 ms |
+  |---|---|---|---|---|---|
+  | `bm25` | 39 % | 44 % | 45 % | 1.9 | 5.5 |
+  | `kw_el:words` | 42 % | 51 % | 52 % | 1.5 | 4.0 |
+  | **`rrg:kw_el:words`** | **82 %** | **91 %** | 92 % | 21.8 | 65 |
+
+  - **Typos:** 0–5 % → **91–95 %** with re-ranking. Names as typed: 92–100 %.
+  - **Greek product names typed in Greeklish: 62 %**, the weak spot. Of 96 misses:
+    - About a third are not real misses: the search returned the same food under another name (`spanaki` → Spinach, `roka` → Arugula, `voutyro` → Butter, `ryzi basmati` → Basmati Rice).
+    - **36 return nothing.** These are multi-word names whose Greeklish spelling and Greek name reduce to different forms:
+      - typed au / ay vs αυ = av: `ayra`, `taygetou`;
+      - the "nt" in "nth" read as ντ = d: `anthrakouxo`;
+      - the ending -ων / -on not removed on the Latin side: `lahanikon`, `katepsygmenon`;
+      - two endings removed on the Greek side but one on the Latin side: `danias` vs Δανίας.
+    - These are fixable in the Greeklish matching (not done yet).
+  - **Misses that are by design:** for a branded product named after a plain food (Ρόκα, Σπανάκι, "Ice Cream by Meijer"), "plain food first" puts the generic item first (Arugula, Spinach, Coffee Ice Cream…).
+  - **Speed:** slower than in `eval` (mean 22 ms, p95 65 ms), because a third of these searches have a typo and take the slower typo path (trigram index).
+- **First reviewed searches (2026-11-19, 50 by the owner, `reviewed` in `eval`):**
+  - **At review time:** the recommended search had the right product first in 39 (78 %) and in the top 5 in 48 (96 %). Plain BM25 had 60 % in the top 5.
+  - **Four real problems found and fixed:**
+    - `χωριάτικη σαλάτα` returned nothing. Phrase fix: greek salad → χωριάτικη σαλάτα. It had been failing as q072 too.
+    - `cheescake` showed 9 branded products whose names contain the same typo, and no Cheesecake. New: when no plain food matches the words, plain foods are also looked up by spelling (`generic_tri`, a trigram index of the ~9 k generic names).
+      - They must be ≥ 0.8 similar to be added (`SPELLING_MIN_SIM`), so tiropita ≠ Tropical Smoothie.
+      - They go above branded products only at ≥ 0.85 (`SPELLING_FIRST_MIN_SIM`), so `fasolada` keeps Φασολάδα first rather than "Fasolia".
+    - `feta` → "Fattoush" first: fattoush was translated φεττούς, which looks like φέτα in Greeklish. Fixed to φατούς.
+    - `tiropita` → cheese crackers first: cheese-flavored was translated τυρόπιτα. Fixed to "με γεύση τυρί", and fruit-flavored to "με γεύση φρούτων".
+  - **After the fixes:** your 50 searches have the right product first in **43 (86 %)** and in the top 5 in **50 (100 %)**. On all 173 test queries: 93 % / 99 %. Known-item: 91 % top 5 (plain-food typos 95 → 98 %). Only improvements against the previous run.
+  - **Seven searches still don't have the right product first.**
+    - `feta` is at #4: Feta Cheese is shown first, but only other feta products were ticked.
+    - In the other six, the product shown first wasn't ticked: Serenata, ΙΟΝ, Olives, Whole Milk Yogurt, Mandarin Oranges, Kinder Bueno by Tic Tac. These could be right answers; check them with Edit on the review page.
+- **Greeklish spelling fix (2026-11-19):** the known-item misses showed four mismatches between a typed Greeklish word and the Greek name. All four are fixed in the skeleton rules (`GREEKLISH_VERSION` 3; the Greeklish index rebuilds itself when the rules change):
+  - typed au / ay and eu / ey now read as av / ev, like αυ / ευ (`ayra` = αύρα, `taygetou` = Ταϋγέτου);
+  - "nt" reads as ντ = d except before h (`anthrakouxo` = ανθρακούχο);
+  - a typed word loses up to two endings, as the Greek side already did (`danias` = Δανίας);
+  - a typed "-on" is tried both as the ending -ων and as part of the word: `lahanikon` = λαχανικών, `zampon` = ζαμπόν.
+    - A first version also removed -on on the Greek side. It made μπέικον (bacon) look like `bikos`, so plain bacon came first for the Bikos water brand. The reviewed search r009 caught that before it shipped.
+  - **Result:**
+    - Known-item: Greek names typed in Greeklish 62 → **75 %**; overall 91 → **93 %**.
+    - 33 misses fixed. One new miss: `penne rigae` finds the Greek product "Πέννες Ριγέ", which is arguably right.
+    - Main test: 93 % / 99 %, unchanged. Reviewed searches: 86 % first, 100 % top 5. Only one result changed: `mpougatsa` now shows Μπουγάτσα first.
+  - **Still not found (17 Greeklish searches with no results):**
+    - about 10 mixed Latin + Greek names ("CHEDDAR ΣΕ ΦΕΤΕΣ", "Trata τόνος σε ηλιέλαιο"), because the Greeklish index holds only Greek words;
+    - about 4 names with numbers ("Γάλα Ελαφρύ 1,5%");
+    - 3 odd spellings ("strangisto" for στραγγιστό).
+    - Possible next step: also index the product's Latin words and numbers in the Greeklish index.
+- **Decision:** run `knownitem` after every search change, with the same seed, to catch anything that gets worse. Use the review page to build a real test set: target 50+ searches from people other than the developer. Judge KR3.5 on the `reviewed` searches.
 
 ---
 

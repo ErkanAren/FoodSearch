@@ -39,11 +39,15 @@
     "chard": "σέσκουλο",
     "breaded": "πανέ",
     "breading": "πανάρισμα",
-    "breadsticks": "κριτσίνια"
+    "breadsticks": "κριτσίνια",
+    "fattoush": "φατούς",
+    "cheese-flavored": "με γεύση τυρί",
+    "fruit-flavored": "με γεύση φρούτων"
   },
   "phrases": {
     "ice cream": "παγωτό",
     "ground beef": "κιμάς μοσχαρίσιος",
-    "beef ground": "κιμάς μοσχαρίσιος"
+    "beef ground": "κιμάς μοσχαρίσιος",
+    "greek salad": "χωριάτικη σαλάτα"
   }
 }

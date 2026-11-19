@@ -88,7 +88,20 @@ python3 -I tools/search/search_lab.py eval $C     # keyword methods → work/sea
 
 # Re-ranking (E17): prefix any method with rr: to put the closest name / generic food first (no model, ~2 ms)
 .venv/bin/python -I tools/search/search_lab.py serve $C --methods bm25,kw_el:words,rr:kw_el:words,rr:hyb_el:words:e5-small
+
+# Testing (E18)
+.venv/bin/python -I tools/search/search_lab.py serve $C --methods bm25,kw_el:words,rrg:kw_el:words   # review page: http://127.0.0.1:8767/review
+.venv/bin/python -I tools/search/search_lab.py knownitem $C   # automatic: ~2,300 searches made from 1,000 product names
 ```
+
+- **Review page (`/review`):**
+  - Type a search the way a user would, tick every right product, and save.
+  - Each saved search goes to `tools/search/reviews.json` and counts in `eval` as kind `reviewed`. That's the honest score.
+  - To let others on your network use it, start `serve` with `--host 0.0.0.0` and share `http://<this Mac's IP>:8767/review`. Only do this on a network you trust: the page has no login.
+- **Known-item test (`knownitem`):**
+  - It takes products with 1–4-word names and searches for each one as typed, in Greeklish and with one typo. It checks that the product, or one with the same name, comes back.
+  - It needs no manual work, so run it after every change. The same `--seed` gives the same searches.
+  - Output: `work/search_lab/<corpus>/knownitem_report.md`.
 
 - **Product sets (`--corpus`):**
   - `library` (default, ≈ 40 k): OFF Greek market + OpenNutrition everyday/prepared/restaurant.

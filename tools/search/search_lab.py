@@ -369,27 +369,76 @@ _GR_SKEL_PAIRS = [("ου", "u"), ("αι", "e"), ("ει", "i"), ("οι", "i"), ("
                   ("μπ", "b"), ("ντ", "d"), ("γκ", "g"), ("γγ", "g"), ("τσ", "ts"), ("τζ", "tz"),
                   ("θ", "th"), ("χ", "h"), ("ψ", "ps"), ("ξ", "ks")]
 _GR_SKEL = str.maketrans("αβγδεζηικλμνοπρστυφω", "avgdeziiklmnoprstifo")
-_LAT_SKEL_PAIRS = [("ou", "u"), ("ai", "e"), ("ei", "i"), ("oi", "i"), ("ui", "i"), ("ph", "f"), ("ch", "h"),
-                   ("kh", "h"), ("mp", "b"), ("nt", "d"), ("gk", "g"), ("gg", "g"), ("x", "h"), ("w", "o"),
+# Greeklish side. au/ay and eu/ey come first, as αυ/ευ = av/ev on the Greek side (ayra = αύρα, taygetou = Ταϋγέτου);
+# "nt" is ντ = d except before h (anthrakouxo = ανθρακούχο: ν + θ).
+_LAT_SKEL_PAIRS = [("au", "av"), ("ay", "av"), ("eu", "ev"), ("ey", "ev"),
+                   ("ou", "u"), ("ai", "e"), ("ei", "i"), ("oi", "i"), ("ui", "i"), ("ph", "f"), ("ch", "h"),
+                   ("kh", "h"), ("mp", "b"), ("gk", "g"), ("gg", "g"), ("x", "h"), ("w", "o"),
                    ("y", "i"), ("c", "k"), ("q", "k")]
+_LAT_NT = re.compile(r"nt(?!h)")
 _SKEL_ENDINGS = ["ies", "es", "as", "os", "is", "us", "ia", "io", "a", "e", "i", "o", "u", "s"]
 _DOUBLE = re.compile(r"(.)\1+")
+GREEKLISH_VERSION = "3"  # bump when the skeleton rules change: the Greeklish index is rebuilt
 
 
-def skeleton(word):
-    """Rough common spelling of a normalized Greek or Greeklish word, without its ending."""
-    if _HAS_GREEK.search(word):
+def _skel_letters(word):
+    greek = bool(_HAS_GREEK.search(word))
+    if greek:
         for a, b in _GR_SKEL_PAIRS:
             word = word.replace(a, b)
         word = word.translate(_GR_SKEL)
     else:
+        word = _LAT_NT.sub("d", word)
         for a, b in _LAT_SKEL_PAIRS:
             word = word.replace(a, b)
-    word = _DOUBLE.sub(r"\1", word)
-    for e in _SKEL_ENDINGS:
-        if word.endswith(e) and len(word) - len(e) >= 3:
-            return word[: -len(e)]
+    return _DOUBLE.sub(r"\1", word), greek
+
+
+def _strip_endings(word, times):
+    for _ in range(times):
+        e = next((e for e in _SKEL_ENDINGS if word.endswith(e) and len(word) - len(e) >= 3), None)
+        if e is None:
+            break
+        word = word[: -len(e)]
     return word
+
+
+def skeleton(word):
+    """Rough common spelling of a normalized Greek or Greeklish word, without its ending. Greek words arrive already
+    stemmed (el_stem), so one more ending comes off; a Greeklish word loses up to two, so both sides end up alike
+    (danias -> dan = Δανίας -> δανι -> dan)."""
+    letters, greek = _skel_letters(word)
+    return _strip_endings(letters, 1 if greek else 2)
+
+
+def skeleton_alts(word):
+    """Every skeleton a typed word may stand for. A Greeklish "-on" is either the Greek ending -ων, which el_stem
+    already drops on the Greek side (lahanikon = λαχανικών -> lahanik), or part of the word (zampon = ζαμπόν ->
+    zabon), so both are tried. Not stripping -on on the Greek side keeps μπέικον (bikon) apart from bikos (bik)."""
+    letters, greek = _skel_letters(word)
+    out = [_strip_endings(letters, 1 if greek else 2)]
+    if not greek and letters.endswith("on") and len(letters) >= 5:
+        out.append(_strip_endings(letters[:-2], 1))
+    return list(dict.fromkeys(out))
+
+
+def skeleton_match(words, op):
+    """FTS query for the Greeklish index: each typed word as one of its skeletons (see skeleton_alts)."""
+    parts = []
+    for w in words:
+        terms = [f'"{s}"*' if len(s) >= 4 else f'"{s}"' for s in skeleton_alts(w)]
+        parts.append(terms[0] if len(terms) == 1 else "(" + " OR ".join(terms) + ")")
+    return f" {op} ".join(parts)
+
+
+def skeleton_queries(words):
+    """The typed words as skeleton token lists for the re-ranker: the main reading, plus the -on reading when a word
+    has one."""
+    alts = [skeleton_alts(w) for w in words]
+    variants = [[a[0] for a in alts]]
+    if any(len(a) > 1 for a in alts):
+        variants.append([a[-1] for a in alts])
+    return variants
 
 
 GREEKLISH_COLUMNS = ["own", "tr"]
@@ -403,7 +452,7 @@ def ensure_greeklish_index():
     the old one-column layout is rebuilt); `translate` drops it so it is rebuilt."""
     with closing(sqlite3.connect(LAB_DB.as_uri(), uri=True)) as con:
         cols = [r[1] for r in con.execute("PRAGMA table_info(greeklish_fts)")]
-        if cols == GREEKLISH_COLUMNS:
+        if cols == GREEKLISH_COLUMNS and meta(con, "greeklish_version") == GREEKLISH_VERSION:
             return
         if cols:
             con.execute("DROP TABLE greeklish_fts")
@@ -418,6 +467,7 @@ def ensure_greeklish_index():
                 rows.append((rid, " ".join(own), " ".join(tr)))
         con.executescript("""CREATE VIRTUAL TABLE greeklish_fts USING fts5(own, tr, tokenize='unicode61', prefix='2 3');""")
         con.executemany("INSERT INTO greeklish_fts(rowid, own, tr) VALUES (?, ?, ?)", rows)
+        con.execute("INSERT OR REPLACE INTO meta VALUES ('greeklish_version', ?)", (GREEKLISH_VERSION,))
         con.commit()
         print(f"Built the Greeklish index ({len(rows):,} items) in {time.time() - t0:.0f}s", flush=True)
 
@@ -430,10 +480,9 @@ def greeklish_ranked(con, words, op, limit):
     if LAB_DB not in _GREEKLISH_READY:  # once per corpus and process: build it, or rebuild an old layout
         ensure_greeklish_index()
         _GREEKLISH_READY.add(LAB_DB)
-    skel = [skeleton(w) for w in words]
     sql = (f"SELECT rowid FROM greeklish_fts WHERE greeklish_fts MATCH ? "
            f"ORDER BY bm25(greeklish_fts, {GREEKLISH_WEIGHTS}), rowid LIMIT ?")
-    return [r for (r,) in con.execute(sql, (el_match(skel, op), limit))]
+    return [r for (r,) in con.execute(sql, (skeleton_match(words, op), limit))]
 
 
 class MT:
@@ -701,6 +750,10 @@ TRANSLATED_WEIGHT = 0.9  # a name match through the offline word translation cou
 AMBIGUOUS_TRANSLATED_WEIGHT = 0.5
 GENERIC_FIRST_MIN_SIM = 0.6  # rrg: a generic food goes above all brands only if its name matches this well
 EXTRA_MIN_SIM = 0.5  # typo / generic candidates below this name similarity are dropped (no junk for no-match queries)
+SPELLING_MIN_SIM = 0.8  # plain foods found only by a close spelling: cheescake ~ Cheesecake (0.95) yes,
+                        # tiropita ~ Tropical Smoothie (0.6) no
+SPELLING_FIRST_MIN_SIM = 0.85  # ... and they go above branded products only when this close: a one-letter typo in a
+                               # longer word (~0.9), not a different word that looks alike (fasolada ~ Fasolia, 0.8)
 POSITION_WEIGHT = 0.10
 BRAND_WORD_RATIO = 20  # a one-word "brand" found in 20x more product names than products it brands is a common word
 
@@ -737,11 +790,16 @@ def build_generic_index():
         has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
         greek = f"COALESCE((SELECT e.text FROM el_words_fts e WHERE e.rowid = d.rid), '')" if has_el else "''"
         greek += " || ' ' || COALESCE((SELECT g.own || ' ' || g.tr FROM greeklish_fts g WHERE g.rowid = d.rid), '')"
+        con.create_function("base_norm", 1, lambda n: norm(base_name(n)), deterministic=True)
         con.executescript(f"""DROP TABLE IF EXISTS generic_fts;
             CREATE VIRTUAL TABLE generic_fts USING fts5(text, tokenize='unicode61 remove_diacritics 2', prefix='2 3');
             INSERT INTO generic_fts(rowid, text)
                 SELECT d.rid, d.search || ' ' || {greek} FROM docs d
-                WHERE d.src = 'on' AND d.type IN {GENERIC_TYPES};""")
+                WHERE d.src = 'on' AND d.type IN {GENERIC_TYPES};
+            DROP TABLE IF EXISTS generic_tri;
+            CREATE VIRTUAL TABLE generic_tri USING fts5(name, tokenize='trigram');
+            INSERT INTO generic_tri(rowid, name)
+                SELECT rid, base_norm(name) FROM docs WHERE src = 'on' AND type IN {GENERIC_TYPES};""")
         con.commit()
 
 
@@ -760,7 +818,18 @@ def generic_candidates(con, q, limit):
         return run(el_match([el_stem(w) for w in words], "AND"))
     # English words, or Greeklish matched against the skeletons. Looked up separately and merged, so a few
     # English prefix hits (gala -> Gala Apples, Galangal) don't push the Greeklish ones (gala = γάλα -> Milk) out.
-    return rrf_fuse([run(fts_match(words, "AND")), run(el_match([skeleton(w) for w in words], "AND"))], limit)
+    return rrf_fuse([run(fts_match(words, "AND")), run(skeleton_match(words, "AND"))], limit)
+
+
+def generic_typo_candidates(con, q, limit):
+    """Generic foods whose name shares the most 3-letter pieces with the query (small trigram index of ~9 k plain
+    foods). Used when no plain food matches the query's words exactly: "cheescake" -> Cheesecake, even though
+    9 branded products are spelled "Cheescake" and match exactly."""
+    grams = sorted({w[i:i + 3] for w in norm(q).split() for i in range(len(w) - 2)})
+    if not grams:
+        return []
+    sql = "SELECT rowid FROM generic_tri WHERE generic_tri MATCH ? ORDER BY bm25(generic_tri), rowid LIMIT ?"
+    return [r for (r,) in con.execute(sql, (" OR ".join(f'"{g}"' for g in grams), limit))]
 
 
 def few_keyword_hits(con, q, n=3):
@@ -936,9 +1005,9 @@ class Reranker:
         if q_latin:
             sims += [name_sim(q_latin, toks) for toks in direct]
         sims += [t_weight * name_sim(q_tokens, toks) for toks in translated]
-        if q_skel:  # Greeklish query: compare skeletons with the item's Greek words (translated, or its own name)
-            sims += [t_weight * name_sim(q_skel, [skeleton(t) for t in toks]) for toks in translated]
-            sims += [TRANSLATED_WEIGHT * name_sim(q_skel, [skeleton(t) for t in toks])
+        for qs in q_skel or []:  # Greeklish query (each reading): compare skeletons with the item's Greek words
+            sims += [t_weight * name_sim(qs, [skeleton(t) for t in toks]) for toks in translated]
+            sims += [TRANSLATED_WEIGHT * name_sim(qs, [skeleton(t) for t in toks])
                      for toks in direct if any(_HAS_GREEK.search(x) for x in toks)]
         return max(sims, default=0.0)
 
@@ -951,7 +1020,7 @@ class Reranker:
         does a hand-fixed word (word_fixes.json): it was reviewed, so pollo -> κοτόπουλο next to chicken is a synonym."""
         if not self.mt_words:
             return False
-        wanted, key = (set(q_skel), skeleton) if q_skel else (set(q_tokens), lambda s: s)
+        wanted, key = ({t for qs in q_skel for t in qs}, skeleton) if q_skel else (set(q_tokens), lambda s: s)
         words = defaultdict(list)  # Greek stem -> [[English food word, how many names it comes from], ...]
         for name in names:
             seen = set()
@@ -978,9 +1047,14 @@ class Reranker:
         if not q_tokens:
             return ranked[:k]
         q_latin = [greek_to_latin(t) for t in norm(q).split()] if _HAS_GREEK.search(norm(q)) else None
-        q_skel = None if q_latin else [skeleton(t) for t in norm(q).split()]
+        q_skel = None if q_latin else skeleton_queries(norm(q).split())  # list of readings
         typo = trigram_candidates(con, q, RR_DEPTH) if few_keyword_hits(con, q) else []
-        cand = list(dict.fromkeys(ranked + typo + generic_candidates(con, q, 10 if not generic_first else RR_DEPTH)))
+        generic = generic_candidates(con, q, 10 if not generic_first else RR_DEPTH)
+        spelled = set()  # plain foods found only by spelling: must be very close (cheescake ~ cheesecake 0.95)
+        if not generic and not _HAS_GREEK.search(norm(q)):  # no plain food has these words: maybe a typo
+            generic = generic_typo_candidates(con, q, 10)
+            spelled = set(generic) - set(ranked) - set(typo)
+        cand = list(dict.fromkeys(ranked + typo + generic))
         if not cand:
             return []
         pos = {r: i for i, r in enumerate(ranked)}
@@ -996,13 +1070,14 @@ class Reranker:
             sim = self.similarity(q_tokens, q_latin, q_skel, name, src, t_weight)
             is_generic = src == "on" and typ in GENERIC_TYPES
             position = POSITION_WEIGHT * (1 - pos[r] / len(ranked)) if r in pos else 0.0
-            group = 0 if (group_generic and is_generic and sim >= GENERIC_FIRST_MIN_SIM) else 1
+            first_min = SPELLING_FIRST_MIN_SIM if r in spelled else GENERIC_FIRST_MIN_SIM
+            group = 0 if (group_generic and is_generic and sim >= first_min) else 1
             return group, sim + (GENERIC_BONUS if is_generic else 0.0) + position, sim
 
         scored = {r: score(r) for r in cand}
         # Extra candidates the re-ranker added itself (typo matches, generic foods) must really resemble the query;
         # otherwise a query with no match would show unrelated guesses ("trikalino" -> "Paprika") instead of nothing.
-        cand = [r for r in cand if r in pos or scored[r][2] >= EXTRA_MIN_SIM]
+        cand = [r for r in cand if r in pos or scored[r][2] >= (SPELLING_MIN_SIM if r in spelled else EXTRA_MIN_SIM)]
         return sorted(cand, key=lambda r: (scored[r][0], -scored[r][1], pos.get(r, RR_DEPTH), r))[:k]
 
 
@@ -1069,8 +1144,30 @@ def compile_rules(spec):
     return {"rx": rx, "src": spec.get("src"), "ids": set(spec.get("ids", []))}
 
 
+REVIEWS = HERE / "reviews.json"  # searches judged by people on the review page (/review)
+RECOMMENDED = "rrg:kw_el:words"
+
+
+def load_reviews():
+    return json.loads(REVIEWS.read_text(encoding="utf-8")) if REVIEWS.exists() else []
+
+
+def save_reviews(reviews):
+    tmp = REVIEWS.with_suffix(".tmp")
+    tmp.write_text(json.dumps(reviews, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    tmp.replace(REVIEWS)
+
+
+def review_queries(reviews):
+    """Reviewed searches as test queries (kind 'reviewed'): the correct items are the products the reviewer
+    picked, by stable id. 'None is right' with nothing found = no correct item (a data gap)."""
+    return [{"id": f"r{i:03d}", "q": r["q"], "kind": "reviewed",
+             "want": r.get("note") or f"picked by {r.get('reviewer') or 'a reviewer'}",
+             "ids": [c["id"] for c in r.get("correct", [])]} for i, r in enumerate(reviews, 1)]
+
+
 def load_queries():
-    raw = json.loads(QUERIES.read_text())
+    raw = json.loads(QUERIES.read_text()) + review_queries(load_reviews())
     by_id = {q["id"]: q for q in raw}
     return [{**q, "rules": compile_rules(by_id[q["same_as"]] if "same_as" in q else q)} for q in raw]
 
@@ -1106,7 +1203,8 @@ def correct_rids(queries, docs):
     """Correct items per query. Judging 120 queries against ~330 k items takes a while, so the result is cached
     per (test set, corpus) and twin queries (same_as) are judged once."""
     with closing(connect()) as con:
-        key = hashlib.sha1(QUERIES.read_bytes() + (meta(con, "embed_sha") or "").encode()).hexdigest()
+        reviews = REVIEWS.read_bytes() if REVIEWS.exists() else b""
+        key = hashlib.sha1(QUERIES.read_bytes() + reviews + (meta(con, "embed_sha") or "").encode()).hexdigest()
     cache = OUT_DIR / "correct_cache.json"
     if cache.exists():
         c = json.loads(cache.read_text())
@@ -1255,6 +1353,157 @@ def sweep(model):
 
 
 # ---------------------------------------------------------------------------
+# Known-item test: searches made automatically from product names
+#   Products with a short name (1-4 words) are sampled from 4 groups. Each gives up to 3 searches: the name as a
+#   user types it (lower case, no accents), in Greeklish (Greek names only) and with one typo. A search counts as
+#   right when the product, or another product with the same name, is in the top results. No manual work, so it
+#   can run after every change; it is less realistic than real searches (reviews.json).
+# ---------------------------------------------------------------------------
+KNOWN_GROUPS = {
+    "off_greek": "Open Food Facts, Greek name",
+    "off_latin": "Open Food Facts, Latin name",
+    "on_generic": "OpenNutrition plain foods (everyday / prepared)",
+    "on_branded": "OpenNutrition branded (grocery / restaurant)",
+}
+_GL_PAIRS = [("ου", "ou"), ("αι", "ai"), ("ει", "ei"), ("οι", "oi"), ("γκ", "gk"), ("γγ", "ng"), ("μπ", "mp"),
+             ("ντ", "nt"), ("θ", "th"), ("ψ", "ps"), ("ξ", "ks")]
+_GL_LETTERS = dict(zip("αβγδεζηικλμνοπρστυφω", ["a", "v", "g", "d", "e", "z", "i", "i", "k", "l", "m", "n", "o", "p",
+                                                   "r", "s", "t", "y", "f", "o"]))
+_TYPO_ALPHABET = {"latin": "abcdefghijklmnopqrstuvwxyz", "greek": "αβγδεζηθικλμνξοπρστυφχψω"}
+
+
+def to_greeklish(text, rng):
+    """Greek (normalized) -> the Latin spelling people type in chats, in one of two common styles
+    (χ as x or h; μπ/ντ at the start as b/d or mp/nt)."""
+    chi, start = rng.choice([("x", True), ("h", False)])
+    out = []
+    for w in text.split():
+        if start and w.startswith("μπ"):
+            w = "b" + w[2:]
+        elif start and w.startswith("ντ"):
+            w = "d" + w[2:]
+        for a, b in _GL_PAIRS:
+            w = w.replace(a, b)
+        out.append("".join(chi if c == "χ" else _GL_LETTERS.get(c, c) for c in w))
+    return " ".join(out)
+
+
+def with_typo(text, rng):
+    """One typo in the longest word (5+ letters, never the first letter): a letter dropped, two swapped or one
+    replaced. None when no word is long enough."""
+    words = text.split()
+    i = max(range(len(words)), key=lambda j: len(words[j]))
+    w = words[i]
+    if len(w) < 5:
+        return None
+    p = rng.randrange(1, len(w) - 1)
+    op = rng.choice(["drop", "swap", "replace"])
+    if op == "drop":
+        w = w[:p] + w[p + 1:]
+    elif op == "swap":
+        w = w[:p] + w[p + 1] + w[p] + w[p + 2:]
+    else:
+        alphabet = _TYPO_ALPHABET["greek" if _HAS_GREEK.search(w) else "latin"]
+        w = w[:p] + rng.choice([c for c in alphabet if c != w[p]]) + w[p + 1:]
+    words[i] = w
+    return " ".join(words)
+
+
+def known_item(n, seed, methods):
+    import random
+    rng = random.Random(seed)
+    with closing(connect()) as con:
+        docs = load_docs(con)
+    key_of = {r: norm(base_name(d["name"]) if d["src"] == "on" else d["name"]) for r, d in docs.items()}
+    same_name = defaultdict(set)
+    for r, k in key_of.items():
+        same_name[k].add(r)
+    groups = defaultdict(list)
+    for r, d in docs.items():
+        words = key_of[r].split()
+        if not 1 <= len(words) <= 4 or len(key_of[r]) > 40 or not any(len(w) >= 3 and w.isalpha() for w in words):
+            continue
+        if d["src"] == "off":
+            groups["off_greek" if _HAS_GREEK.search(key_of[r]) else "off_latin"].append(r)
+        else:
+            groups["on_generic" if d["type"] in GENERIC_TYPES else "on_branded"].append(r)
+    per = n // len(KNOWN_GROUPS)
+    tests = []  # (group, variant, query, target rid)
+    for g in KNOWN_GROUPS:
+        for r in rng.sample(sorted(groups[g]), min(per, len(groups[g]))):
+            text = key_of[r]
+            tests.append((g, "as typed", text, r))
+            if _HAS_GREEK.search(text):
+                tests.append((g, "greeklish", to_greeklish(text, rng), r))
+            typo = with_typo(text, rng)
+            if typo:
+                tests.append((g, "typo", typo, r))
+    print(f"{len(tests):,} searches from {sum(min(per, len(groups[g])) for g in KNOWN_GROUPS):,} products "
+          f"(seed {seed}); methods: {', '.join(methods)}", flush=True)
+
+    funcs = {m: get_method(m) for m in methods}
+    ranks = {m: [] for m in methods}
+    times = {m: [] for m in methods}
+    misses = {m: [] for m in methods}
+    with closing(connect()) as con:
+        for m in methods:
+            funcs[m](con, "γαλα")
+            funcs[m](con, "milk")
+        for i, (g, variant, q, r) in enumerate(tests, 1):
+            ok = same_name[key_of[r]]
+            for m in methods:
+                clear_query_caches()
+                t0 = time.perf_counter()
+                res = funcs[m](con, q)
+                times[m].append(1000 * (time.perf_counter() - t0))
+                rank = first_rank(res, ok)
+                ranks[m].append(rank)
+                if rank is None or rank > 5:
+                    misses[m].append({"group": g, "variant": variant, "q": q, "target": docs[r]["name"],
+                                      "rank": rank, "top3": [docs[x]["name"] for x in res[:3]]})
+            if i % 500 == 0:
+                print(f"  {i:,}/{len(tests):,}", flush=True)
+
+    def summ(rows):
+        k = len(rows)
+        return (k, *(sum(x is not None and x <= c for x in rows) / k if k else 0.0 for c in (1, 5, 10)))
+
+    lines = ["# Known-item test", "",
+             f"Run {time.strftime('%Y-%m-%d %H:%M')} · corpus '{CORPUS}' · {len(tests):,} searches made from product "
+             f"names (seed {seed}). Right = the product, or one with the same name, is in the results.", "",
+             "## Overall", "", "| Method | searches | hit@1 | hit@5 | hit@10 | mean ms | p95 ms |", "|---|---|---|---|---|---|---|"]
+    for m in methods:
+        k, h1, h5, h10 = summ(ranks[m])
+        ts = sorted(times[m])
+        lines.append(f"| {m} | {k:,} | {h1:.0%} | **{h5:.0%}** | {h10:.0%} | {statistics.mean(ts):.1f} | "
+                     f"{ts[int(0.95 * (len(ts) - 1))]:.1f} |")
+    lines += ["", "## hit@5 by group and search type", "",
+              "| Group | Search | n | " + " | ".join(methods) + " |", "|---|---|---|" + "---|" * len(methods)]
+    for g in KNOWN_GROUPS:
+        for variant in ("as typed", "greeklish", "typo"):
+            idx = [i for i, t in enumerate(tests) if t[0] == g and t[1] == variant]
+            if idx:
+                lines.append(f"| {KNOWN_GROUPS[g]} | {variant} | {len(idx)} | "
+                             + " | ".join(f"{summ([ranks[m][i] for i in idx])[2]:.0%}" for m in methods) + " |")
+    last = methods[-1]
+    lines += ["", f"## Examples missed by {last} (not in top 5)", "", "| Group | Search | Product | Got first |",
+              "|---|---|---|---|"]
+    by_cell = defaultdict(list)
+    for x in misses[last]:
+        by_cell[(x["group"], x["variant"])].append(x)
+    for cell, xs in by_cell.items():
+        for x in xs[:4]:
+            lines.append(f"| {x['group']} · {x['variant']} | {x['q']} | {x['target']} | "
+                         f"{x['top3'][0] if x['top3'] else '(nothing)'} |")
+    report = "\n".join(lines) + "\n"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    (OUT_DIR / "knownitem_report.md").write_text(report)
+    (OUT_DIR / "knownitem_misses.json").write_text(json.dumps(misses, ensure_ascii=False, indent=1))
+    print("\n".join(lines[:4 + 4 + len(methods)]))
+    print(f"\nFull report: {OUT_DIR / 'knownitem_report.md'}\nMisses: {OUT_DIR / 'knownitem_misses.json'}")
+
+
+# ---------------------------------------------------------------------------
 # Compare page: type a query, see every method's top 10 side by side
 # ---------------------------------------------------------------------------
 COMPARE_HTML = HERE / "compare.html"
@@ -1289,7 +1538,10 @@ def compare_columns(models):
     return cols
 
 
-def serve(port, models, methods=None):
+REVIEW_HTML = HERE / "review.html"
+
+
+def serve(port, models, methods=None, host="127.0.0.1"):
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from urllib.parse import parse_qs, urlparse
@@ -1299,15 +1551,88 @@ def serve(port, models, methods=None):
     queries = load_queries()
     with closing(connect()) as con:
         docs = load_docs(con)
+        has_el = con.execute("SELECT 1 FROM sqlite_master WHERE name = 'el_words_fts'").fetchone()
+    find_fn = get_method("kw_el:words" if has_el else "bm25")  # "not in the list? find it" on the review page
+    find_any = get_method("bm25_or")
+    by_id = {d["id"]: d for d in docs.values()}
     correct = correct_rids(queries, docs)
     test_by_q = {norm(q["q"]): q for q in queries}
     examples = [{"id": q["id"], "q": q["q"], "kind": q["kind"]} for q in queries]
     lock = threading.Lock()  # one query at a time: the models are not shared safely across threads
+    file_lock = threading.Lock()  # reviews.json writes
     print("Loading models…", flush=True)
     with closing(connect()) as con:
         for m, _ in cols:  # warm-up loads every model before the first real query
             funcs[m](con, "γαλα")
             funcs[m](con, "milk")
+
+    def item(r):
+        d = docs[r]
+        return {"id": d["id"], "name": d["name"], "brand": d["brand"], "src": d["src"], "type": d["type"]}
+
+    def pool(q):
+        """Review page: every method's top 10, merged and sorted by name, so the reviewer judges the products
+        without seeing which method ranked what (the test stays fair to every method)."""
+        rids = []
+        with lock, closing(connect()) as con:
+            for m, _ in cols:
+                clear_query_caches()
+                rids += funcs[m](con, q)
+        rids = sorted(dict.fromkeys(rids), key=lambda r: (docs[r]["n_name"], docs[r]["n_brand"], r))
+        saved = next((r for r in load_reviews() if norm(r["q"]) == norm(q)), None)
+        return {"q": q, "items": [item(r) for r in rids], "saved": saved}
+
+    def find(q):
+        with lock, closing(connect()) as con:  # all words first, then any word, so something always comes back
+            clear_query_caches()
+            rids = find_fn(con, q, 20)
+            if len(rids) < 10:
+                rids = list(dict.fromkeys(rids + find_any(con, q, 20)))[:20]
+            return {"q": q, "items": [item(r) for r in rids]}
+
+    def method_ranks(q, ok_ids):
+        out = []
+        with lock, closing(connect()) as con:
+            for m, label in cols:
+                clear_query_caches()
+                out.append({"method": m, "label": label, "recommended": m == RECOMMENDED,
+                            "rank": first_rank(funcs[m](con, q), {r for r in docs if docs[r]["id"] in ok_ids})})
+        return out
+
+    def save_review(body):
+        q = str(body.get("q", "")).strip()[:200]
+        if not norm(q):
+            return {"error": "empty search"}
+        ids = [i for i in dict.fromkeys(str(x) for x in body.get("correct", [])) if i in by_id][:50]
+        entry = {"q": q, "correct": [{"id": i, "src": by_id[i]["src"], "name": by_id[i]["name"],
+                                      "brand": by_id[i]["brand"]} for i in ids],
+                 "note": str(body.get("note", "")).strip()[:300], "reviewer": str(body.get("reviewer", "")).strip()[:60],
+                 "date": time.strftime("%Y-%m-%d %H:%M"), "corpus": CORPUS}
+        ranks = method_ranks(q, set(ids)) if ids else []
+        rec = next((x["rank"] for x in ranks if x["recommended"]), None)
+        entry["recommended_rank"] = rec  # where the recommended search put the first right product, when reviewed
+        with file_lock:  # a search reviewed again is updated in place, so the r001… numbers don't shift
+            reviews = load_reviews()
+            pos = next((i for i, r in enumerate(reviews) if norm(r["q"]) == norm(q)), None)
+            if pos is None:
+                reviews.append(entry)
+                pos = len(reviews) - 1
+            else:
+                reviews[pos] = entry
+            save_reviews(reviews)
+        # judge this search on the compare page too, without a restart
+        qid = f"r{pos + 1:03d}"
+        test_by_q[norm(q)] = {"id": qid, "q": q, "kind": "reviewed", "want": entry["note"] or "reviewed"}
+        correct[qid] = {r for r in docs if docs[r]["id"] in set(ids)}
+        return {"saved": entry, "ranks": ranks, "count": len(reviews)}
+
+    def delete_review(body):
+        q = str(body.get("q", ""))
+        with file_lock:
+            reviews = load_reviews()
+            kept = [r for r in reviews if norm(r["q"]) != norm(q)]
+            save_reviews(kept)
+        return {"deleted": len(reviews) - len(kept), "count": len(kept)}
 
     def compare(q):
         tq = test_by_q.get(norm(q))
@@ -1338,22 +1663,48 @@ def serve(port, models, methods=None):
 
         def do_GET(self):
             url = urlparse(self.path)
+            q = parse_qs(url.query).get("q", [""])[0].strip()[:200]
             if url.path in ("/", "/index.html"):
                 self._send(200, COMPARE_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/review":
+                self._send(200, REVIEW_HTML.read_bytes(), "text/html; charset=utf-8")
             elif url.path == "/api/examples":
                 self._json({"examples": examples, "columns": [label for _, label in cols],
                             "corpus": {"name": CORPUS, "description": CORPORA[CORPUS][0], "items": len(docs)}})
             elif url.path == "/api/compare":
-                self._json(compare(parse_qs(url.query).get("q", [""])[0].strip()[:200]))
+                self._json(compare(q))
+            elif url.path == "/api/pool":
+                self._json(pool(q) if norm(q) else {"q": q, "items": [], "saved": None})
+            elif url.path == "/api/find":
+                self._json(find(q) if norm(q) else {"q": q, "items": []})
+            elif url.path == "/api/reviews":
+                self._json({"reviews": load_reviews()})
+            else:
+                self._send(404, b'{"error": "not found"}', "application/json")
+
+        def do_POST(self):
+            url = urlparse(self.path)
+            n = int(self.headers.get("Content-Length") or 0)
+            if n > 65536:
+                return self._send(413, b'{"error": "too large"}', "application/json")
+            try:
+                body = json.loads(self.rfile.read(n) or b"{}")
+            except ValueError:
+                return self._send(400, b'{"error": "bad json"}', "application/json")
+            if url.path == "/api/review":
+                self._json(save_review(body))
+            elif url.path == "/api/review/delete":
+                self._json(delete_review(body))
             else:
                 self._send(404, b'{"error": "not found"}', "application/json")
 
         def log_message(self, fmt, *args):
             pass
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"Search compare page for corpus '{CORPUS}' ({len(docs):,} items) running at http://127.0.0.1:{port}"
-          "  (Ctrl+C to stop)", flush=True)
+    server = ThreadingHTTPServer((host, port), Handler)
+    shown = "127.0.0.1" if host in ("127.0.0.1", "localhost") else host
+    print(f"Search compare page for corpus '{CORPUS}' ({len(docs):,} items) running at http://{shown}:{port}"
+          f"  · review page: http://{shown}:{port}/review  (Ctrl+C to stop)", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -1380,10 +1731,17 @@ def main():
     ev = sub.add_parser("eval", parents=[common], help="score search methods on the test set")
     ev.add_argument("--methods", default="like,bm25,bm25_or", help="comma-separated; see the method list above")
     ev.add_argument("--threads", type=int, help="CPU threads for the models (1 = per-core speed)")
+    ki = sub.add_parser("knownitem", parents=[common],
+                        help="automatic test: searches made from product names (as typed, Greeklish, typo)")
+    ki.add_argument("--n", type=int, default=1000, help="products to sample, split over 4 groups (default 1000)")
+    ki.add_argument("--seed", type=int, default=1, help="same seed = same searches, to compare runs")
+    ki.add_argument("--methods", default=f"bm25,{RECOMMENDED}", help="comma-separated method specs")
     sv = sub.add_parser("serve", parents=[common], help="web page: type a query, compare the methods side by side")
     sv.add_argument("--port", type=int, default=8767)
     sv.add_argument("--models", default="e5-small", help=f"comma-separated, from: {', '.join(MODELS)}")
     sv.add_argument("--methods", help="comma-separated method specs for the columns (overrides --models)")
+    sv.add_argument("--host", default="127.0.0.1",
+                    help="address to listen on; 0.0.0.0 lets other devices on your network open the review page")
     args = ap.parse_args()
     set_corpus(args.corpus)
     if getattr(args, "threads", None):
@@ -1395,7 +1753,7 @@ def main():
         if unknown:
             sys.exit(f"unknown model(s): {', '.join(unknown)}")
         methods = [m.strip() for m in args.methods.split(",") if m.strip()] if args.methods else None
-        return serve(args.port, models, methods)
+        return serve(args.port, models, methods, args.host)
     if args.cmd == "translate":
         return translate_corpus(args.mode, args.mt, args.batch)
     if args.cmd == "build":
@@ -1406,6 +1764,8 @@ def main():
         embed(args.model, args.batch)
     elif args.cmd == "sweep":
         sweep(args.model)
+    elif args.cmd == "knownitem":
+        known_item(args.n, args.seed, [m.strip() for m in args.methods.split(",") if m.strip()])
     else:
         evaluate([m.strip() for m in args.methods.split(",") if m.strip()])
 
